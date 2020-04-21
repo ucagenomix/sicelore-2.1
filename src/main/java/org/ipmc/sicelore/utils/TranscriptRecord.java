@@ -49,13 +49,15 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     public int dist_polya = 0;
     public int junctionReads = 0;
     
+    // consensus pipeline requirements
+    //public Consensus consensus;
+    
     public TranscriptRecord() {
         evidenceList = new ArrayList<LongreadRecord>();
         novelJunctions = new ArrayList<int[]>();
     }
     
-    public TranscriptRecord(String geneId, String transcriptId)
-    {
+    public TranscriptRecord(String geneId, String transcriptId){
         evidenceList = new ArrayList<LongreadRecord>();
         novelJunctions = new ArrayList<int[]>();
         this.geneId = geneId;
@@ -227,7 +229,9 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     public List<int[]> getExons(boolean cdsExonsOnly) {
         return cdsExonsOnly ? this.codingExons : this.exons;
     }
-    
+
+    //public Consensus getConsensus() { return this.consensus; }
+ 
     public void addNovelJunction(int[] j) {
         this.novelJunctions.add(j);
     }

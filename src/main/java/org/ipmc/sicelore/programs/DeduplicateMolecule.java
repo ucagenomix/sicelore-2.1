@@ -87,7 +87,7 @@ public class DeduplicateMolecule extends CommandLineProgram {
             while (it.hasNext()) {
                 String key = (String) it.next();
                 Molecule m = (Molecule) map.get(key);
-                os.write(new String(">" + m.getBarcode() + "|" + m.getUmi() + "|" + m.getRn() + "\n" + m.getConsensus() + "\n").getBytes());
+                os.write(new String(">" + m.getBarcode() + "-" + m.getUmi() + "-" + m.getRn() + "\n" + m.getConsensus() + "\n").getBytes());
             }
             os.close();
         } catch (Exception e) { e.printStackTrace(); try { os.close(); } catch (Exception e2) { System.err.println("can not close stream"); }

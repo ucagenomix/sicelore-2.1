@@ -5,6 +5,9 @@ package org.ipmc.sicelore.utils;
  * @author kevin lebrigand
  * 
  */ 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
@@ -14,6 +17,11 @@ import java.io.*;
 import java.util.*;
 import htsjdk.samtools.util.Log;
 import htsjdk.tribble.annotation.Strand;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import org.biojava.nbio.core.util.ConcurrencyTools;
 
 public class UCSCRefFlatParser implements GeneModelParser {
 
@@ -24,6 +32,11 @@ public class UCSCRefFlatParser implements GeneModelParser {
     public int MINEVIDENCE = 5;
     public int NOVELINDEX=1;
                
+    private ListeningExecutorService oneNanoporeReadexecutor;
+    private Deque<Future<String>> future_list;
+    private DataOutputStream os;
+    private Iterator itglobal;
+    
     public UCSCRefFlatParser(File refFlat)
     {
         log = Log.getInstance(UCSCRefFlatParser.class);
@@ -357,6 +370,20 @@ public class UCSCRefFlatParser implements GeneModelParser {
         
         return bool;
     }
+    
+    /*
+    public void callConsensus(int nThreads)
+    {
+    }
+
+    private synchronized void write(String rslt) {
+        try {
+            os.writeBytes(rslt);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    */
     
     // statistiques
     public void statistics()

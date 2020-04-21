@@ -49,7 +49,11 @@ public class Longread implements Comparable<Longread> {
 
     public void addRecord(LongreadRecord lrr)
     {
-        this.geneIds.add(lrr.getGeneId()); // IG !!!
+        if(lrr.getGeneId() != null){
+            String[] allgenes = lrr.getGeneId().split(",");
+            for(int i=0;i<allgenes.length;i++)
+                this.geneIds.add(allgenes[i]);
+        }
         if(lrr.getBarcode() != null)
             this.barcode = lrr.getBarcode();
         if(lrr.getUmi() != null)

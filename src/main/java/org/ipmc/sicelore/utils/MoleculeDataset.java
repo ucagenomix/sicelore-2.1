@@ -143,10 +143,10 @@ public class MoleculeDataset {
     public void setIsoformStrict(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA)
     {
         List list1=null;
-        boolean debug = true;
+        boolean debug = false;
         
-        //if(debug) { System.out.println("transcripts:" + transcripts); }
-        //if(debug) { System.out.println("molecule:" + molecule.getBarcode() + "\t" + molecule.getUmi()); }
+        if(debug) { System.out.println("transcripts:" + transcripts); }
+        if(debug) { System.out.println("molecule:" + molecule.getBarcode() + "\t" + molecule.getUmi()); }
         
         HashMap<String, Integer> candidates = new HashMap<String, Integer>();
         List<Longread> longreads = molecule.getLongreads();
@@ -157,16 +157,16 @@ public class MoleculeDataset {
             for(LongreadRecord lrr : records){
                 List list = junctionsFromExons(lrr.getExons());
                 
-                //if(debug) { System.out.println("o "+lrr.getName() + "("+list.size()+" junctions)"); }
+                if(debug) { System.out.println("o "+lrr.getName() + "("+list.size()+" junctions)"); }
                 
                 for(TranscriptRecord transcriptrecord : transcripts){
                     list1 = junctionsFromExons(transcriptrecord.getExons());
                     
-                    //if(debug) { System.out.println("\t"+transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId() + "("+list1.size()+" junctions)"); }
+                    if(debug) { System.out.println("\t"+transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId() + "("+list1.size()+" junctions)"); }
                     
                     if(map(list, list1, DELTA, molecule)) {
                         
-                        //if(debug) { System.out.println("\tmatch"); }
+                        if(debug) { System.out.println("\tmatch"); }
                         
                         String key = transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId();
 
@@ -179,11 +179,11 @@ public class MoleculeDataset {
             }
         }
         
-        //if(debug) { System.out.println("candidates:" + candidates); }
+        if(debug) { System.out.println("candidates:" + candidates); }
         
         if(candidates.size() > 0){
             
-            //if(debug) { System.out.println("we have candidate(s):" + candidates.size()); }
+            if(debug) { System.out.println("we have candidate(s):" + candidates.size()); }
             
             HashSet<String> bestCandidates = new HashSet<String>();
             int maxValueInMap=(Collections.max(candidates.values()));  // This will return max value in the Hashmap
@@ -198,7 +198,7 @@ public class MoleculeDataset {
                 molecule.setGeneId(g.split("\\|")[1]);
                 molecule.setSupporting_reads(candidates.get(g));
                 
-                //if(debug) { System.out.println("only one best candidate --> transcript_id/gene_id:" + g); }
+                if(debug) { System.out.println("only one best candidate --> transcript_id/gene_id:" + g); }
             }
             else{
                 
@@ -224,7 +224,7 @@ public class MoleculeDataset {
             molecule.setTranscriptId("undef");
             molecule.setGeneId((String) iter.next());
             
-            //if(debug) { System.out.println("no candidate --> gene_id:" + molecule.getGeneId()); }
+            if(debug) { System.out.println("no candidate --> gene_id:" + molecule.getGeneId()); }
         }
         
         // only 1 mono-exonic transcript in the model --> we do set the isoform
@@ -233,7 +233,7 @@ public class MoleculeDataset {
            molecule.setTranscriptId(transcripts.get(0).getTranscriptId());
            molecule.setGeneId(transcripts.get(0).getGeneId());
            molecule.setSupporting_reads(1);
-           //if(debug) { System.out.println("mono-exonic --> transcript_id/gene_id:" + transcripts.get(0).getTranscriptId()+"|"+transcripts.get(0).getGeneId()); }
+           if(debug) { System.out.println("mono-exonic --> transcript_id/gene_id:" + transcripts.get(0).getTranscriptId()+"|"+transcripts.get(0).getGeneId()); }
            
         }
     }

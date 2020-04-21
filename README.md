@@ -1006,9 +1006,9 @@ per molecules (UMI/BC) fusion information
 
 **use CollaspeModel (sicelore.jar)**
 
-SAM records are grouped per cllBC and UMI by transcript isoform based on exon makeup. Transcripts isoforms showing an exon structure supported by less than MINEVIDENCE (5) UMIs are filtered out. 
-The set of novel isoforms are then validated in CAGE/SHORT/POLYA files are provided and filtered requiring: 
-(i) all exon-exon junctions either described in Gencode or confirmed in external short read data given as STAR aligned bam file by at least **juncCo** reads; 
+SAM records are grouped per cellBC and UMI by transcript isoform based on exon makeup. Transcripts isoforms showing an exon structure supported by less than MINEVIDENCE (5) UMIs are filtered out. 
+The set of novel isoforms are then validated using **CAGE* / **SHORT* / **POLYA** files if provided. Novel isoform is classify as valid if: 
+(i) all exon-exon junctions either described in Gencode or confirmed in an external short read data given as STAR aligned bam file by at least **juncCo** reads; 
 (ii) a 5’ start within **cageCo** nucleotides of a transcription start site identified by CAGE peaks given as .bed file; 
 (iii) a 3’ end within **polyaCo** nucleotides of a polyadenylation site given as .bed file.
 
@@ -1035,11 +1035,11 @@ prefix used for output file names
 
 **DELTA=** (required)
 
-the number of extra or lacking bases allowed at exon-exon junctions (default = 2)
+Number of extra or lacking bases allowed at exon-exon junctions (default = 2)
 
 **MINEVIDENCE=** (required)
 
-the minimum number of UMIs supporting the novel isoform to keep it as novel isoform (default = 5)
+Minimum number of UMIs supporting the novel isoform not to remove it (default = 5)
 
 **CELLTAG=**
 
@@ -1063,27 +1063,27 @@ Read number tag (default=RN)
 
 **SHORT=**
 
-The short read SAM or BAM file fot junction validation
+The short read SAM or BAM file (STAR aligned external short reads dataset)
 
 **CAGE=**
 
-CAGE peaks file (.bed)
+CAGE peaks file (.bed) (Ressources/mm10.liftover.Fantom5.cage_peaks.bed)
 
 **POLYA=**
 
-POLYA sites file (.bed)
+POLYA sites file (.bed) (Ressources/mm10.gencode.vM24.polyAs.bed)
 
 **cageCo=**
 
-CAGE validation cutoff (default=50 bases)
+CAGE validation cutoff (default = 50 bases)
 
 **polyaCo=**
 
-PolyA validation cutoff (default=50 bases)
+PolyA validation cutoff (default = 50 bases)
 
 **juncCo=**
 
-Junction validation cutoff (default=1 read)
+Junction validation cutoff (default = 1 read)
 
 ```
 
@@ -1095,15 +1095,15 @@ java -jar -Xmx40g sicelor.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLA
 
 **PREFIX.d'DELTA'.e'MINEVIDENCE'.txt**
 
-Knwon and Novel isoforms detected classification .txt file
+All known and novel isoforms detected classification .txt file
 
 **PREFIX.d'DELTA'.e'MINEVIDENCE'.gff**
 
-All knwons and all novels isoforms .gff file
+All known and all novel isoforms .gff file
 
 **PREFIX.d'DELTA'.e'MINEVIDENCE'.final.gff**
 
-All knwons and all validated novel isoforms .gff file
+All known and all validated novel isoforms .gff file
 
 **PREFIX.d'DELTA'.e'MINEVIDENCE'.fas**
 

@@ -153,12 +153,13 @@ public class AddGeneNameTag extends CommandLineProgram
         }
         if(sameStrand.isEmpty() && (oppositeStrand.size() > 0)) {
             metrics.READS_WRONG_STRAND += 1;
-          return new ArrayList();
+            return new ArrayList();
         }
 
         if (sameStrand.size() > 1) {
-            metrics.AMBIGUOUS_READS_REJECTED += 1;
-          return new ArrayList();
+            // update KL 21/04/2020 --> authorize same strand gene ambiguous, we be resolve latter with isoform attribution
+            //metrics.AMBIGUOUS_READS_REJECTED += 1;
+            //return new ArrayList();
         }
         if (oppositeStrand.size() > 0) {
           metrics.READ_AMBIGUOUS_GENE_FIXED += 1;

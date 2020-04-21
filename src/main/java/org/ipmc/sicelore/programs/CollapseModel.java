@@ -52,6 +52,10 @@ public class CollapseModel extends CommandLineProgram
     public String ISOFORMTAG = "IT";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
+    //@Argument(shortName = "TMPDIR", doc = "TMPDIR")
+    //public String TMPDIR = "/share/data/scratch/sicelore/";
+    //@Argument(shortName = "T", doc = "The number of threads (default 20)")
+    //public int nThreads = 20;
     
     @Argument(shortName = "SHORT", doc = "The short read SAM or BAM file fot junction validation")
     public File SHORT;
@@ -93,11 +97,41 @@ public class CollapseModel extends CommandLineProgram
         IOUtil.assertFileIsReadable(REFFLAT);
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(CSV);
+        
+        /*
+        String POAPATH = this.findExecutableOnPath("poa");
+        String RACONPATH = this.findExecutableOnPath("racon");
+        String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
+        
+        if(POAPATH == null)
+            log.info(new Object[]{"Unable to find poa, please add it to your PATH"});
+        else if(RACONPATH == null)
+            log.info(new Object[]{"Unable to find racon, please add it to your PATH"});
+        else if(MINIMAP2PATH == null)
+            log.info(new Object[]{"Unable to find minimap2, please add it to your PATH"});
+        else{
+            Consensus c = new Consensus();
+            c.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
+            process();
+        }
+        */
+        
         process();
-
         return 0;
     }
-
+    /*
+    public static String findExecutableOnPath(String name)
+    {
+        for (String dirname : System.getenv("PATH").split(File.pathSeparator)) {
+            File file = new File(dirname, name);
+            if (file.isFile() && file.canExecute()) {
+                return file.getAbsolutePath();
+            }
+        }
+        return null;
+    }
+    */
+    
     protected void process()
     {
         this.cellList = new CellList(CSV);
@@ -182,6 +216,7 @@ public class CollapseModel extends CommandLineProgram
         else
             log.info(new Object[]{"\tWon't perform validation (please provide CAGE bed, POLYA bed and SHORT read bam files"});
         
+        //mymodel.callConsensus(nThreads);
         mymodel.statistics();
         
         File TXT = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".txt");

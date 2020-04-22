@@ -5,12 +5,17 @@ package org.ipmc.sicelore.utils;
  * @author kevin lebrigand
  *
  */
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Ordering;
 import java.util.*; 
 import java.io.*;
 import htsjdk.samtools.util.*;
 import java.util.concurrent.*;
 import org.biojava.nbio.core.util.ConcurrencyTools;
 import com.google.common.util.concurrent.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.biojava.nbio.core.sequence.DNASequence;
         
@@ -217,13 +222,16 @@ public class MoleculeDataset {
             }
         }
         else{
+            // case multiGene here, like Pkm / RP23-320D23.6
+            // set to the more complex gene, the one with the more isoforms in List<TranscriptRecord> transcripts
             this.nomatch++;
-            int index = new Random().nextInt(molecule.getGeneIds().size());
-            Iterator<String> iter = molecule.getGeneIds().iterator();
-            for (int i = 0; i < index; i++) { iter.next(); }
+            String geneIdChoice = this.getMostComplexGene(transcripts);
+            //int index = new Random().nextInt(molecule.getGeneIds().size());
+            //Iterator<String> iter = molecule.getGeneIds().iterator();
+            //for (int i = 0; i < index; i++) { iter.next(); }
             molecule.setTranscriptId("undef");
-            molecule.setGeneId((String) iter.next());
-            
+            //molecule.setGeneId((String) iter.next());
+            molecule.setGeneId(geneIdChoice);
             if(debug) { System.out.println("no candidate --> gene_id:" + molecule.getGeneId()); }
         }
         
@@ -236,6 +244,23 @@ public class MoleculeDataset {
            if(debug) { System.out.println("mono-exonic --> transcript_id/gene_id:" + transcripts.get(0).getTranscriptId()+"|"+transcripts.get(0).getGeneId()); }
            
         }
+    }
+    
+    public String getMostComplexGene(List<TranscriptRecord> transcripts)
+    {
+        ArrayList<String> list = new ArrayList<>();
+        for(TranscriptRecord transcriptrecord : transcripts)
+            list.add(transcriptrecord.getGeneId());
+        
+        String mostRepeatedWord  = list.stream()
+          .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
+          .entrySet()
+          .stream()
+          .max(Comparator.comparing(Entry::getValue))
+          .get()
+          .getKey();
+        
+        return mostRepeatedWord;
     }
     
     public void setIsoformScore(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, boolean AMBIGUOUS_ASSIGN)

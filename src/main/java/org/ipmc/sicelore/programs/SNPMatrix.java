@@ -60,10 +60,6 @@ public class SNPMatrix extends CommandLineProgram {
         log.info(new Object[]{"Cells detected\t\t[" + this.cellList.size() + "]"});
         Matrix matrix = new Matrix(this.cellList);
         
-        //UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
-        //String[] gria2 = {"Gria2"};
-        //List<TranscriptRecord> transcripts = model.select(gria2);
-        
         SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
         htsjdk.samtools.SAMFileHeader samFileHeader = samReader.getFileHeader();
         htsjdk.samtools.SAMSequenceDictionary dictionnary = samFileHeader.getSequenceDictionary() ;

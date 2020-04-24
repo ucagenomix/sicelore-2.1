@@ -27,6 +27,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
 
     private final Log log;
     private HashMap<String, List<TranscriptRecord>> mapGenesTranscripts;
+    HashMap<String, Consensus> mapConsensus;
 
     public int DELTA = 2;
     public int MINEVIDENCE = 5;
@@ -371,9 +372,79 @@ public class UCSCRefFlatParser implements GeneModelParser {
         return bool;
     }
     
-    /*
-    public void callConsensus(int nThreads)
+    public void callConsensus(File OUTPUT, int nThreads)
     {
+        log.info(new Object[]{"Calling consensus start with " + nThreads + " threads"});
+        
+        this.mapConsensus = new HashMap<String, Consensus>();
+        for(String geneId : this.mapGenesTranscripts.keySet()) {
+            List<TranscriptRecord> tAll = mapGenesTranscripts.get(geneId);
+            for(int i=0; i<tAll.size(); i++){
+                TranscriptRecord t = tAll.get(i);
+                
+                this.mapConsensus.put(t.getTranscriptId(), new Consensus(t.getTranscriptId(), t.getEvidenceList()));
+            }
+        }
+        
+        log.info(new Object[]{"Total consensus to compute\t" + this.mapConsensus.size()});
+        
+        future_list = new ConcurrentLinkedDeque<Future<String>>();
+        oneNanoporeReadexecutor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(nThreads));
+
+        try {
+            os = new DataOutputStream(new FileOutputStream(OUTPUT));
+
+            Set cles = this.mapConsensus.keySet();
+            itglobal = cles.iterator();
+            int i = 0;
+            while (itglobal.hasNext() && i++ < (5 * nThreads)) {
+                String key = (String) itglobal.next();
+                Consensus consensus = (Consensus) this.mapConsensus.get(key);
+                ListenableFuture<String> submit = oneNanoporeReadexecutor.submit(consensus);
+                future_list.add(submit); //adds to end of queue
+                //System.out.println("add:"+molecule.getUmi()+"\t"+ future_list.size());
+            }
+            ConcurrencyTools.setThreadPoolDefault();
+
+            try {
+                //wait until all jobs finished
+                while (future_list.isEmpty() == false) {
+
+                    //the following line blocks until job is done. Can also recover results here get() returns OneThreadResult
+                    String rslt = future_list.remove().get();
+                    write(rslt);
+
+                    if (itglobal.hasNext()) {
+                        String key = (String) itglobal.next();
+                        Consensus consensus = (Consensus) this.mapConsensus.get(key);
+                        ListenableFuture<String> submit = oneNanoporeReadexecutor.submit(consensus);
+                        future_list.add(submit);//adds to end of queue
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace(System.out);
+                System.exit(1);
+            }
+
+            oneNanoporeReadexecutor.shutdown();
+            ConcurrencyTools.shutdown();
+
+            try {
+                oneNanoporeReadexecutor.awaitTermination(1, TimeUnit.SECONDS);
+            } catch (InterruptedException ex) {
+                log.info(new Object[]{"Error:\t[" + ex + "]"});
+            }
+
+            os.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                os.close();
+            } catch (Exception e) {
+                System.err.println("can not close stream");
+            }
+        }
     }
 
     private synchronized void write(String rslt) {
@@ -383,7 +454,6 @@ public class UCSCRefFlatParser implements GeneModelParser {
             e.printStackTrace();
         }
     }
-    */
     
     // statistiques
     public void statistics()
@@ -446,19 +516,17 @@ public class UCSCRefFlatParser implements GeneModelParser {
     }
     
     //export files
-    public void exportFiles(File TXT, File GFF, File GFFVALID, File FAS)
+    public void exportFiles(File TXT, File GFF, File GFFVALID)
     {
         BufferedOutputStream ostxt = null;
         BufferedOutputStream osgff = null;
         BufferedOutputStream osgffvalid = null;
-        BufferedOutputStream osfas = null;
         
         try {
             ostxt = new BufferedOutputStream(new java.io.FileOutputStream(TXT));
             ostxt.write(new TranscriptRecord().printLegendTxt().getBytes());
             osgff = new BufferedOutputStream(new java.io.FileOutputStream(GFF));
             osgffvalid = new BufferedOutputStream(new java.io.FileOutputStream(GFFVALID));
-            osfas = new BufferedOutputStream(new java.io.FileOutputStream(FAS));
             
             for(String geneId : mapGenesTranscripts.keySet()) {
                 // running through all ENST + NOVEL
@@ -473,16 +541,14 @@ public class UCSCRefFlatParser implements GeneModelParser {
                     // valif.gff is all gencode + the validated novels isoforms
                     if(t.getIs_known() || (t.getIs_novel() && t.getIs_valid()))
                         osgffvalid.write(t.printGff().getBytes());
-                    osfas.write(t.printFas().getBytes());
                 }
             }
             
             ostxt.close();
             osgff.close();
             osgffvalid.close();
-            osfas.close();
-        } catch (Exception e) { e.printStackTrace(); try { ostxt.close(); osgff.close(); osgffvalid.close(); osfas.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
-        } finally { try { ostxt.close(); osgff.close(); osfas.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
+        } catch (Exception e) { e.printStackTrace(); try { ostxt.close(); osgff.close(); osgffvalid.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { ostxt.close(); osgff.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
     }
     
     public List<TranscriptRecord> collapse(List<LongreadRecord> lrrList, String geneId)

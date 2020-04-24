@@ -68,8 +68,9 @@ public class ComputeConsensus extends CommandLineProgram {
         else if(MINIMAP2PATH == null)
             log.info(new Object[]{"Unable to find minimap2, please add it to your PATH"});
         else{
-            Molecule m = new Molecule();
-            m.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
+            Consensus c = new Consensus();
+            c.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
+            
             LongreadRecord lrr = new LongreadRecord();
             lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP,RNTAG);
         

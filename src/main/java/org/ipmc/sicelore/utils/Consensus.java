@@ -18,6 +18,7 @@ public class Consensus implements Callable<String>
     private List<SubConsensus> sequences;
     private String name;
     private String cons;
+    private int MAX = 20;
     
     protected static String TMPDIR;
     protected static String POAPATH;
@@ -29,9 +30,39 @@ public class Consensus implements Callable<String>
 
     public Consensus() {}
     
-    public Consensus(String name, List<SubConsensus> lst) {
+    public Consensus(String name, List<LongreadRecord> evidenceList)
+    {
         this.name = name;
-        this.sequences = lst;
+        this.sequences = new ArrayList<SubConsensus>();
+        
+        // sort LongreadRecords on minimap2 "de" max to min value (hope so)
+        Collections.sort(evidenceList);
+        int max = this.MAX;
+        if(evidenceList.size() < this.MAX)
+            max = evidenceList.size();
+        
+        for(int i=0; i<max; i++){
+            LongreadRecord lrr = evidenceList.get(i);
+            this.sequences.add(new SubConsensus(lrr.getName(),new String(lrr.getCdna())));
+        }
+    }
+    
+    public Consensus(String name, List<Longread> evidenceList, boolean from_molecule)
+    {
+        this.name = name;
+        this.sequences = new ArrayList<SubConsensus>();
+        
+        // sort LongreadRecords on minimap2 "de" max to min value (hope so)
+        Collections.sort(evidenceList);
+        int max = this.MAX;
+        if(evidenceList.size() < this.MAX)
+            max = evidenceList.size();
+        
+        for(int i=0; i<max; i++){
+            Longread lr = evidenceList.get(i);
+            LongreadRecord lrr = lr.getBestRecord();
+            this.sequences.add(new SubConsensus(lrr.getName(),new String(lrr.getCdna())));
+        }
     }
     
     static {
@@ -77,56 +108,68 @@ public class Consensus implements Callable<String>
         DataOutputStream os=null;
         
         try {
-            os = new DataOutputStream(new FileOutputStream(TMPDIR+"/"+this.name+"_reads.fa"));
-            Iterator<SubConsensus> iterator2 = this.sequences.iterator();
-            while(iterator2.hasNext()){
-                SubConsensus sc = (SubConsensus) iterator2.next();
-                os.writeBytes(">"+sc.getName()+"\n"+new String(sc.getSequence())+"\n");
+            // if only one evidence -> get it
+            if(this.sequences.size() == 1){
+                this.cons = new String(this.sequences.get(0).getSequence());
             }
-            os.close();
-            
-            // compute consensus with POA
-            String[] commande = {"bash", "-c" , ""};
-            String poadir = POAPATH.replaceAll("/poa$","");
-            commande[2] = POAPATH + " -read_fasta "+TMPDIR+"/"+this.name+"_reads.fa -pir "+TMPDIR+"/"+this.name+".pir " + poadir + "/blosum80.mat -hb -best";
-            //System.out.println(commande[2]);
-            ExecuteCmd executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
-            executeCmd.run();
+            // if 2 reads, take the longest
+            else if(this.sequences.size() == 2){
+                String s1 = this.sequences.get(0).getSequence();
+                String s2 = this.sequences.get(1).getSequence();
+                this.cons = (s1.length() > s2.length())? s1: s2;
+            }
+            // if more do consensus calling
+            else{
+                os = new DataOutputStream(new FileOutputStream(TMPDIR+"/"+this.name+"_reads.fa"));
+                Iterator<SubConsensus> iterator2 = this.sequences.iterator();
+                while(iterator2.hasNext()){
+                    SubConsensus sc = (SubConsensus) iterator2.next();
+                    os.writeBytes(">"+sc.getName()+"\n"+new String(sc.getSequence())+"\n");
+                }
+                os.close();
 
-            // get CONSENS0 in fasta file .pir
-            this.cons = "";
-            BufferedReader file = new BufferedReader(new FileReader(TMPDIR+"/"+ this.name + ".pir"));
-            line = file.readLine();
-            while(! ">CONSENS0".equals(line)){ line = file.readLine(); }
-            while(line != null && !"".equals(line)){ line = file.readLine(); this.cons += line; }                
-            file.close();
-            
-            this.cons = this.cons.replaceAll("-", "");
-            this.cons = this.cons.replaceAll("\\n", "");
-            this.cons = this.cons.replaceAll("null", "");
-                
-            // do we still need to do that after poa consensus ?
-            os = new DataOutputStream(new FileOutputStream(TMPDIR+"/"+this.name+"_consensus.fa"));
-            os.writeBytes(">"+this.name+"\n"+this.cons+"\n");
-            os.close();
+                // compute consensus with POA
+                String[] commande = {"bash", "-c" , ""};
+                String poadir = POAPATH.replaceAll("/poa$","");
+                commande[2] = POAPATH + " -read_fasta "+TMPDIR+"/"+this.name+"_reads.fa -pir "+TMPDIR+"/"+this.name+".pir " + poadir + "/blosum80.mat -hb -best";
+                //System.out.println(commande[2]);
+                ExecuteCmd executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
+                executeCmd.run();
 
-            commande[2] = MINIMAP2PATH + " --secondary=no -ax map-ont "+TMPDIR+"/"+this.name+"_consensus.fa "+TMPDIR+"/"+this.name+"_reads.fa > "+TMPDIR+"/"+this.name+"_overlap.sam";
-            executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
-            executeCmd.run();
+                // get CONSENS0 in fasta file .pir
+                this.cons = "";
+                BufferedReader file = new BufferedReader(new FileReader(TMPDIR+"/"+ this.name + ".pir"));
+                line = file.readLine();
+                while(! ">CONSENS0".equals(line)){ line = file.readLine(); }
+                while(line != null && !"".equals(line)){ line = file.readLine(); this.cons += line; }                
+                file.close();
 
-            commande[2] = RACONPATH + " "+TMPDIR+"/"+this.name+"_reads.fa "+TMPDIR+"/"+this.name+"_overlap.sam "+TMPDIR+"/"+this.name+"_consensus.fa > "+TMPDIR+"/"+this.name+"_corrected_consensus.fa";
-            executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
-            executeCmd.run();
-                
-            BufferedReader fichier = new BufferedReader(new FileReader(TMPDIR+"/"+ this.name + "_corrected_consensus.fa"));
-            line = fichier.readLine();
-            this.cons = fichier.readLine();
-            fichier.close();
-                
-            commande[2] = "rm "+TMPDIR+"/"+this.name+"_reads.fa "+TMPDIR+"/"+this.name+".pir "+TMPDIR+"/"+this.name+"_overlap.sam "+TMPDIR+"/"+this.name+"_consensus.fa "+TMPDIR+"/"+this.name+"_corrected_consensus.fa";
-            executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
-            executeCmd.run();
-            
+                this.cons = this.cons.replaceAll("-", "");
+                this.cons = this.cons.replaceAll("\\n", "");
+                this.cons = this.cons.replaceAll("null", "");
+
+                // do we still need to do that after poa consensus ?
+                os = new DataOutputStream(new FileOutputStream(TMPDIR+"/"+this.name+"_consensus.fa"));
+                os.writeBytes(">"+this.name+"\n"+this.cons+"\n");
+                os.close();
+
+                commande[2] = MINIMAP2PATH + " --secondary=no -ax map-ont "+TMPDIR+"/"+this.name+"_consensus.fa "+TMPDIR+"/"+this.name+"_reads.fa > "+TMPDIR+"/"+this.name+"_overlap.sam";
+                executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
+                executeCmd.run();
+
+                commande[2] = RACONPATH + " "+TMPDIR+"/"+this.name+"_reads.fa "+TMPDIR+"/"+this.name+"_overlap.sam "+TMPDIR+"/"+this.name+"_consensus.fa > "+TMPDIR+"/"+this.name+"_corrected_consensus.fa";
+                executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
+                executeCmd.run();
+
+                BufferedReader fichier = new BufferedReader(new FileReader(TMPDIR+"/"+ this.name + "_corrected_consensus.fa"));
+                line = fichier.readLine();
+                this.cons = fichier.readLine();
+                fichier.close();
+
+                commande[2] = "rm "+TMPDIR+"/"+this.name+"_reads.fa "+TMPDIR+"/"+this.name+".pir "+TMPDIR+"/"+this.name+"_overlap.sam "+TMPDIR+"/"+this.name+"_consensus.fa "+TMPDIR+"/"+this.name+"_corrected_consensus.fa";
+                executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
+                executeCmd.run();
+            }
         }catch(Exception e){ e.printStackTrace(); }
         
         return this.toFasta();

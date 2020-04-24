@@ -15,7 +15,6 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import org.ipmc.sicelore.utils.*;
@@ -52,10 +51,10 @@ public class CollapseModel extends CommandLineProgram
     public String ISOFORMTAG = "IT";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
-    //@Argument(shortName = "TMPDIR", doc = "TMPDIR")
-    //public String TMPDIR = "/share/data/scratch/sicelore/";
-    //@Argument(shortName = "T", doc = "The number of threads (default 20)")
-    //public int nThreads = 20;
+    @Argument(shortName = "TMPDIR", doc = "TMPDIR")
+    public String TMPDIR = "/share/data/scratch/sicelore/";
+    @Argument(shortName = "T", doc = "The number of threads (default 20)")
+    public int nThreads = 20;
     
     @Argument(shortName = "SHORT", doc = "The short read SAM or BAM file fot junction validation")
     public File SHORT;
@@ -83,6 +82,8 @@ public class CollapseModel extends CommandLineProgram
     private ProgressLogger pl;
     private final Log log;
     
+    private boolean doConsCall = false;
+    
     UCSCRefFlatParser model;
     UCSCRefFlatParser mymodel;
 
@@ -98,7 +99,6 @@ public class CollapseModel extends CommandLineProgram
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(CSV);
         
-        /*
         String POAPATH = this.findExecutableOnPath("poa");
         String RACONPATH = this.findExecutableOnPath("racon");
         String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
@@ -112,14 +112,13 @@ public class CollapseModel extends CommandLineProgram
         else{
             Consensus c = new Consensus();
             c.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
-            process();
+            this.doConsCall = true;
         }
-        */
         
         process();
         return 0;
     }
-    /*
+    
     public static String findExecutableOnPath(String name)
     {
         for (String dirname : System.getenv("PATH").split(File.pathSeparator)) {
@@ -130,7 +129,6 @@ public class CollapseModel extends CommandLineProgram
         }
         return null;
     }
-    */
     
     protected void process()
     {
@@ -216,14 +214,22 @@ public class CollapseModel extends CommandLineProgram
         else
             log.info(new Object[]{"\tWon't perform validation (please provide CAGE bed, POLYA bed and SHORT read bam files"});
         
-        //mymodel.callConsensus(nThreads);
         mymodel.statistics();
         
         File TXT = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".txt");
         File GFF = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".gff");
         File GFFVALID = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".final.gff");
-        File FAS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".fas");
-        mymodel.exportFiles(TXT,GFF,GFFVALID,FAS);
+        mymodel.exportFiles(TXT,GFF,GFFVALID);
+        
+        // this is where we need to phase haplotype instead of aclling consensus/
+        // allelic determination and output an allele specific counting matrix
+        // define nachor for phasing: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5025529/
+        // on the todo list !!
+        if(this.doConsCall){
+            log.info(new Object[]{"\tExporting all isoforms consensus sequence to fasta..."});
+            File FAS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".fas");
+            mymodel.callConsensus(FAS, nThreads);
+        }
     }
                     
     public static void main(String[] args) {

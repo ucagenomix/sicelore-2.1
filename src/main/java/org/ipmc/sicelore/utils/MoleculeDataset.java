@@ -25,6 +25,7 @@ public class MoleculeDataset {
 
     HashMap<String, Molecule> mapMolecules;
     HashMap<String, List<Molecule>> mapGenes;
+    HashMap<String, Consensus> mapConsensus;
 
     private int chromstrange = 0;
     private int noexons = 0;
@@ -222,8 +223,10 @@ public class MoleculeDataset {
             }
         }
         else{
+            // KL 22/04/2020
             // case multiGene here, like Pkm / RP23-320D23.6
             // set to the more complex gene, the one with the more isoforms in List<TranscriptRecord> transcripts
+            // need some bug fix here in the future verson !!!!
             this.nomatch++;
             String geneIdChoice = this.getMostComplexGene(transcripts);
             //int index = new Random().nextInt(molecule.getGeneIds().size());
@@ -236,7 +239,7 @@ public class MoleculeDataset {
         }
         
         // only 1 mono-exonic transcript in the model --> we do set the isoform
-        if(transcripts.size() == 1 && list1.size() == 0){
+        if(transcripts.size() == 1 && list1.isEmpty()){
            this.monoexon++;
            molecule.setTranscriptId(transcripts.get(0).getTranscriptId());
            molecule.setGeneId(transcripts.get(0).getGeneId());
@@ -278,23 +281,6 @@ public class MoleculeDataset {
             }
         }
         
-        //System.out.println(molecule.getBarcode() + "|" + molecule.getUmi() + " --> " + molecule.getGeneIds());
-        
-        /*
-        Set cles = mapper.keySet();
-        Iterator it = cles.iterator();
-        while(it.hasNext()){
-           Junction j = (Junction)it.next();
-           System.out.println(j);
-           HashSet<TranscriptRecord> rec = mapper.get(j);
-           Iterator<TranscriptRecord> iterator = rec.iterator();
-           while(iterator.hasNext()){
-                TranscriptRecord tr = iterator.next();
-                System.out.println("\t"+tr.getTranscriptId());
-            }
-        }
-        */
-        
         HashSet<TranscriptRecord> h = null;
         HashMap<TranscriptRecord, Integer> scoring = new HashMap<TranscriptRecord, Integer>();
         //HashMap<Integer, Integer> nbJunctions = new HashMap<Integer, Integer>();
@@ -304,14 +290,6 @@ public class MoleculeDataset {
             List<LongreadRecord> records = lr.getLongreadrecords();
             for(LongreadRecord lrr : records){
                 List<Junction> lrr_junc = junctionsListFromExon(lrr.getExons());
-                
-                // record nb junction of SAM record
-                //if(lrr_junc.size() > 0){
-                //    if(nbJunctions.containsKey(lrr_junc.size()))
-                //        nbJunctions.put(lrr_junc.size(), nbJunctions.get(lrr_junc.size())+1);
-                //    else
-                //        nbJunctions.put(lrr_junc.size(), 1);
-                //}
                 
                 for(int i=0; i<lrr_junc.size(); i++){
                     Set cles = mapper.keySet();
@@ -360,17 +338,6 @@ public class MoleculeDataset {
             HashMap<TranscriptRecord, Integer> sorted = scoring.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
             .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new));
         
-            /*
-            int nb=0;
-            Set cles = sorted.keySet();
-            Iterator it = cles.iterator();
-            while(it.hasNext()){
-                TranscriptRecord tr = (TranscriptRecord)it.next();
-                if(nb++ < 3)
-                    System.out.println(tr + " " + sorted.get(tr));
-            }
-            */
-
             HashSet<TranscriptRecord> bestCandidates = new HashSet<TranscriptRecord>();
             int maxValueInMap=(Collections.max(sorted.values()));
             for(Map.Entry<TranscriptRecord, Integer> entry : sorted.entrySet()) 
@@ -383,39 +350,20 @@ public class MoleculeDataset {
                 molecule.setGeneId(tr.getGeneId());
             }
             else{
-                // choose on the number of junctions of transcript and number of junctions of reads
-                //int nbJunctionsMaxValue=Collections.max(nbJunctions.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-                //HashSet<TranscriptRecord> newCandidates = new HashSet<TranscriptRecord>();
-                
-                //Iterator<TranscriptRecord> iterator = bestCandidates.iterator();
-                //while(iterator.hasNext()){
-                //    TranscriptRecord tr = iterator.next();
-                //    if(tr.getJunctions().size() == nbJunctionsMaxValue)
-                //        newCandidates.add(tr);
-                //}
-                
-                //if(newCandidates.size() == 1){
-                //    TranscriptRecord tr = (TranscriptRecord)newCandidates.iterator().next();
-                //    molecule.setTranscriptId(tr.getTranscriptId());
-                //    molecule.setGeneId(tr.getGeneId());
-                //    this.onematch++;
-                //}
-                //else{
-                    this.ambiguous++;
-                    int index = new Random().nextInt(bestCandidates.size());
+                this.ambiguous++;
+                int index = new Random().nextInt(bestCandidates.size());
                     TranscriptRecord tr = (TranscriptRecord)(bestCandidates.toArray()[index]);
                     
-                    if(AMBIGUOUS_ASSIGN){
-                        // set isoform randomly if AMBIGUOUS_ASSIGN=true
-                        molecule.setTranscriptId(tr.getTranscriptId());
-                        molecule.setGeneId(tr.getGeneId());
-                    }
-                    else{
-                        // we set the geneId at least
-                        molecule.setTranscriptId("undef");
-                        molecule.setGeneId(tr.getGeneId());
-                    }
-                //}
+                if(AMBIGUOUS_ASSIGN){
+                    // set isoform randomly if AMBIGUOUS_ASSIGN=true
+                    molecule.setTranscriptId(tr.getTranscriptId());
+                    molecule.setGeneId(tr.getGeneId());
+                }
+                else{
+                    // we set the geneId at least
+                    molecule.setTranscriptId("undef");
+                    molecule.setGeneId(tr.getGeneId());
+                }
             }
         }
     }
@@ -570,21 +518,30 @@ public class MoleculeDataset {
     
     public void callConsensus(File OUTPUT, int nThreads)
     {
-        log.info(new Object[]{"\tCalling consensus\tstart with [" + nThreads + "] threads"});
-
+        log.info(new Object[]{"\tCalling consensus start with " + nThreads + " threads"});
+        
+        this.mapConsensus = new HashMap<String, Consensus>();
+        for(String key : this.mapMolecules.keySet()) {
+            Molecule m = (Molecule) this.mapMolecules.get(key);
+            String mykey = m.getBarcode() + "-" + m.getUmi() + "-" + m.getLongreads().size();
+            this.mapConsensus.put(mykey, new Consensus(mykey, m.getLongreads(), true));
+        }
+        
+        log.info(new Object[]{"\tTotal consensus to compute\t" + this.mapConsensus.size()});
+        
         future_list = new ConcurrentLinkedDeque<Future<String>>();
         oneNanoporeReadexecutor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(nThreads));
 
         try {
             os = new DataOutputStream(new FileOutputStream(OUTPUT));
 
-            Set cles = this.mapMolecules.keySet();
+            Set cles = this.mapConsensus.keySet();
             itglobal = cles.iterator();
             int i = 0;
             while (itglobal.hasNext() && i++ < (5 * nThreads)) {
                 String key = (String) itglobal.next();
-                Molecule molecule = (Molecule) this.mapMolecules.get(key);
-                ListenableFuture<String> submit = oneNanoporeReadexecutor.submit(molecule);
+                Consensus consensus = (Consensus) this.mapConsensus.get(key);
+                ListenableFuture<String> submit = oneNanoporeReadexecutor.submit(consensus);
                 future_list.add(submit); //adds to end of queue
                 //System.out.println("add:"+molecule.getUmi()+"\t"+ future_list.size());
             }
@@ -600,8 +557,8 @@ public class MoleculeDataset {
 
                     if (itglobal.hasNext()) {
                         String key = (String) itglobal.next();
-                        Molecule molecule = (Molecule) this.mapMolecules.get(key);
-                        ListenableFuture<String> submit = oneNanoporeReadexecutor.submit(molecule);
+                        Consensus consensus = (Consensus) this.mapConsensus.get(key);
+                        ListenableFuture<String> submit = oneNanoporeReadexecutor.submit(consensus);
                         future_list.add(submit);//adds to end of queue
                     }
                 }
@@ -635,8 +592,12 @@ public class MoleculeDataset {
     private synchronized void write(String rslt) {
         try {
             os.writeBytes(rslt);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            // thats a mess.... but it works, need to change ket of 
+            // this.mapMolecules ligne 68, does this will break something else ?
+            String[] tmp = rslt.split("\n");
+            tmp[0] = tmp[0].replaceAll(">","");
+            String[] tmp2 = tmp[0].split("-");
+            this.mapMolecules.get(tmp2[0]+":"+tmp2[1]).setConsensus(tmp[1]);
+        } catch (Exception e) { e.printStackTrace(); }
     }
 }

@@ -54,22 +54,7 @@ public class AddBamMoleculeTags extends CommandLineProgram {
                 if(info.length == 1)
                     info = str.split("\\|");
                 
-                //System.out.println(info.toString() + "\t"+info.length);
-                
-                if(info.length == 5){ // GENEID|TRANSCRIPTID|BC|U8|NBREADS --> v1.0
-                    r.setAttribute(GENETAG, info[0]);
-                    r.setAttribute(ISOTAG, info[1]);
-                    r.setAttribute(CELLTAG, info[2]);
-                    r.setAttribute(UMITAG, info[3]);
-                    r.setAttribute(RNTAG, new Integer(info[4]).intValue());
-                }
-                else if(info.length == 4){ // BC|U8|GENEID|NBREADS --> v1.01
-                    r.setAttribute(GENETAG, info[2]);
-                    r.setAttribute(CELLTAG, info[0]);
-                    r.setAttribute(UMITAG, info[1]);
-                    r.setAttribute(RNTAG, new Integer(info[3]).intValue());
-                }
-                else if(info.length == 3){ // BC|U8|NBREADS --> v1.02
+                if(info.length == 3){ // BC|U8|NBREADS --> v1.02
                     r.setAttribute(CELLTAG, info[0]);
                     r.setAttribute(UMITAG, info[1]);
                     r.setAttribute(RNTAG, new Integer(info[2]).intValue());

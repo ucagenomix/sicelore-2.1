@@ -37,7 +37,7 @@ public class LongreadParser implements LongreadModelParser {
         Longread longread = null;
         log = Log.getInstance(LongreadParser.class);
         log.info(new Object[]{"\tstart..."});
-        pl = new htsjdk.samtools.util.ProgressLogger(log, 500000, "\tProcessed\t", "Records");
+        pl = new htsjdk.samtools.util.ProgressLogger(log, 1000000, "\tProcessed\t", "Records");
 
         this.mapLongreads = new HashMap<String, Longread>();
         htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(bam);
@@ -92,7 +92,7 @@ public class LongreadParser implements LongreadModelParser {
         if(record == null) { unvalid_records++; null_records++; return null; }
         if(record.getIsChimeria()) { unvalid_records++; chimeria_records++; return null; }
         if(record.getIsReversed()) { unvalid_records++; reversed_records++; return null; }
-        if(this.is_gene_mandatory && record.getGeneId() == null) { unvalid_records++; gene_unset++; return null; }
+        if(this.is_gene_mandatory && (record.getGeneId() == null || "undef".equals(record.getGeneId()))) { unvalid_records++; gene_unset++; return null; }
         if(this.is_umi_mandatory && record.getUmi() == null) { unvalid_records++; umi_unset++; return null; }
         if(record.getMapqv() == 0) { unvalid_records++; mapqv0_records++; return null; }
         

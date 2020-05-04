@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import java.io.*;
@@ -26,11 +27,15 @@ import org.biojava.nbio.core.util.ConcurrencyTools;
 public class UCSCRefFlatParser implements GeneModelParser {
 
     private final Log log;
+    private htsjdk.samtools.util.ProgressLogger pl;
+    
     private HashMap<String, List<TranscriptRecord>> mapGenesTranscripts;
     HashMap<String, Consensus> mapConsensus;
 
+    public UCSCRefFlatParser refmodel;
     public int DELTA = 2;
     public int MINEVIDENCE = 5;
+    public int RNMIN = 3;
     public int NOVELINDEX=1;
                
     private ListeningExecutorService oneNanoporeReadexecutor;
@@ -72,13 +77,15 @@ public class UCSCRefFlatParser implements GeneModelParser {
         log.info(new Object[]{"Number of Transcripts\t[" + nb + "]"});
     }
     
-    public UCSCRefFlatParser(int DELTA, int MINEVIDENCE)
+    public UCSCRefFlatParser(int DELTA, int MINEVIDENCE, int RNMIN, UCSCRefFlatParser refmodel)
     {
         log = Log.getInstance(UCSCRefFlatParser.class);
         this.mapGenesTranscripts = new HashMap<String, List<TranscriptRecord>>();
         
+        this.refmodel=refmodel;
         this.DELTA =DELTA;
         this.MINEVIDENCE=MINEVIDENCE;
+        this.RNMIN=RNMIN;
         this.NOVELINDEX=1;
     }
 
@@ -125,9 +132,79 @@ public class UCSCRefFlatParser implements GeneModelParser {
         return mapGenesTranscripts;
     }
     
+    public void loader(File INPUT,String CELLTAG, String UMITAG, String GENETAG, String ISOFORMTAG, String RNTAG)
+    {
+        pl = new htsjdk.samtools.util.ProgressLogger(log, 1000000, "Processed\t", "Records");
+        
+        log.info(new Object[]{String.format("Loader Bam Start...")});
+        
+        SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
+        htsjdk.samtools.SAMFileHeader samFileHeader = samReader.getFileHeader();
+        htsjdk.samtools.SAMSequenceDictionary dictionnary = samFileHeader.getSequenceDictionary();
+        
+        try{
+            for(SAMSequenceRecord x : dictionnary.getSequences()){
+                SAMRecordIterator iter = samReader.query(x.getSequenceName(), 1, x.getSequenceLength(), false);
+                //log.info(new Object[]{"\tProcessing ref. " + x.getSequenceName() + "\t[" + mymodel.getMapGenesTranscripts().size() +" genes]"});
+                
+                while(iter.hasNext()){
+                    SAMRecord r = iter.next();
+                    pl.record(r);
+                    
+                    String BC = (String)r.getAttribute(CELLTAG);
+                    String U8 = (String)r.getAttribute(UMITAG);
+                    String IG = (String)r.getAttribute(GENETAG);
+                    String IT = (String)r.getAttribute(ISOFORMTAG);
+                    int    RN = ((Integer) r.getAttribute(RNTAG) != null) ? (Integer) r.getAttribute(RNTAG) : 0;
+                    
+                    LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, true);
+                    
+                    // never null case if umifound or isobam from isoformMatrix pipeline used
+                    // but we filter out some not reliable reads just as in isoformMatrix
+                    if(lrr != null && lrr.getMapqv() > 0 && !lrr.getIsChimeria() && !lrr.getIsReversed() && RN >= this.RNMIN){
+                        
+                        // we have a geneId
+                        if(! "undef".equals(IG)){
+                            TranscriptRecord tr = new TranscriptRecord(IG, IT);
+                                
+                            // never seen this gene, create a new List<TranscriptRecord> including IT of lrr
+                            if(! mapGenesTranscripts.containsKey(IG)) {
+                                if(! "undef".equals(IT))
+                                    tr = refmodel.select(IG, IT);
+                                
+                                List<TranscriptRecord> lst = new ArrayList<TranscriptRecord>();
+                                lst.add(tr);
+                                mapGenesTranscripts.put(IG, lst);
+                            }
+                            // we know this gene
+                            else {
+                                // but we don't know this transcript
+                                if(!(mapGenesTranscripts.get(IG)).contains(tr)){
+                                    if(! "undef".equals(IT))
+                                        tr = refmodel.select(IG, IT);
+                                    
+                                    ((ArrayList<TranscriptRecord>) mapGenesTranscripts.get(IG)).add(tr);
+                                }
+                            }
+                            
+                            // finally add the molecule to the TranscriptRecord
+                            mapGenesTranscripts.get(IG).get(mapGenesTranscripts.get(IG).indexOf(tr)).add(lrr);
+                        }
+                        // intergenic region, new genes ?
+                        else{ }
+                    }
+                }
+                iter.close();
+            }
+            samReader.close();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+    
     // parcours de la map de genes and collapse undef categorie
     public void collapser()
     {
+        log.info(new Object[]{String.format("Collapser Start...[" + mapGenesTranscripts.size() + " total genes]")});
+        
         for(String geneId : mapGenesTranscripts.keySet()) {
             List<TranscriptRecord> tAll = mapGenesTranscripts.get(geneId);
             
@@ -155,8 +232,8 @@ public class UCSCRefFlatParser implements GeneModelParser {
         }
     }
     
-    // filtration of 3p-part degradated isoforms
-    public void filter(UCSCRefFlatParser model)
+    // filtration of sub-part degradated isoforms
+    public void filter()
     {
         for(String geneId : mapGenesTranscripts.keySet()) {
             List<TranscriptRecord> tAll = mapGenesTranscripts.get(geneId);
@@ -170,7 +247,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
                 if(t.getIs_known())
                     keep.add(t);
                 else{
-                    if(! is3pPart(t, keep, model.select(new String[]{t.getGeneId()})))
+                    if(! is3pPart(t, keep, refmodel.select(new String[]{t.getGeneId()})))
                         keep.add(t);
                 }
             }
@@ -179,14 +256,14 @@ public class UCSCRefFlatParser implements GeneModelParser {
     }
     
     // classification
-    public void classifier(UCSCRefFlatParser model)
+    public void classifier()
     {
         for(String geneId : mapGenesTranscripts.keySet()) {
             List<TranscriptRecord> tAll = mapGenesTranscripts.get(geneId);
             for(int i=0; i<tAll.size(); i++){
                 TranscriptRecord t = tAll.get(i);
                 if(t.getIs_novel())
-                    this.noveltyDetector(t, model.select(new String[]{t.getGeneId()}));
+                    this.noveltyDetector(t, refmodel.select(new String[]{t.getGeneId()}));
             }
         }
     }
@@ -233,8 +310,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
                         
                         int supportReads=0;
                         int totalReads=0;
-                        if(! isDone.containsKey(jkey))
-                        {
+                        if(! isDone.containsKey(jkey)){
                             SAMRecordIterator iter = samReaderShort.query(t.getChrom(), donor, acceptor, false);
                             while(iter.hasNext()){
                                 SAMRecord r = iter.next();
@@ -248,13 +324,11 @@ public class UCSCRefFlatParser implements GeneModelParser {
                                     if(b>0){ junctions.add(new int[]{e_prev-1, s}); }
                                     e_prev = e;
                                 }
-                                //log.info(new Object[]{lst[index] + "\t" + junctions.size()});
                                 
                                 // for junction validation no DELTA
                                 if(this.isIn(new int[]{donor, acceptor}, junctions, 0)){
                                     supportReads++;
                                     totalSupportReads++;
-                                    //log.info(new Object[]{r.getReadNegativeStrandFlag()});
                                 }
 
                                 totalReads++;
@@ -516,14 +590,18 @@ public class UCSCRefFlatParser implements GeneModelParser {
     }
     
     //export files
-    public void exportFiles(File TXT, File GFF, File GFFVALID)
+    public void exportFiles(File TXT, File FLAT, File FLATVALID,File GFF, File GFFVALID)
     {
         BufferedOutputStream ostxt = null;
+        BufferedOutputStream osrefflat = null;
+        BufferedOutputStream osrefflatvalid = null;
         BufferedOutputStream osgff = null;
         BufferedOutputStream osgffvalid = null;
         
         try {
             ostxt = new BufferedOutputStream(new java.io.FileOutputStream(TXT));
+            osrefflat = new BufferedOutputStream(new java.io.FileOutputStream(FLAT));
+            osrefflatvalid = new BufferedOutputStream(new java.io.FileOutputStream(FLATVALID));
             ostxt.write(new TranscriptRecord().printLegendTxt().getBytes());
             osgff = new BufferedOutputStream(new java.io.FileOutputStream(GFF));
             osgffvalid = new BufferedOutputStream(new java.io.FileOutputStream(GFFVALID));
@@ -535,20 +613,25 @@ public class UCSCRefFlatParser implements GeneModelParser {
                 for(int i=0; i<tList.size(); i++) {
                     TranscriptRecord t = tList.get(i);
                     
+                    osrefflat.write(t.printRefflat().getBytes());
                     ostxt.write(t.printTxt().getBytes());
                     osgff.write(t.printGff().getBytes());
                     
                     // valif.gff is all gencode + the validated novels isoforms
-                    if(t.getIs_known() || (t.getIs_novel() && t.getIs_valid()))
+                    if(t.getIs_known() || (t.getIs_novel() && t.getIs_valid())){
                         osgffvalid.write(t.printGff().getBytes());
+                        osrefflatvalid.write(t.printRefflat().getBytes());
+                    }
                 }
             }
             
             ostxt.close();
+            osrefflat.close();
+            osrefflatvalid.close();
             osgff.close();
             osgffvalid.close();
-        } catch (Exception e) { e.printStackTrace(); try { ostxt.close(); osgff.close(); osgffvalid.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
-        } finally { try { ostxt.close(); osgff.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
+        } catch (Exception e) { e.printStackTrace(); try { ostxt.close(); osgff.close(); osgffvalid.close(); osrefflat.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { ostxt.close(); osgff.close(); osgffvalid.close(); osrefflat.close();} catch (Exception e3) { System.err.println("can not close stream");  } }
     }
     
     public List<TranscriptRecord> collapse(List<LongreadRecord> lrrList, String geneId)

@@ -264,6 +264,28 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
         return str;
     }
     
+    public String printRefflat()
+    {    
+        // RP23-333I7.1    ENSMUST00000194643.1    1       -       3905738 3986215 3986215 3986215 3       3905738,3985159,3986146,        3906134,3985351,3986215, 
+        return geneId+"\t"+transcriptId+"\t"+chrom+"\t"+strand+"\t"+txStart+"\t"+txEnd+"\t"+cdsStart+"\t"+cdsEnd+"\t"+exons.size()+"\t"+this.getExonStartsString()+"\t"+this.getExonEndsString()+"\n";
+    }
+    
+    public String getExonStartsString()
+    {
+        String str = "";
+        for(int i=0;i<this.exons.size();i++)
+            str+= (this.exons.get(i)[0]-1) + ",";
+        return str;
+    }
+    
+    public String getExonEndsString()
+    {
+        String str = "";
+        for(int i=0;i<this.exons.size();i++)
+            str+= this.exons.get(i)[1] + ",";
+        return str;
+    }
+    
     public String getNovelJunctionsString(){
         String str = "";
         if(novelJunctions.size()>0){
@@ -354,7 +376,9 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
             exons.get(0)[0]=minStart;
             exons.get(exons.size()-1)[1]=maxEnd;
             txStart = minStart;
+            cdsStart = minStart;
             txEnd = maxEnd;
+            cdsEnd = maxEnd;
         }
         if(is_known){
             categorie="full_splice_match";

@@ -111,15 +111,15 @@ public class MoleculeDataset {
             // sort all selected isoforms on exons number (max to min)
             //Collections.sort(transcripts);
             
-            if("SCORE".equals(METHOD))
-                this.setIsoformScore(molecule, transcripts, DELTA, AMBIGUOUS_ASSIGN);
-            else if("STRICT".equals(METHOD)) 
-                this.setIsoformStrict(molecule, transcripts, DELTA);
-            
-            // record womewhere what happened during this setIsoform
+            if(transcripts.size() > 0){
+                if("SCORE".equals(METHOD))
+                    this.setIsoformScore(molecule, transcripts, DELTA, AMBIGUOUS_ASSIGN);
+                else if("STRICT".equals(METHOD)) 
+                    this.setIsoformStrict(molecule, transcripts, DELTA);
+            }
             
             compteur++;
-            if(compteur%200000 == 0)
+            if(compteur%1000000 == 0)
                 log.info(new Object[]{"\tSetIsoforms\t\t" + compteur + "/" + this.mapMolecules.size()});
         }
         
@@ -152,7 +152,7 @@ public class MoleculeDataset {
         boolean debug = false;
         
         if(debug) { System.out.println("transcripts:" + transcripts); }
-        if(debug) { System.out.println("molecule:" + molecule.getBarcode() + "\t" + molecule.getUmi()); }
+        if(debug) { System.out.println("molecule:" + molecule.getBarcode() + "\t" + molecule.getUmi() + "\t" + molecule.getGeneIds().toString()); }
         
         HashMap<String, Integer> candidates = new HashMap<String, Integer>();
         List<Longread> longreads = molecule.getLongreads();
@@ -251,17 +251,21 @@ public class MoleculeDataset {
     
     public String getMostComplexGene(List<TranscriptRecord> transcripts)
     {
-        ArrayList<String> list = new ArrayList<>();
-        for(TranscriptRecord transcriptrecord : transcripts)
-            list.add(transcriptrecord.getGeneId());
-        
-        String mostRepeatedWord  = list.stream()
-          .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
-          .entrySet()
-          .stream()
-          .max(Comparator.comparing(Entry::getValue))
-          .get()
-          .getKey();
+        String mostRepeatedWord = "";
+        try{
+            ArrayList<String> list = new ArrayList<>();
+            for(TranscriptRecord transcriptrecord : transcripts)
+                list.add(transcriptrecord.getGeneId());
+
+            mostRepeatedWord  = list.stream()
+              .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
+              .entrySet()
+              .stream()
+              .max(Comparator.comparing(Entry::getValue))
+              .get()
+              .getKey();
+        }
+        catch(Exception e){ e.printStackTrace();  System.out.println(transcripts.size() + "\t" + transcripts.get(0).getGeneId()); }
         
         return mostRepeatedWord;
     }

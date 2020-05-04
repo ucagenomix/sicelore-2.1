@@ -75,6 +75,18 @@ public class IsoformMatrix extends CommandLineProgram
         IOUtil.assertFileIsReadable(REFFLAT);
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(CSV);
+
+        LongreadRecord lrr = new LongreadRecord();
+	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP, RNTAG);
+        
+        this.cellList = new CellList(CSV); 
+        log.info(new Object[]{"\tCells detected\t\t[" + this.cellList.size() + "]"});
+        
+        if(!"STRICT".equals(METHOD) && !"SCORE".equals(METHOD)){
+            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, please choose STRICT or SCORE only"});
+            return 0;
+        }
+
         process();
 
         return 0;
@@ -82,6 +94,11 @@ public class IsoformMatrix extends CommandLineProgram
 
     protected void process()
     {
+        UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
+        LongreadParser bam = new LongreadParser(INPUT, false, true, true);
+        MoleculeDataset dataset = new MoleculeDataset(bam);
+        dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
+        
         File ISOMATRIX   = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isomatrix.txt");
         File ISOMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isometrics.txt");
         File JUNCMATRIX  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_juncmatrix.txt");
@@ -91,23 +108,7 @@ public class IsoformMatrix extends CommandLineProgram
         File CELLMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_cellmetrics.txt");
         File MOLINFOS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
         File outISOBAM = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isobam.bam");
-	
-        LongreadRecord lrr = new LongreadRecord();
-	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP, RNTAG);
 
-        this.cellList = new CellList(CSV); 
-        log.info(new Object[]{"\tCells detected\t\t[" + this.cellList.size() + "]"});
-        
-        if(!"STRICT".equals(METHOD) && !"SCORE".equals(METHOD)){
-            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, please choose STRICT or SCORE only"});
-            return;
-        }
-        
-        UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
-        LongreadParser bam = new LongreadParser(INPUT, false, true, true);
-        MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
-        
         Matrix matrix = dataset.produceMatrix(model, this.cellList);
         log.info(new Object[]{"\twriteJunctionMatrix\t[start]"});
         matrix.writeJunctionMatrix(JUNCMATRIX, JUNCMETRICS);

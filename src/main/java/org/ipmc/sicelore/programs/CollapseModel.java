@@ -35,8 +35,10 @@ public class CollapseModel extends CommandLineProgram
     public File CSV;
     @Argument(shortName = "DELTA", doc = "Allowed base number difference between start/end of exons and read block position (default=2)")
     public int DELTA = 2;
-    @Argument(shortName = "MINEVIDENCE", doc = "Minimum evidence for Novel isoforms (default=5 molecules)")
-    public int MINEVIDENCE = 5;
+    @Argument(shortName = "MINEVIDENCE", doc = "Minimum evidence for Novel isoforms to be kept (default=2 molecules)")
+    public int MINEVIDENCE = 2;
+    @Argument(shortName = "RNMIN", doc = "Minimum number of reads to consider the UMI for Novel isoforms identification (default=3 reads)")
+    public int RNMIN = 3;
     @Argument(shortName = "OUTDIR", doc = "The output directory")
     public File OUTDIR;
     @Argument(shortName = "PREFIX", doc = "Prefix for output file names (default=CollapseModel)")
@@ -84,7 +86,7 @@ public class CollapseModel extends CommandLineProgram
     
     private boolean doConsCall = false;
     
-    UCSCRefFlatParser model;
+    UCSCRefFlatParser refmodel;
     UCSCRefFlatParser mymodel;
 
     public CollapseModel()
@@ -112,7 +114,7 @@ public class CollapseModel extends CommandLineProgram
         else{
             Consensus c = new Consensus();
             c.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
-            this.doConsCall = true;
+            this.doConsCall = true; // change to true if needed
         }
         
         process();
@@ -136,74 +138,17 @@ public class CollapseModel extends CommandLineProgram
         log.info(new Object[]{"\tCells detected\t\t[" + this.cellList.size() + "]"});
        
         // initialize models
-        this.model = new UCSCRefFlatParser(REFFLAT);
-        this.mymodel = new UCSCRefFlatParser(DELTA, MINEVIDENCE);
+        refmodel = new UCSCRefFlatParser(REFFLAT);
+        mymodel = new UCSCRefFlatParser(DELTA, MINEVIDENCE, RNMIN, refmodel);
         
-        SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
-        htsjdk.samtools.SAMFileHeader samFileHeader = samReader.getFileHeader();
-        htsjdk.samtools.SAMSequenceDictionary dictionnary = samFileHeader.getSequenceDictionary();
-        
-        try{
-            for(SAMSequenceRecord x : dictionnary.getSequences()){
-                SAMRecordIterator iter = samReader.query(x.getSequenceName(), 1, x.getSequenceLength(), false);
-                //log.info(new Object[]{"\tProcessing ref. " + x.getSequenceName() + "\t[" + mymodel.getMapGenesTranscripts().size() +" genes]"});
-                
-                while(iter.hasNext()){
-                    SAMRecord r = iter.next();
-                    pl.record(r);
-                    
-                    String BC = (String)r.getAttribute(CELLTAG);
-                    String U8 = (String)r.getAttribute(UMITAG);
-                    String IG = (String)r.getAttribute(GENETAG);
-                    String IT = (String)r.getAttribute(ISOFORMTAG);
-                    int    RN = ((Integer) r.getAttribute(RNTAG) != null) ? (Integer) r.getAttribute(RNTAG) : 0;
-                    
-                    LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, true);
-                    
-                    // never null case if umifound or isobam from isoformMatrix pipeline used
-                    // but we filter out some not reliable reads just as in isoformMatrix
-                    if(lrr != null && lrr.getMapqv() > 0 && !lrr.getIsChimeria() && !lrr.getIsReversed()){
-                        
-                        // we have a geneId
-                        if(! "undef".equals(IG)){
-                            TranscriptRecord tr = new TranscriptRecord(IG, IT);
-                                
-                            // never seen this gene, create a new List<TranscriptRecord> including IT of lrr
-                            if(! mymodel.getMapGenesTranscripts().containsKey(IG)) {
-                                if(! "undef".equals(IT))
-                                    tr = model.select(IG, IT);
-                                
-                                List<TranscriptRecord> lst = new ArrayList<TranscriptRecord>();
-                                lst.add(tr);
-                                mymodel.getMapGenesTranscripts().put(IG, lst);
-                            }
-                            // we know this gene
-                            else {
-                                // but we don't know this transcript
-                                if(!(mymodel.getMapGenesTranscripts().get(IG)).contains(tr)){
-                                    if(! "undef".equals(IT))
-                                        tr = model.select(IG, IT);
-                                    
-                                    ((ArrayList<TranscriptRecord>) mymodel.getMapGenesTranscripts().get(IG)).add(tr);
-                                }
-                            }
-                            
-                            // finally add the molecule to the TranscriptRecord
-                            mymodel.getMapGenesTranscripts().get(IG).get(mymodel.getMapGenesTranscripts().get(IG).indexOf(tr)).add(lrr);
-                        }
-                        // intergenic region, new genes ?
-                        else{ }
-                    }
-                }
-                iter.close();
-            }
-            samReader.close();
-        } catch (Exception e) { e.printStackTrace(); }
-        
+        mymodel.loader(INPUT,CELLTAG,UMITAG,GENETAG,ISOFORMTAG,RNTAG);
         mymodel.collapser();
+        
         mymodel.initialize();
-        mymodel.filter(model);
-        mymodel.classifier(model);
+        //mymodel.statistics();
+        
+        mymodel.filter();
+        mymodel.classifier();
         
         if(CAGE.exists() && POLYA.exists() && SHORT.exists()){
             log.info(new Object[]{"\tPerform validation using provided CAGE bed, POLYA bed and SHORT read bam files"});
@@ -216,10 +161,12 @@ public class CollapseModel extends CommandLineProgram
         
         mymodel.statistics();
         
-        File TXT = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".txt");
-        File GFF = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".gff");
-        File GFFVALID = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".final.gff");
-        mymodel.exportFiles(TXT,GFF,GFFVALID);
+        File TXT = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".rn" + RNMIN + ".e" + MINEVIDENCE + ".txt");
+        File FLAT = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".rn" + RNMIN + ".e" + MINEVIDENCE + ".refflat.txt");
+        File FLATVALID = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".rn" + RNMIN + ".e" + MINEVIDENCE + ".final.refflat.txt");
+        File GFF = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".rn" + RNMIN + ".e" + MINEVIDENCE + ".gff");
+        File GFFVALID = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".rn" + RNMIN + ".e" + MINEVIDENCE + ".final.gff");
+        mymodel.exportFiles(TXT,FLAT,FLATVALID,GFF,GFFVALID);
         
         // this is where we need to phase haplotype instead of aclling consensus/
         // allelic determination and output an allele specific counting matrix
@@ -227,7 +174,7 @@ public class CollapseModel extends CommandLineProgram
         // on the todo list !!
         if(this.doConsCall){
             log.info(new Object[]{"\tExporting all isoforms consensus sequence to fasta..."});
-            File FAS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".e" + MINEVIDENCE + ".fas");
+            File FAS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".rn" + RNMIN + ".e" + MINEVIDENCE + ".fas");
             mymodel.callConsensus(FAS, nThreads);
         }
     }

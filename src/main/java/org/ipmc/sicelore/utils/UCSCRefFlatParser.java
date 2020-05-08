@@ -247,7 +247,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
                 if(t.getIs_known())
                     keep.add(t);
                 else{
-                    if(! is3pPart(t, keep, refmodel.select(new String[]{t.getGeneId()})))
+                    if(! isPartOfLonger(t, keep, refmodel.select(new String[]{t.getGeneId()})))
                         keep.add(t);
                 }
             }
@@ -417,8 +417,12 @@ public class UCSCRefFlatParser implements GeneModelParser {
         }
     }
     
-    public boolean is3pPart(TranscriptRecord t, List<TranscriptRecord> lst, List<TranscriptRecord> modelLst)
+    public boolean isPartOfLonger(TranscriptRecord t, List<TranscriptRecord> lst, List<TranscriptRecord> modelLst)
     {
+        // -------------
+        // Here we remove degradated but also all intron-retention isoforms 
+        // which have all their junctions in full gencode isoforms
+        // -------------
         boolean bool = false;
         List<int[]> junctions = junctionsFromExons(t.getExons());
         
@@ -505,28 +509,17 @@ public class UCSCRefFlatParser implements GeneModelParser {
 
             try {
                 oneNanoporeReadexecutor.awaitTermination(1, TimeUnit.SECONDS);
-            } catch (InterruptedException ex) {
-                log.info(new Object[]{"Error:\t[" + ex + "]"});
-            }
+            } catch (InterruptedException ex) { log.info(new Object[]{"Error:\t[" + ex + "]"}); }
 
             os.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                os.close();
-            } catch (Exception e) {
-                System.err.println("can not close stream");
-            }
         }
+        catch (Exception e) {  e.printStackTrace(); } 
+        finally { try { os.close(); } catch (Exception e) { System.err.println("can not close stream"); } }
     }
 
-    private synchronized void write(String rslt) {
-        try {
-            os.writeBytes(rslt);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private synchronized void write(String rslt)
+    {
+        try { os.writeBytes(rslt); } catch (Exception e) { e.printStackTrace(); }
     }
     
     // statistiques

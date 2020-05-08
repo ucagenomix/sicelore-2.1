@@ -143,11 +143,8 @@ public class CollapseModel extends CommandLineProgram
         
         mymodel.loader(INPUT,CELLTAG,UMITAG,GENETAG,ISOFORMTAG,RNTAG);
         mymodel.collapser();
-        
         mymodel.initialize();
-        //mymodel.statistics();
-        
-        mymodel.filter();
+        mymodel.filter(); // remove also here the intron-retention --> TODO list
         mymodel.classifier();
         
         if(CAGE.exists() && POLYA.exists() && SHORT.exists()){

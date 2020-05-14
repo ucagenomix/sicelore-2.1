@@ -106,11 +106,11 @@ public class CollapseModel extends CommandLineProgram
         String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
         
         if(POAPATH == null)
-            log.info(new Object[]{"Unable to find poa, please add it to your PATH"});
+            log.info(new Object[]{"\t# Unable to find poa, please add it to your PATH"});
         else if(RACONPATH == null)
-            log.info(new Object[]{"Unable to find racon, please add it to your PATH"});
+            log.info(new Object[]{"\t# Unable to find racon, please add it to your PATH"});
         else if(MINIMAP2PATH == null)
-            log.info(new Object[]{"Unable to find minimap2, please add it to your PATH"});
+            log.info(new Object[]{"\t# Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
             c.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
@@ -141,7 +141,7 @@ public class CollapseModel extends CommandLineProgram
         refmodel = new UCSCRefFlatParser(REFFLAT);
         mymodel = new UCSCRefFlatParser(DELTA, MINEVIDENCE, RNMIN, refmodel);
         
-        mymodel.loader(INPUT,CELLTAG,UMITAG,GENETAG,ISOFORMTAG,RNTAG);
+        mymodel.loader(INPUT,this.cellList,CELLTAG,UMITAG,GENETAG,ISOFORMTAG,RNTAG);
         mymodel.collapser();
         mymodel.initialize();
         mymodel.filter(); // remove also here the intron-retention --> TODO list

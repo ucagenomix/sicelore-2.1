@@ -39,6 +39,8 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     boolean is_novel = false;
     boolean is_known = true;
     private byte[] representative;
+    public int nbUmis;
+    public int nbCells;
     
     // annotateModel pipeline requirements
     public boolean is_valid = false;
@@ -182,6 +184,9 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     public int[] getExonEnds() { return exonEnds; }
     public int[] getExonFrames() { return exonFrames; }
 
+    public int getNbUmis() { return nbUmis; }
+    public int getNbCells() { return nbCells; }
+
     public void setJunctionReads(int junctionReads) { this.junctionReads = junctionReads; }
     public int getJunctionReads() { return this.junctionReads; }
     
@@ -243,7 +248,7 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     public String printLegendTxt()
     {
         // standard annotation
-        String str = "geneId\ttranscriptId\tchrom\tstrand\ttxStart\ttxEnd\texons\tnbUMIs";
+        String str = "geneId\ttranscriptId\tchrom\tstrand\ttxStart\ttxEnd\texons\tUMIs\tCells";
         // classification
         str += "\tcategorie\tsubcategorie\tnovelJunctions";
         //validation
@@ -255,7 +260,7 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
     public String printTxt()
     {    
         // standard annotation
-        String str = geneId+"\t"+transcriptId+"\t"+chrom+"\t"+strand+"\t"+txStart+"\t"+txEnd+"\t"+exons.size()+"\t"+evidenceList.size();
+        String str = geneId+"\t"+transcriptId+"\t"+chrom+"\t"+strand+"\t"+txStart+"\t"+txEnd+"\t"+exons.size()+"\t"+nbUmis+"\t"+nbCells;
         // classification
         str += "\t"+categorie+"\t"+subcategorie+"\t"+this.getNovelJunctionsString();
         //validation
@@ -309,7 +314,7 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
 1       ONT     exon            4783951 4784105 .       -       .       gene_id "PB.135"; transcript_id "ONT.135.19"; ensembl_id "NA"; category "full-splice_match"; subcategory "multi-exon"; color "#ff1aff";
 1       ONT     exon            4785573 4785726 .       -       .       gene_id "PB.135"; transcript_id "ONT.135.19"; ensembl_id "NA"; category "full-splice_match"; subcategory "multi-exon"; color "#ff1aff";
 */
-        String str = chrom + "\tsicelore\ttranscript\t" + txStart + "\t" + txEnd + "\t.\t" + strand + "\t.\tgene_id \"" + geneId + "\"; transcript_id \""+ transcriptId +"\"; category \"" + categorie + "\"; subcategory \""+ subcategorie +"\"; UMIs \"" + evidenceList.size() + "\"; ";
+        String str = chrom + "\tsicelore\ttranscript\t" + txStart + "\t" + txEnd + "\t.\t" + strand + "\t.\tgene_id \"" + geneId + "\"; transcript_id \""+ transcriptId +"\"; category \"" + categorie + "\"; subcategory \""+ subcategorie +"\"; UMIs \"" + nbUmis + "\"; Cells \"" + nbCells + "\"; ";
         str += "novelJunctions \"" + this.getNovelJunctionsString() +"\"; ";
         str += "supportingReads \"" + this.junctionReads +"\"; ";
         str += "CAGEdist \"" + dist_cage +"\"; ";
@@ -384,6 +389,13 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
             categorie="full_splice_match";
             subcategorie="gencode";
         }
+        
+        HashSet<String> hash = new HashSet<String>();
+        for (int i=0; i<evidenceList.size(); i++)
+            hash.add(evidenceList.get(i).getBarcode());
+        
+        this.nbUmis = evidenceList.size();
+        this.nbCells = hash.size();
     }
     
     private static int[] toIntArray(String str) throws NumberFormatException

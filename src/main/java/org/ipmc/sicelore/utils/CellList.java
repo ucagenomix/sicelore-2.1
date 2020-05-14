@@ -12,21 +12,18 @@ import java.io.File;
  */
 public class CellList extends HashSet<String>
 {
-    public HashSet<String> cellSet;
-    
     public CellList(File CSV)
     {
-        this.cellSet = new HashSet<String>();
         try {
             BufferedReader fichier = new BufferedReader(new FileReader(CSV));
             String line = fichier.readLine();
-            while (line != null) {
+            while(line != null) {
                 line=line.replace("-1","");
                 this.add(line);
                 line = fichier.readLine();
             }
             fichier.close();
         } catch (Exception e) { e.printStackTrace(); }
+        
    }
-    
 }

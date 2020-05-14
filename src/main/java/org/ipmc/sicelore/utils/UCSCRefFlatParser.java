@@ -132,7 +132,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
         return mapGenesTranscripts;
     }
     
-    public void loader(File INPUT,String CELLTAG, String UMITAG, String GENETAG, String ISOFORMTAG, String RNTAG)
+    public void loader(File INPUT, CellList cellList, String CELLTAG, String UMITAG, String GENETAG, String ISOFORMTAG, String RNTAG)
     {
         pl = new htsjdk.samtools.util.ProgressLogger(log, 1000000, "Processed\t", "Records");
         
@@ -161,7 +161,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
                     
                     // never null case if umifound or isobam from isoformMatrix pipeline used
                     // but we filter out some not reliable reads just as in isoformMatrix
-                    if(lrr != null && lrr.getMapqv() > 0 && !lrr.getIsChimeria() && !lrr.getIsReversed() && RN >= this.RNMIN){
+                    if(lrr != null && lrr.getMapqv() > 0 && !lrr.getIsChimeria() && !lrr.getIsReversed() && RN >= this.RNMIN && cellList.contains(BC)){
                         
                         // we have a geneId
                         if(! "undef".equals(IG)){

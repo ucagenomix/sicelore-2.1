@@ -9,6 +9,8 @@ import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import java.io.BufferedReader;
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -25,7 +27,7 @@ public class SNPMatrix extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "CSV", doc = "The cell barcodes .csv file")
     public File CSV;
-    @Argument(shortName = "SNP", doc = "The SNP/editing events .csv file \n#-----\nname,gene,chromosome,start,end,strand,pos,ref,alt\nRG,Gria2,3,80681450,80802835,-,80692286,T,C\nQR,Gria2,3,80681450,80802835,-,80706912,T,C\n#-----")
+    @Argument(shortName = "SNP", doc = "The SNP/editing events .csv file \n#-----\nchromosome,position,strand,name\n3,80692286,-,Gria2_RG\n3,80706912,-,Gria2_QR\n3,80692286|80706912,-,Gria2_RGQR\n#-----")
     public File SNP;
     //@Argument(shortName = "REFFLAT", doc = "The refFlat gene model file")
     //public File REFFLAT;
@@ -39,7 +41,7 @@ public class SNPMatrix extends CommandLineProgram {
     public String UMITAG = "U8";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
-    @Argument(shortName = "RN_min", doc = "Minimum number of reads for a molecule to be taken into account for SNP calling (default=0, means all molecules)")
+    @Argument(shortName = "RN_min", doc = "Minimum read number to take into account the molecule (default=0, means all)")
     public int RN_min = 0;
 
     public CellList cellList;
@@ -84,106 +86,55 @@ public class SNPMatrix extends CommandLineProgram {
                     int total=0;
                     nb++;
                     
-                    if(java.util.regex.Pattern.matches(".*\\|.*", tok[1])){
+                    String[] pos = { tok[1] };
+                    if(java.util.regex.Pattern.matches(".*\\|.*", tok[1]))
+                        pos = tok[1].split("\\|");
                         
-                        //System.out.println("2 positions:" + line);
-                        
-                        String[] pos = tok[1].split("\\|");
-                        int pos1 = Integer.parseInt(pos[0]);
-                        int pos2 = Integer.parseInt(pos[1]);
-                        
-                        //System.out.println(chromosome + "," + pos1 + "," + pos2);
-                        
-                        if(pos1 > pos2){
-                            int tmp=pos2;
-                            pos2=pos1;
-                            pos1=tmp;
-                        }
-                        
-                        //System.out.println(chromosome + "," + pos1 + "," + pos2);
-                        
-                        SAMRecordIterator iter = samReader.query(chromosome, pos1, pos2, false);
-                        while(iter.hasNext()){
-                            SAMRecord r = iter.next();
-                            
-                            //System.out.println("record:" + r);
-                            
-                            if(strand == r.getReadNegativeStrandFlag()){
-                                pl.record(r);
-                                LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, false);
-                                
-                                //System.out.println("good strand:" + lrr.getRn());
-                                
-                                if(lrr != null && lrr.getRn() >= RN_min){
-                                    Longread lr = new Longread(r.getReadName());
-                                    lr.addRecord(lrr);
-                                    String readString = r.getReadString();
-                                    int posInt1 = r.getReadPositionAtReferencePosition(pos1);
-                                    int posInt2 = r.getReadPositionAtReferencePosition(pos2);
-                                    
-                                    //System.out.println(posInt1 + "\t" + posInt2 + "("+readString.length()+")");
-                                    
-                                    if(posInt1 > 0 && readString.length() > posInt1 && posInt2 > 0 && readString.length() > posInt2){
-                                        String nuc1 = readString.substring(posInt1 - 1, posInt1);
-                                        String nuc2 = readString.substring(posInt2 - 1, posInt2);
-                                        
-                                        if(r.getReadNegativeStrandFlag())
-                                            nuc1 = complementBase(nuc1.charAt(0)); nuc2 = complementBase(nuc2.charAt(0));
-                                        
-                                        total++;
-                                        Molecule molecule = new Molecule(lrr.getBarcode(), lrr.getUmi(), lrr.getRn());
-                                        molecule.addLongread(lr);
-                                        molecule.setGeneId(gene);
-                                        molecule.setTranscriptId(chromosome + ":" + pos1 + "-" + pos2 + ".." + nuc1 + nuc2);
-                                        matrix.addMolecule(molecule);
+                    int[] arr = stringToIntArray(pos);
+                    SAMRecordIterator iter = samReader.query(chromosome, arr[0], arr[arr.length - 1], false);
+                    while (iter.hasNext()) {
+                        SAMRecord r = iter.next();
+
+                        if (strand == r.getReadNegativeStrandFlag()) {
+                            pl.record(r);
+                            LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, false);
+
+                            if (lrr != null && lrr.getRn() >= RN_min) {
+                                Longread lr = new Longread(r.getReadName());
+                                lr.addRecord(lrr);
+                                String readString = r.getReadString();
+
+                                Integer[] posInt = new Integer[arr.length];
+                                for (int i = 0; i < arr.length; i++) {
+                                    posInt[i] = r.getReadPositionAtReferencePosition(arr[i]);
+                                }
+
+                                int min = Collections.min(Arrays.asList(posInt));
+                                int max = Collections.max(Arrays.asList(posInt));
+
+                                if (min > 0 && readString.length() > max) {
+                                    String[] nuc = new String[posInt.length];
+                                    for (int i = 0; i < arr.length; i++) {
+                                        nuc[i] = readString.substring(posInt[i] - 1, posInt[i]);
                                     }
+
+                                    if (r.getReadNegativeStrandFlag()) {
+                                        for (int i = 0; i < nuc.length; i++) {
+                                            nuc[i] = complementBase(nuc[i].charAt(0));
+                                        }
+                                    }
+                                    
+                                    total++;
+                                    Molecule molecule = new Molecule(lrr.getBarcode(), lrr.getUmi(), lrr.getRn());
+                                    molecule.addLongread(lr);
+                                    molecule.setGeneId(gene);
+                                    molecule.setTranscriptId(chromosome + ":" + String.join("|", pos) + ".." + String.join("", nuc));
+                                    matrix.addMolecule(molecule);
                                 }
                             }
                         }
-                        iter.close();
                     }
-                    else{
-                        
-                        //System.out.println("1 position:" + line);
-                        
-                        int position = Integer.parseInt(tok[1]);
-
-                        SAMRecordIterator iter = samReader.query(chromosome, position, position, false);
-                        while(iter.hasNext()){
-                            SAMRecord r = iter.next();
-                            
-                            //System.out.println("record:" + r);
-                            
-                            if(strand == r.getReadNegativeStrandFlag()){
-                                pl.record(r);
-                                LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, false);
-                                
-                                //System.out.println("good strand:" + lrr.getRn());
-                                
-                                if(lrr != null && lrr.getRn() >= RN_min){
-                                    Longread lr = new Longread(r.getReadName());
-                                    lr.addRecord(lrr);
-                                    String readString = r.getReadString();
-                                    int posInt = r.getReadPositionAtReferencePosition(position);
-
-                                    if(posInt > 0 && readString.length() > posInt){
-                                        String nuc = readString.substring(posInt - 1, posInt);
-                                        
-                                        if(r.getReadNegativeStrandFlag())
-                                            nuc = complementBase(nuc.charAt(0));
-                                        
-                                        total++;
-                                        Molecule molecule = new Molecule(lrr.getBarcode(), lrr.getUmi(), lrr.getRn());
-                                        molecule.addLongread(lr);
-                                        molecule.setGeneId(gene);
-                                        molecule.setTranscriptId(chromosome + ":" + position + ".." + nuc);
-                                        matrix.addMolecule(molecule);
-                                    }
-                                }
-                            }
-                        }
-                        iter.close();
-                    }
+                    iter.close();
                     log.info(new Object[]{"processing...\t\t" + line + "\t[" + total + " hits]\t"});
                 }
                 line = fichier.readLine();
@@ -203,6 +154,17 @@ public class SNPMatrix extends CommandLineProgram {
         return 0;
     }
     
+    public int[] stringToIntArray(String[] s)
+    {
+        int size = s.length;
+        int [] arr = new int [size];
+        for(int i=0; i<size; i++) 
+            arr[i] = Integer.parseInt(s[i]);
+        
+        Arrays.sort(arr);
+        return arr;
+    }
+    
     protected static String complementBase(char base)
     {
         String cc = "";
@@ -212,6 +174,16 @@ public class SNPMatrix extends CommandLineProgram {
         if (base == 'T') cc = "A";
 	
         return cc;
+    }
+    
+    public String[] complementBaseArray(String[] nuc)
+    {
+        int size = nuc.length;
+        String[] comp = new String[size];
+        for(int i=0; i<size; i++) 
+            comp[i] = complementBase(nuc[i].charAt(0));
+        
+        return comp;
     }
     
     public static void main(String[] paramArrayOfString) {

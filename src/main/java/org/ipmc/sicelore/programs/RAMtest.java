@@ -15,15 +15,16 @@ import java.io.*;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
+import java.util.concurrent.TimeUnit;
 import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Isoform and gene level expression matrices production.", oneLineSummary = "Isoform and gene level expression matrices production.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
+@CommandLineProgramProperties(summary = "Isoform and gene level expression matrices production.", oneLineSummary = "Isoform and gene level expression matrices production.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
-public class IsoformMatrix extends CommandLineProgram
+public class RAMtest extends CommandLineProgram
 { 
     @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;
@@ -68,8 +69,8 @@ public class IsoformMatrix extends CommandLineProgram
     private ProgressLogger pl;
     private final Log log;
 
-    public IsoformMatrix() {
-        log = Log.getInstance(IsoformMatrix.class);
+    public RAMtest() {
+        log = Log.getInstance(RAMtest.class);
         pl = new ProgressLogger(log);
     }
 
@@ -99,10 +100,6 @@ public class IsoformMatrix extends CommandLineProgram
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, MAPQV0, false, true, true);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        
-        bam = null;
-        System.gc();
-        
         dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
         
         File ISOMATRIX   = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isomatrix.txt");
@@ -133,6 +130,12 @@ public class IsoformMatrix extends CommandLineProgram
         log.info(new Object[]{"\tMatrix isoforms define\t[" + matrix.getTotal_isoform_def() + "]"});
         log.info(new Object[]{"\tMatrix isoforms undefine[" + matrix.getTotal_isoform_undef() + "]"});
         
+        log.info(new Object[]{"\tstart sleeping 2"});
+        try{
+            TimeUnit.SECONDS.sleep(240);
+        }catch(Exception e){}
+
+        
         if(ISOBAM){
             log.info(new Object[]{"\tProducing ISOBAM\t[true]"});
             SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
@@ -162,6 +165,6 @@ public class IsoformMatrix extends CommandLineProgram
     }
 
     public static void main(String[] args) {
-        System.exit(new IsoformMatrix().instanceMain(args));
+        System.exit(new RAMtest().instanceMain(args));
     }
 }

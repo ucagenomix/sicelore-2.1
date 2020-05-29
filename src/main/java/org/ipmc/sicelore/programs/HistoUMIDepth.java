@@ -61,7 +61,7 @@ public class HistoUMIDepth extends CommandLineProgram
         if("longread".equals(TYPE)){
             log.info(new Object[]{"\tloadLongreadsBam"});
             
-            LongreadParser bam = new LongreadParser(INPUT, false, true, true);
+            LongreadParser bam = new LongreadParser(INPUT, false, false, true, true);
             MoleculeDataset dataset = new MoleculeDataset(bam);
             
             Set cles = dataset.getMapMolecules().keySet();

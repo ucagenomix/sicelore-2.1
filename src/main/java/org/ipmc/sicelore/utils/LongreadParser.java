@@ -9,6 +9,7 @@ import java.util.*;
 import java.io.*;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
+import gnu.trove.THashMap;
 
 public class LongreadParser implements LongreadModelParser {
 
@@ -22,14 +23,23 @@ public class LongreadParser implements LongreadModelParser {
     private int null_records = 0;
     private int gene_unset = 0;
     private int umi_unset = 0;
+    
+    private boolean keep_mapqv0 = false;
     private boolean load_sequence = false;
     private boolean is_gene_mandatory = true;
     private boolean is_umi_mandatory = true;
     
-    HashMap<String, Longread> mapLongreads;
-
-    public LongreadParser(File bam, boolean load_sequence, boolean is_gene_mandatory, boolean is_umi_mandatory)
+    THashMap<String, Longread> mapLongreads;
+    
+    public LongreadParser()
     {
+        log = Log.getInstance(LongreadParser.class);
+        this.mapLongreads = new THashMap<String, Longread>();
+    }
+    
+    public LongreadParser(File bam, boolean keep_mapqv0, boolean load_sequence, boolean is_gene_mandatory, boolean is_umi_mandatory)
+    {
+        this.keep_mapqv0 = keep_mapqv0;
         this.load_sequence = load_sequence;
         this.is_gene_mandatory = is_gene_mandatory;
         this.is_umi_mandatory = is_umi_mandatory;
@@ -39,7 +49,7 @@ public class LongreadParser implements LongreadModelParser {
         log.info(new Object[]{"\tstart..."});
         pl = new htsjdk.samtools.util.ProgressLogger(log, 1000000, "\tProcessed\t", "Records");
 
-        this.mapLongreads = new HashMap<String, Longread>();
+        this.mapLongreads = new THashMap<String, Longread>();
         htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(bam);
 
         int total_records = 0;
@@ -94,12 +104,12 @@ public class LongreadParser implements LongreadModelParser {
         if(record.getIsReversed()) { unvalid_records++; reversed_records++; return null; }
         if(this.is_gene_mandatory && (record.getGeneId() == null || "undef".equals(record.getGeneId()))) { unvalid_records++; gene_unset++; return null; }
         if(this.is_umi_mandatory && record.getUmi() == null) { unvalid_records++; umi_unset++; return null; }
-        if(record.getMapqv() == 0) { unvalid_records++; mapqv0_records++; return null; }
+        if(!this.keep_mapqv0 && record.getMapqv() == 0) { unvalid_records++; mapqv0_records++; return null; }
         
         return record;
     }
 
-    public HashMap<String, Longread> getMapLongreads() {
+    public THashMap<String, Longread> getMapLongreads() {
         return this.mapLongreads;
     }
 }

@@ -8,43 +8,45 @@ package org.ipmc.sicelore.utils;
 import java.util.*;
 import java.io.*;
 import htsjdk.samtools.util.Log;
+import gnu.trove.THashMap;
+import gnu.trove.THashSet;
 
 public class Matrix
 {
-    private final Log log;
-    private HashMap<String, HashMap<String, Integer>> matrice;
-    private HashMap<String, HashMap<String, Integer>> matriceGene;
-    private HashMap<String, HashMap<String, Integer>> matriceJunction;
-    private HashMap<String, CellMetrics> cellMetrics;
-    private HashMap<String, GeneMetrics> geneMetrics;
-    private HashSet<Molecule> molecules;
+    public final Log log;
+    public THashMap<String, THashMap<String, Integer>> matrice;
+    public THashMap<String, THashMap<String, Integer>> matriceGene;
+    public THashMap<String, THashMap<String, Integer>> matriceJunction;
+    public THashMap<String, CellMetrics> cellMetrics;
+    public THashMap<String, GeneMetrics> geneMetrics;
+    public THashSet<Molecule> molecules;
 
-    private int nb_count = 0;
-    private int total_count = 0;
-    private int total_remove = 0;
-    private int total_isoform_def = 0;
-    private int total_isoform_undef = 0;
+    public int nb_count = 0;
+    public int total_count = 0;
+    public int total_remove = 0;
+    public int total_isoform_def = 0;
+    public int total_isoform_undef = 0;
     
     public Matrix(HashSet<String> cells)
     {
         log = Log.getInstance(Matrix.class);
-        this.matrice = new HashMap<String, HashMap<String, Integer>>();
-        this.matriceGene = new HashMap<String, HashMap<String, Integer>>();
-        this.matriceJunction = new HashMap<String, HashMap<String, Integer>>();
-        this.geneMetrics = new HashMap<String, GeneMetrics>();
-        this.molecules = new HashSet<Molecule>();
-        this.cellMetrics = new HashMap<String, CellMetrics>();
+        this.matrice = new THashMap<String, THashMap<String, Integer>>();
+        this.matriceGene = new THashMap<String, THashMap<String, Integer>>();
+        this.matriceJunction = new THashMap<String, THashMap<String, Integer>>();
+        this.geneMetrics = new THashMap<String, GeneMetrics>();
+        this.molecules = new THashSet<Molecule>();
+        this.cellMetrics = new THashMap<String, CellMetrics>();
         Iterator it = cells.iterator();
         while (it.hasNext())
             cellMetrics.put((String)it.next(), new CellMetrics());
     }
 
-    public HashMap<String, HashMap<String, Integer>> getMatrice(){ return matrice; }
-    public HashMap<String, HashMap<String, Integer>> getMatriceGene(){ return matriceGene; }
-    public HashMap<String, HashMap<String, Integer>> getMatriceJunction(){ return matriceJunction; }
-    public HashMap<String, CellMetrics> getCellMetrics(){ return cellMetrics; }
-    public HashMap<String, GeneMetrics> getGeneMetrics(){ return geneMetrics; }
-    public HashSet<Molecule> getMolecules(){ return molecules; }
+    public THashMap<String, THashMap<String, Integer>> getMatrice(){ return matrice; }
+    public THashMap<String, THashMap<String, Integer>> getMatriceGene(){ return matriceGene; }
+    public THashMap<String, THashMap<String, Integer>> getMatriceJunction(){ return matriceJunction; }
+    public THashMap<String, CellMetrics> getCellMetrics(){ return cellMetrics; }
+    public THashMap<String, GeneMetrics> getGeneMetrics(){ return geneMetrics; }
+    public THashSet<Molecule> getMolecules(){ return molecules; }
     
     public int getNb_count(){ return nb_count; }
     public int getTotal_count(){ return total_count; }
@@ -54,91 +56,98 @@ public class Matrix
        
     public void addMolecule(Molecule molecule)
     {
-        HashMap mapCell = null;
-        HashSet umiSet = null;
+        THashMap mapCell = null;
+        THashSet umiSet = null;
         
-        this.molecules.add(molecule);
-        //System.out.println(molecule);
+        // only produce matrix for cells that we need to consider
+        // we may have some molecules from other cell barcodes
+        if(cellMetrics.containsKey(molecule.getBarcode())){
+            this.molecules.add(molecule);
+            //System.out.println(molecule);
         
-        if(! geneMetrics.containsKey(molecule.getGeneId()))
-            geneMetrics.put(molecule.getGeneId(), new GeneMetrics());
+            if(! geneMetrics.containsKey(molecule.getGeneId()))
+                geneMetrics.put(molecule.getGeneId(), new GeneMetrics());
         
-        //System.out.println(molecule.getBarcode() + "|" + molecule.getUmi()+ "|" + molecule.getGeneId()+ "|" + molecule.getTranscriptId()+ "|" + molecule.getLongreads());
+            //System.out.println(molecule.getBarcode() + "|" + molecule.getUmi()+ "|" + molecule.getGeneId()+ "|" + molecule.getTranscriptId()+ "|" + molecule.getLongreads());
         
-        ((CellMetrics)cellMetrics.get(molecule.getBarcode())).addCount(molecule.getGeneId(), molecule.getTranscriptId(), molecule.getLongreads().size());
-        ((GeneMetrics)geneMetrics.get(molecule.getGeneId())).addCount(molecule.getGeneId(), molecule.getTranscriptId());
-        //((JunctionMetrics)junctionMetrics.get(molecule.getGeneId())).addCount(molecule.getGeneId(), molecule.getTranscriptId());
-        
-        if ("undef".equals(molecule.getTranscriptId()))
-            total_isoform_undef++;
-        else
-            total_isoform_def++;
-        
-        // we already have this gene/transcript isokey
-        String isokey = molecule.getGeneId() + "\t" + molecule.getTranscriptId();
-        if ((mapCell = (HashMap) matrice.get(isokey)) != null) {
-            // we already have this cell
-            if ((umiSet = (HashSet) mapCell.get(molecule.getBarcode())) != null) {
-                umiSet.add(molecule.getUmi());
-            }
-            else {
-                umiSet = new HashSet();
-                umiSet.add(molecule.getUmi());
-                mapCell.put(molecule.getBarcode(), umiSet);
-            }
-        }
-        else {
-            matrice.put(isokey, new HashMap());
-            umiSet = new HashSet();
-            umiSet.add(molecule.getUmi());
-            ((HashMap) matrice.get(isokey)).put(molecule.getBarcode(), umiSet);
-        }
-        
-        // now work on matrixGene
-        isokey = molecule.getGeneId();
-        if ((mapCell = (HashMap) matriceGene.get(isokey)) != null) {
-            // we already have this cell
-            if ((umiSet = (HashSet) mapCell.get(molecule.getBarcode())) != null) {
-                umiSet.add(molecule.getUmi());
-            }
-            else {
-                umiSet = new HashSet();
-                umiSet.add(molecule.getUmi());
-                mapCell.put(molecule.getBarcode(), umiSet);
-            }
-        }
-        else {
-            matriceGene.put(isokey, new HashMap());
-            umiSet = new HashSet();
-            umiSet.add(molecule.getUmi());
-            ((HashMap) matriceGene.get(isokey)).put(molecule.getBarcode(), umiSet);
-        }
-        
-        // now work on matrixJunction
-        HashSet<int[]> junctionSet = molecule.getJunctionSet();
-        Iterator<int[]> it = junctionSet.iterator();
-        while(it.hasNext()) {
-            int[] j = it.next();
-            String junckey = molecule.getGeneId() + ":" + j[0] + "-" + j[1];
-            
-            // we already have this junction
-            if ((mapCell = (HashMap) matriceJunction.get(junckey)) != null) {
-                if ((umiSet = (HashSet) mapCell.get(molecule.getBarcode())) != null) {
+            ((CellMetrics)cellMetrics.get(molecule.getBarcode())).addCount(molecule.getGeneId(), molecule.getTranscriptId(), molecule.getLongreads().size());
+            ((GeneMetrics)geneMetrics.get(molecule.getGeneId())).addCount(molecule.getGeneId(), molecule.getTranscriptId());
+            //((JunctionMetrics)junctionMetrics.get(molecule.getGeneId())).addCount(molecule.getGeneId(), molecule.getTranscriptId());
+
+            if ("undef".equals(molecule.getTranscriptId()))
+                total_isoform_undef++;
+            else
+                total_isoform_def++;
+
+            // we already have this gene/transcript isokey
+            String isokey = molecule.getGeneId() + "\t" + molecule.getTranscriptId();
+            if ((mapCell = (THashMap) matrice.get(isokey)) != null) {
+                // we already have this cell
+                if ((umiSet = (THashSet) mapCell.get(molecule.getBarcode())) != null) {
                     umiSet.add(molecule.getUmi());
                 }
                 else {
-                    umiSet = new HashSet();
+                    umiSet = new THashSet();
                     umiSet.add(molecule.getUmi());
                     mapCell.put(molecule.getBarcode(), umiSet);
                 }
             }
             else {
-                matriceJunction.put(junckey, new HashMap());
-                umiSet = new HashSet();
+                matrice.put(isokey, new THashMap());
+                umiSet = new THashSet();
                 umiSet.add(molecule.getUmi());
-                ((HashMap) matriceJunction.get(junckey)).put(molecule.getBarcode(), umiSet);
+                ((THashMap) matrice.get(isokey)).put(molecule.getBarcode(), umiSet);
+            }
+
+            // now work on matrixGene
+            isokey = molecule.getGeneId();
+            if ((mapCell = (THashMap) matriceGene.get(isokey)) != null) {
+                // we already have this cell
+                if ((umiSet = (THashSet) mapCell.get(molecule.getBarcode())) != null) {
+                    umiSet.add(molecule.getUmi());
+                }
+                else {
+                    umiSet = new THashSet();
+                    umiSet.add(molecule.getUmi());
+                    mapCell.put(molecule.getBarcode(), umiSet);
+                }
+            }
+            else {
+                matriceGene.put(isokey, new THashMap());
+                umiSet = new THashSet();
+                umiSet.add(molecule.getUmi());
+                ((THashMap) matriceGene.get(isokey)).put(molecule.getBarcode(), umiSet);
+            }
+
+            // now work on matrixJunction
+            HashSet<int[]> junctionSet = molecule.getJunctionSet();
+            Iterator<int[]> it = junctionSet.iterator();
+            while(it.hasNext()) {
+                int[] j = it.next();
+                String junckey = molecule.getGeneId() + ":" + j[0] + "-" + j[1];
+
+                // we already have this junction
+                if ((mapCell = (THashMap) matriceJunction.get(junckey)) != null) {
+                    if ((umiSet = (THashSet) mapCell.get(molecule.getBarcode())) != null) {
+                        umiSet.add(molecule.getUmi());
+                    }
+                    else {
+                        umiSet = new THashSet();
+                        umiSet.add(molecule.getUmi());
+                        mapCell.put(molecule.getBarcode(), umiSet);
+                    }
+                }
+                else {
+                    matriceJunction.put(junckey, new THashMap());
+                    umiSet = new THashSet();
+                    umiSet.add(molecule.getUmi());
+                    ((THashMap) matriceJunction.get(junckey)).put(molecule.getBarcode(), umiSet);
+                }
             }
         }
+        //else{
+        //    log.info(new Object[]{"cellMetrics does not contains cellBC\t"+molecule.getBarcode()});
+        //}
     }
 
     public void writeIsoformMatrix(java.io.File isomatrix, java.io.File isometrics, java.io.File molmetrics, UCSCRefFlatParser model)
@@ -146,7 +155,7 @@ public class Matrix
         BufferedOutputStream os = null;
         BufferedOutputStream os2 = null;
         BufferedOutputStream os3 = null;
-        HashSet setUmi = null;
+        THashSet setUmi = null;
         
         try {
             os = new BufferedOutputStream(new java.io.FileOutputStream(isomatrix));
@@ -180,7 +189,7 @@ public class Matrix
                     
                 int total = 0;
                 for(String cell_barcode : cellMetrics.keySet()){
-                    if ((setUmi = (HashSet) ((HashMap) matrice.get(isokey)).get(cell_barcode)) != null) {
+                    if ((setUmi = (THashSet) ((THashMap) matrice.get(isokey)).get(cell_barcode)) != null) {
                         os.write(new String("\t" + setUmi.size()).getBytes());
                         this.total_count += setUmi.size();
                         total += setUmi.size();
@@ -212,7 +221,7 @@ public class Matrix
     {
         BufferedOutputStream os = null;
         BufferedOutputStream os2 = null;
-        HashSet umiSet = null;
+        THashSet umiSet = null;
         
         try {
             os = new BufferedOutputStream(new java.io.FileOutputStream(juncmatrix));
@@ -229,7 +238,7 @@ public class Matrix
                 os2.write(junckey.getBytes());
                 int total = 0;
                 for(String cell_barcode : cellMetrics.keySet()){
-                    if ((umiSet = (HashSet) ((HashMap) matriceJunction.get(junckey)).get(cell_barcode)) != null) {
+                    if ((umiSet = (THashSet) ((THashMap) matriceJunction.get(junckey)).get(cell_barcode)) != null) {
                         os.write(new String("\t" + umiSet.size()).getBytes());
                         //this.total_count += umiSet.size();
                         total += umiSet.size();
@@ -251,7 +260,7 @@ public class Matrix
     {
         BufferedOutputStream os = null;
         BufferedOutputStream os2 = null;
-        HashSet setUmi = null;
+        THashSet setUmi = null;
         
         try {
             os = new BufferedOutputStream(new java.io.FileOutputStream(genematrix));
@@ -263,7 +272,7 @@ public class Matrix
             for(String isokey : matriceGene.keySet()){
                 os.write(isokey.getBytes());
                 for(String cell_barcode : cellMetrics.keySet()){
-                    if ((setUmi = (HashSet) ((HashMap) matriceGene.get(isokey)).get(cell_barcode)) != null)
+                    if ((setUmi = (THashSet) ((THashMap) matriceGene.get(isokey)).get(cell_barcode)) != null)
                         os.write(new String("\t" + setUmi.size()).getBytes());
                     else
                         os.write(new String("\t0").getBytes());

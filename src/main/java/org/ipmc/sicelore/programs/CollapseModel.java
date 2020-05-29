@@ -4,19 +4,12 @@ package org.ipmc.sicelore.programs;
  *
  * @author kevin lebrigand
  * 
- */ 
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
+ */
 import java.io.*;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -76,7 +69,6 @@ public class CollapseModel extends CommandLineProgram
     @Argument(shortName = "juncCo", doc = "Junction validation cutoff (default=1 read)")
     public int juncCo = 1;
     
-    public HashSet<String> allcmp = new HashSet<String>();
     BEDParser cage;
     BEDParser polyA;
     

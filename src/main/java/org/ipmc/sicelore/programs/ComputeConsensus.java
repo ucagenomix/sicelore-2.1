@@ -11,7 +11,6 @@ import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import org.ipmc.common.utils.ExecuteCmd;
 import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Compute consensus sequence per molecule.", oneLineSummary = "Compute consensus sequence per molecule.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
@@ -47,6 +46,10 @@ public class ComputeConsensus extends CommandLineProgram {
     public String RNTAG = "RN";
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
     public int MAXCLIP = 150;
+    @Argument(shortName = "MAPQV0", doc = "Wether or not to keep mapqv=0 SAM records (default=false)", optional=true)
+    public boolean MAPQV0 = false;
+    //@Argument(shortName = "FASTQ", doc = "The .FASTQ file")
+    //public File FASTQ;
 
     public ComputeConsensus() {
         log = Log.getInstance(ComputeConsensus.class);
@@ -56,7 +59,8 @@ public class ComputeConsensus extends CommandLineProgram {
     protected int doWork()
     {
         IOUtil.assertFileIsReadable(INPUT);
-        
+        //IOUtil.assertFileIsReadable(FASTQ);
+                
         String POAPATH = this.findExecutableOnPath("poa");
         String RACONPATH = this.findExecutableOnPath("racon");
         String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
@@ -73,11 +77,17 @@ public class ComputeConsensus extends CommandLineProgram {
             
             LongreadRecord lrr = new LongreadRecord();
             lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP,RNTAG);
-        
-            // load_sequence = true
-            // is_gene_mandatory = false
-            // is_umi_mandatory = true
-            LongreadParser bam = new LongreadParser(INPUT, true, false, true);
+            
+            //log.info(new Object[]{"loadFastq\tSTART..."});
+            //FastqLoader fastq = new FastqLoader(FASTQ);
+            //if(fastq.getMap().size()>0)
+            //    lrr.setFastqLoader(fastq);
+            
+            boolean load_sequence = true;
+            boolean is_gene_mandatory = false;
+            boolean is_umi_mandatory = true;
+            LongreadParser bam = new LongreadParser(INPUT, MAPQV0, load_sequence, is_gene_mandatory, is_umi_mandatory);
+            
             MoleculeDataset dataset = new MoleculeDataset(bam);
             dataset.callConsensus(OUTPUT, nThreads);
         }

@@ -14,7 +14,7 @@ public class FastqLoader {
     THashMap<String, byte[]> map = new THashMap();
     THashMap<String, byte[]> mapQV = new THashMap();
 
-    public FastqLoader(File paramFile) {
+    public FastqLoader(File f) {
         map = new THashMap();
         mapQV = new THashMap();
         String str1 = null;
@@ -22,21 +22,21 @@ public class FastqLoader {
         String qv = null;
         
         try {
-            BufferedReader localBufferedReader = new BufferedReader(new java.io.FileReader(paramFile));
-            str2 = localBufferedReader.readLine();
+            BufferedReader br = new BufferedReader(new java.io.FileReader(f));
+            str2 = br.readLine();
             while (str2 != null) {
-                str1 = localBufferedReader.readLine();
-                localBufferedReader.readLine();
-                qv = localBufferedReader.readLine();
+                str1 = br.readLine();
+                br.readLine();
+                qv = br.readLine();
 
                 str2 = str2.replace("@", "");
                 String[] arrayOfString = str2.split("\\s+");
                 //System.out.println(arrayOfString[0]);
                 map.put(arrayOfString[0], str1.getBytes());
                 mapQV.put(arrayOfString[0], qv.getBytes());
-                str2 = localBufferedReader.readLine();
+                str2 = br.readLine();
             }
-            localBufferedReader.close();
+            br.close();
         } catch (Exception localException) { localException.printStackTrace(); }
     }
 

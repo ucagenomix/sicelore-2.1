@@ -5,8 +5,6 @@ package org.ipmc.sicelore.utils;
  * @author kevin lebrigand
  *
  */
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Ordering;
 import java.util.*; 
 import java.io.*;
 import htsjdk.samtools.util.*;
@@ -15,17 +13,18 @@ import org.biojava.nbio.core.util.ConcurrencyTools;
 import com.google.common.util.concurrent.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.biojava.nbio.core.sequence.DNASequence;
-        
+import gnu.trove.THashMap;
+import gnu.trove.THashSet;
+
 public class MoleculeDataset {
 
     private final Log log;
 
-    HashMap<String, Molecule> mapMolecules;
-    HashMap<String, List<Molecule>> mapGenes;
-    HashMap<String, Consensus> mapConsensus;
+    THashMap<String, Molecule> mapMolecules;
+    THashMap<String, List<Molecule>> mapGenes;
+    THashMap<String, Consensus> mapConsensus;
 
     private int chromstrange = 0;
     private int noexons = 0;
@@ -53,12 +52,14 @@ public class MoleculeDataset {
     
     public MoleculeDataset(LongreadParser bam)
     {
-        Molecule molecule = null;
-        this.mapMolecules = new HashMap<String, Molecule>();
-        this.mapGenes = new HashMap<String, List<Molecule>>();
         log = Log.getInstance(MoleculeDataset.class);
+        log.info(new Object[]{"\tMoleculeDataset init start..."});
+        
+        Molecule molecule = null;
+        this.mapMolecules = new THashMap<String, Molecule>();
+        this.mapGenes = new THashMap<String, List<Molecule>>();
 
-        HashMap<String, Longread> mapLongreads = bam.getMapLongreads();
+        THashMap<String, Longread> mapLongreads = bam.getMapLongreads();
         Set cles = mapLongreads.keySet();
         Iterator it = cles.iterator();
         while (it.hasNext()) {
@@ -88,7 +89,7 @@ public class MoleculeDataset {
     }
     
     public List<Molecule> select(String mygene){ return (List<Molecule>) mapGenes.get(mygene); }
-    public HashMap<String, Molecule> getMapMolecules() { return this.mapMolecules; }
+    public THashMap<String, Molecule> getMapMolecules() { return this.mapMolecules; }
     
     public Molecule getMolecule(String isokey)
     {
@@ -154,7 +155,7 @@ public class MoleculeDataset {
         if(debug) { System.out.println("transcripts:" + transcripts); }
         if(debug) { System.out.println("molecule:" + molecule.getBarcode() + "\t" + molecule.getUmi() + "\t" + molecule.getGeneIds().toString()); }
         
-        HashMap<String, Integer> candidates = new HashMap<String, Integer>();
+        THashMap<String, Integer> candidates = new THashMap<String, Integer>();
         List<Longread> longreads = molecule.getLongreads();
 
         for(Longread lr : longreads){
@@ -191,7 +192,7 @@ public class MoleculeDataset {
             
             if(debug) { System.out.println("we have candidate(s):" + candidates.size()); }
             
-            HashSet<String> bestCandidates = new HashSet<String>();
+            THashSet<String> bestCandidates = new THashSet<String>();
             int maxValueInMap=(Collections.max(candidates.values()));  // This will return max value in the Hashmap
             for(Map.Entry<String, Integer> entry : candidates.entrySet()) {  // Iterate through hashmap
                 if (entry.getValue() == maxValueInMap) { bestCandidates.add(entry.getKey()); }
@@ -207,10 +208,11 @@ public class MoleculeDataset {
                 if(debug) { System.out.println("only one best candidate --> transcript_id/gene_id:" + g); }
             }
             else{
-                
                 // ambiguous is true, mutiple isoforms are valid
-                // but in STICT mode we have all exons and we set to one 
-                // of the possible isoform
+                // but in STICT mode we have all exons and we set to one of the possible isoform
+                // need to solve Gapsh case where competing with pseudogenes
+                // get the transcripts with the more exons for instance
+                // but need to records the transcriptRecords before
                 this.ambiguous++;
                 int index = new Random().nextInt(bestCandidates.size());
                 String g = (String)(bestCandidates.toArray()[index]);
@@ -496,7 +498,7 @@ public class MoleculeDataset {
     {
         int nb = 0;
         Matrix matrix = new Matrix(authorizedCells);
-        HashMap<String, List<TranscriptRecord>> mapGenesTranscripts = model.getMapGenesTranscripts();
+        THashMap<String, List<TranscriptRecord>> mapGenesTranscripts = model.getMapGenesTranscripts();
 
         log.info(new Object[]{"\tDTEMatrix\t\tstart...[" + mapGenesTranscripts.size() + "] genes"});
         Set cles = mapGenesTranscripts.keySet();
@@ -524,7 +526,7 @@ public class MoleculeDataset {
     {
         log.info(new Object[]{"\tCalling consensus start with " + nThreads + " threads"});
         
-        this.mapConsensus = new HashMap<String, Consensus>();
+        this.mapConsensus = new THashMap<String, Consensus>();
         for(String key : this.mapMolecules.keySet()) {
             Molecule m = (Molecule) this.mapMolecules.get(key);
             String mykey = m.getBarcode() + "-" + m.getUmi() + "-" + m.getLongreads().size();

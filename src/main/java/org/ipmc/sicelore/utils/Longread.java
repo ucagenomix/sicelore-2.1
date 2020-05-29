@@ -6,13 +6,14 @@ package org.ipmc.sicelore.utils;
  * 
  */
 import java.util.*;
+import gnu.trove.THashSet;
 
 public class Longread implements Comparable<Longread> {
  
     private List<LongreadRecord> longreadrecords;
     private String name;
     //private String geneId;
-    private HashSet<String> geneIds;
+    private THashSet<String> geneIds;
     private String barcode;
     private String umi;
     private int rn;
@@ -21,7 +22,7 @@ public class Longread implements Comparable<Longread> {
     public Longread(String name) {
         this.name = name;
         this.longreadrecords = new ArrayList<LongreadRecord>();
-        this.geneIds = new HashSet<String>();
+        this.geneIds = new THashSet<String>();
     }
     
     public int compareTo(Longread lr)
@@ -83,5 +84,5 @@ public class Longread implements Comparable<Longread> {
     public int getRn() {return rn; }
     public void setRn(int rn) { this.rn=rn; }
     
-    public HashSet<String> getGeneIds() { return geneIds; }
+    public THashSet<String> getGeneIds() { return geneIds; }
 }

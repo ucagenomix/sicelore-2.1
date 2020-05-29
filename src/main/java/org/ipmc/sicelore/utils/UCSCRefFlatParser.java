@@ -23,14 +23,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.biojava.nbio.core.util.ConcurrencyTools;
+import gnu.trove.THashMap;
 
 public class UCSCRefFlatParser implements GeneModelParser {
 
     private final Log log;
     private htsjdk.samtools.util.ProgressLogger pl;
     
-    private HashMap<String, List<TranscriptRecord>> mapGenesTranscripts;
-    HashMap<String, Consensus> mapConsensus;
+    public THashMap<String, List<TranscriptRecord>> mapGenesTranscripts;
+    public THashMap<String, Consensus> mapConsensus;
 
     public UCSCRefFlatParser refmodel;
     public int DELTA = 2;
@@ -48,7 +49,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
         log = Log.getInstance(UCSCRefFlatParser.class);
         log.info(new Object[]{"UCSCRefFlatParser\tstart..."});
 
-        this.mapGenesTranscripts = new HashMap<String, List<TranscriptRecord>>();
+        this.mapGenesTranscripts = new THashMap<String, List<TranscriptRecord>>();
         int nb = 0;
 
         try {
@@ -80,7 +81,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
     public UCSCRefFlatParser(int DELTA, int MINEVIDENCE, int RNMIN, UCSCRefFlatParser refmodel)
     {
         log = Log.getInstance(UCSCRefFlatParser.class);
-        this.mapGenesTranscripts = new HashMap<String, List<TranscriptRecord>>();
+        this.mapGenesTranscripts = new THashMap<String, List<TranscriptRecord>>();
         
         this.refmodel=refmodel;
         this.DELTA =DELTA;
@@ -128,7 +129,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
         return tr;
     }
 
-    public HashMap<String, List<TranscriptRecord>> getMapGenesTranscripts() {
+    public THashMap<String, List<TranscriptRecord>> getMapGenesTranscripts() {
         return mapGenesTranscripts;
     }
     
@@ -454,7 +455,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
     {
         log.info(new Object[]{"Calling consensus start with " + nThreads + " threads"});
         
-        this.mapConsensus = new HashMap<String, Consensus>();
+        this.mapConsensus = new THashMap<String, Consensus>();
         for(String geneId : this.mapGenesTranscripts.keySet()) {
             List<TranscriptRecord> tAll = mapGenesTranscripts.get(geneId);
             for(int i=0; i<tAll.size(); i++){

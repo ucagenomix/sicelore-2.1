@@ -6,7 +6,6 @@ package org.ipmc.sicelore.programs;
  * 
  */
 import org.ipmc.sicelore.utils.*;
-import gnu.trove.THashMap;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
 import java.io.*;
@@ -45,9 +44,8 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
 
         log.info(new Object[]{"loadFastq\tSTART..."});
         FastqLoader localFastqLoader = new FastqLoader(FASTQ);
-        THashMap localTHashMap = localFastqLoader.getMap();
-        THashMap localTHashMapQV = localFastqLoader.getMapQV();
-        log.info(new Object[]{"loadFastq\t" + localTHashMap.size() + " reads loaded"});
+        
+        log.info(new Object[]{"loadFastq\t" + localFastqLoader.getMap().size() + " reads loaded"});
 
         SamReader localSamReader = SamReaderFactory.makeDefault().open(INPUT);
         htsjdk.samtools.SAMFileHeader localSAMFileHeader = localSamReader.getFileHeader();
@@ -60,10 +58,10 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
                 
                 //log.info(new Object[]{name});
                 
-                String seq = new String((byte[]) localTHashMap.get(name));
+                String seq = new String((byte[]) localFastqLoader.getMap().get(name));
                 localSAMRecord.setAttribute(SEQTAG, seq);
-                String qv = new String((byte[]) localTHashMapQV.get(name));
-                localSAMRecord.setAttribute(QVTAG, qv);
+                //String qv = new String((byte[]) localFastqLoader.getMapQV().get(name));
+                //localSAMRecord.setAttribute(QVTAG, qv);
                 localSAMFileWriter.addAlignment(localSAMRecord);
             }
             localSamReader.close();
@@ -84,6 +82,7 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
                 System.err.println("can not close stream");
             }
         }
+        
         return 0;
     }
 

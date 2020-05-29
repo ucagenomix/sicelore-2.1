@@ -11,13 +11,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import static org.ipmc.sicelore.programs.SNPMatrix.complementBase;
-import org.ipmc.sicelore.utils.*;
-import picard.annotation.Gene;
 import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "SampleParserTemp", oneLineSummary = "SampleParserTemp", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)

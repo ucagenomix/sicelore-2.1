@@ -26,6 +26,7 @@ import org.ipmc.sicelore.utils.Matrix;
 import org.ipmc.sicelore.utils.Molecule;
 import org.ipmc.sicelore.utils.MoleculeDataset;
 import picard.cmdline.CommandLineProgram;
+import gnu.trove.THashMap;
 
 @CommandLineProgramProperties(summary = "Detect fusion genes.", oneLineSummary = "Detect fusion genes.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
@@ -63,13 +64,13 @@ public class FusionDetector extends CommandLineProgram
 	lrr.setStaticParams("BC","U8","GE","TE","UE","PE","US",10000,"RN");
 
         // umi not mandatory cos' 2ndary fusion SAM records without UMI !
-        LongreadParser bam = new LongreadParser(INPUT, false, true, false);
+        LongreadParser bam = new LongreadParser(INPUT, false, false, true, false);
         MoleculeDataset dataset = new MoleculeDataset(bam);
         
         log.info(new Object[]{"\tSetFusions\t\tstart..."});
         
         Map<String, Integer> count = new HashMap<String, Integer>();
-        HashMap<String, Molecule> mapMolecules = dataset.getMapMolecules();
+        THashMap<String, Molecule> mapMolecules = dataset.getMapMolecules();
         Set cles = mapMolecules.keySet();
         Iterator it = cles.iterator();
         while (it.hasNext()) {

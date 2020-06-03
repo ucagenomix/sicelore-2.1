@@ -44,6 +44,7 @@ public class Consensus implements Callable<String>
         for(int i=0; i<max; i++){
             LongreadRecord lrr = evidenceList.get(i);
             this.sequences.add(new SubConsensus(lrr.getName(),new String(lrr.getCdna())));
+            //System.out.println(i+"\t"+name+"\t"+lrr.getName() + "\t" + lrr.getDe());
         }
     }
     
@@ -61,6 +62,7 @@ public class Consensus implements Callable<String>
         for(int i=0; i<max; i++){
             Longread lr = evidenceList.get(i);
             LongreadRecord lrr = lr.getBestRecord();
+            //System.out.println(i+"\t"+name+"\t"+lrr.getName() + "\t" + lrr.getDe());
             this.sequences.add(new SubConsensus(lrr.getName(),new String(lrr.getCdna())));
         }
     }

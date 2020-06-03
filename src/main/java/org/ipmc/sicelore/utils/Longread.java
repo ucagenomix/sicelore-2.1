@@ -25,22 +25,11 @@ public class Longread implements Comparable<Longread> {
         this.geneIds = new THashSet<String>();
     }
     
-    public int compareTo(Longread lr)
-    {
-        /*
-        if(lr.getAssociatedRecord() != null){
-            //System.out.println(lr.getName() + "\t" + lr.getAssociatedRecord());
-            Float obj1 = new Float(lr.getAssociatedRecord().getDv());
-            Float obj2 = new Float(this.getAssociatedRecord().getDv());
-            int retval = obj2.compareTo(obj1);
-            return retval;
-        }
-        else{
-            return 1;
-        }
-        //return ((Longread)lr).getAssociatedRecord().getExonBases() - this.getAssociatedRecord().getExonBases();
-        */
-        return 1;
+    public int compareTo(Longread lr){
+        Float obj1 = new Float(lr.getBestRecord().getDe());
+        Float obj2 = new Float(this.getBestRecord().getDe());
+        int retval = obj2.compareTo(obj1);
+        return retval;
     }
 
     public String toString() {

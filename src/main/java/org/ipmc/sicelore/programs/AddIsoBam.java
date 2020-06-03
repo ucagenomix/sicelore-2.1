@@ -88,10 +88,11 @@ public class AddIsoBam extends CommandLineProgram
                 molecule.addLongread(lr);
                 
                 List<TranscriptRecord> transcripts = model.select(molecule.getGeneIdsArray());
-                if("SCORE".equals(METHOD))
-                    md.setIsoformScore(molecule, transcripts, DELTA, AMBIGUOUS_ASSIGN);
-                else if("STRICT".equals(METHOD)) 
-                    md.setIsoformStrict(molecule, transcripts, DELTA);
+                //if("SCORE".equals(METHOD))
+                //    md.setIsoformScore(molecule, transcripts, DELTA, AMBIGUOUS_ASSIGN);
+                
+                if("STRICT".equals(METHOD)) 
+                    md.setIsoformStrictNew(molecule, DELTA);
                 
                 r.setAttribute("IT", molecule.getTranscriptId());
                 samFileWriter.addAlignment(r);

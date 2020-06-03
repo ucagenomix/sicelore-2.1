@@ -120,11 +120,11 @@ public class Matrix
             }
 
             // now work on matrixJunction
-            HashSet<int[]> junctionSet = molecule.getJunctionSet();
-            Iterator<int[]> it = junctionSet.iterator();
+            HashSet<Junction> junctionSet = molecule.getJunctionSet();
+            Iterator<Junction> it = junctionSet.iterator();
             while(it.hasNext()) {
-                int[] j = it.next();
-                String junckey = molecule.getGeneId() + ":" + j[0] + "-" + j[1];
+                Junction j = it.next();
+                String junckey = molecule.getGeneId() + ":" + j.getStart() + "-" + j.getEnd();
 
                 // we already have this junction
                 if ((mapCell = (THashMap) matriceJunction.get(junckey)) != null) {

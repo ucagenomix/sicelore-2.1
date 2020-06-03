@@ -45,6 +45,11 @@ public class MoleculeDataset {
     private int monoexon = 0;
     private int multimatchset = 0;
     
+    private UCSCRefFlatParser model;
+    private THashMap<String, Integer> candidates;
+    private List<TranscriptRecord> transcripts;
+    private THashSet<String> bestCandidates;
+    
     public MoleculeDataset()
     {
         log = Log.getInstance(MoleculeDataset.class);
@@ -75,28 +80,42 @@ public class MoleculeDataset {
                 ((Molecule) this.mapMolecules.get(molkey)).addLongread(lr);
             }
         }
-        log.info(new Object[]{"\tTotal Molecules\t\t[" + this.mapMolecules.size() + "]"});
+        log.info(new Object[]{"\tTotal molecules\t\t" + this.mapMolecules.size()});
         
         int multiIG = 0;
+        int totalReads = 0;
+        //int totalRecords = 0;
         cles = this.mapMolecules.keySet();
         it = cles.iterator();
         while (it.hasNext()){
             molecule = (Molecule) this.mapMolecules.get((String) it.next());
+            totalReads += molecule.getLongreads().size();
             if(molecule.getGeneIds().size() > 1)
                 multiIG++;
         }        
-        log.info(new Object[]{"\tTotal Molecules multiIG\t[" + multiIG + "]"});
+        log.info(new Object[]{"\tTotal molecule reads\t\t" + totalReads});
+        log.info(new Object[]{"\tTotal molecule multiIG\t" + multiIG});
     }
     
     public List<Molecule> select(String mygene){ return (List<Molecule>) mapGenes.get(mygene); }
     public THashMap<String, Molecule> getMapMolecules() { return this.mapMolecules; }
+    
+    public void initModel(File REFFLAT)
+    {
+        this.model = new UCSCRefFlatParser(REFFLAT);
+    }
     
     public Molecule getMolecule(String isokey)
     {
         return this.mapMolecules.get(isokey);
     }
     
-    public void setIsoforms(UCSCRefFlatParser model, int DELTA, String METHOD, boolean AMBIGUOUS_ASSIGN)
+    public UCSCRefFlatParser getModel()
+    {
+        return this.model;
+    }
+    
+    public void setIsoforms(int DELTA, String METHOD, boolean AMBIGUOUS_ASSIGN)
     {
         Molecule molecule = null;
         
@@ -108,16 +127,18 @@ public class MoleculeDataset {
             String molkey = (String) it.next();
             molecule = (Molecule) this.mapMolecules.get(molkey);
 
-            List<TranscriptRecord> transcripts = model.select(molecule.getGeneIdsArray());
+            //List<TranscriptRecord> transcripts = this.model.select(molecule.getGeneIdsArray());
             // sort all selected isoforms on exons number (max to min)
             //Collections.sort(transcripts);
             
-            if(transcripts.size() > 0){
-                if("SCORE".equals(METHOD))
-                    this.setIsoformScore(molecule, transcripts, DELTA, AMBIGUOUS_ASSIGN);
-                else if("STRICT".equals(METHOD)) 
-                    this.setIsoformStrict(molecule, transcripts, DELTA);
-            }
+            //if(transcripts.size() > 0){
+            //    if("SCORE".equals(METHOD))
+            //        this.setIsoformScore(molecule, transcripts, DELTA, AMBIGUOUS_ASSIGN);
+            //    else if("STRICT".equals(METHOD)) 
+                    
+                    // KL:29/05/2020 -> for RAM optimization purpose
+                    this.setIsoformStrictNew(molecule, DELTA);
+            //}
             
             compteur++;
             if(compteur%1000000 == 0)
@@ -146,7 +167,133 @@ public class MoleculeDataset {
             }
         }
     }
+    
+    // 29/05/2020
+    public void setIsoformStrictNew(Molecule molecule, int DELTA)
+    {
+        List<Junction> list1 = null;
+        boolean debug = false;
+        
+        this.candidates = new THashMap<String, Integer>();
+        this.transcripts = this.model.select(molecule.getGeneIdsArray());
+        
+        if(debug) { System.out.println("transcripts:" + transcripts); }
+        if(debug) { System.out.println("molecule:" + molecule.getBarcode() + "\t" + molecule.getUmi() + "\t" + molecule.getGeneIds().toString()); }
+        
+        List<Longread> longreads = molecule.getLongreads();
+        for(Longread lr : longreads){
+            List<LongreadRecord> records = lr.getLongreadrecords();
+            
+            for(LongreadRecord lrr : records){
+                List<Junction> list = lrr.getJunctions();
+                
+                if(debug) { System.out.println("o "+lrr.getName() + "("+list.size()+" junctions)"); }
+                
+                for(TranscriptRecord transcriptrecord : transcripts){
+                    list1 = transcriptrecord.getJunctions();
+                    
+                    if(debug) { System.out.println("\t"+transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId() + "("+list1.size()+" junctions)"); }
+                    
+                    if(map(list, list1, DELTA, molecule)){
+                        
+                        if(debug) { System.out.println("\tmatch"); }
+                        
+                        String key = transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId();
+                        if(candidates.containsKey(key))
+                            candidates.put(key, candidates.get(key) + 1);
+                        else
+                            candidates.put(key, 1);
+                    }
+                }
+            }
+        }
+        
+        if(debug) { System.out.println("candidates:" + candidates); }
+        
+        if(candidates.size() > 0){
+            
+            if(debug) { System.out.println("we have candidate(s):" + candidates.size()); }
+            
+            this.bestCandidates = new THashSet<String>();
+            int maxValueInMap=(Collections.max(candidates.values()));  // This will return max value in the Hashmap
+            for(Map.Entry<String, Integer> entry : candidates.entrySet()) {  // Iterate through hashmap
+                if (entry.getValue() == maxValueInMap) { bestCandidates.add(entry.getKey()); }
+            }
+            
+            if(bestCandidates.size() == 1){
+                this.onematch++;
+                String g = (String)bestCandidates.iterator().next();
+                molecule.setTranscriptId(g.split("\\|")[0]);
+                molecule.setGeneId(g.split("\\|")[1]);
+                molecule.setSupporting_reads(candidates.get(g));
+                
+                if(debug) { System.out.println("only one best candidate --> transcript_id/gene_id:" + g); }
+            }
+            else{
+                // ambiguous is true, mutiple isoforms are valid
+                // but in STICT mode we have all exons and we set to one of the possible isoform
+                // need to solve Gapsh case where competing with pseudogenes
+                // get the transcripts with the more exons for instance
+                // but need to records the transcriptRecords before
+                this.ambiguous++;
+                int index = new Random().nextInt(bestCandidates.size());
+                String g = (String)(bestCandidates.toArray()[index]);
+                molecule.setTranscriptId(g.split("\\|")[0]);
+                molecule.setGeneId(g.split("\\|")[1]);
+                molecule.setSupporting_reads(candidates.get(g));
+                // we set the geneId at least
+                //molecule.setTranscriptId("undef");
+                //molecule.setGeneId(g.split("\\|")[1]);
+            }
+        }
+        else{
+            // KL 22/04/2020
+            // case multiGene here, like Pkm / RP23-320D23.6
+            // set to the more complex gene, the one with the more isoforms in List<TranscriptRecord> transcripts
+            // need some bug fix here in the future verson !!!!
+            this.nomatch++;
+            //int index = new Random().nextInt(molecule.getGeneIds().size());
+            //Iterator<String> iter = molecule.getGeneIds().iterator();
+            //for (int i = 0; i < index; i++) { iter.next(); }
+            molecule.setTranscriptId("undef");
+            //molecule.setGeneId((String) iter.next());
+            molecule.setGeneId(getMostComplexGene());
+            if(debug) { System.out.println("no candidate --> gene_id:" + molecule.getGeneId()); }
+        }
+        
+        // only 1 mono-exonic transcript in the model --> we do set the isoform
+        if(transcripts.size() == 1 && list1.isEmpty()){
+           this.monoexon++;
+           molecule.setTranscriptId(transcripts.get(0).getTranscriptId());
+           molecule.setGeneId(transcripts.get(0).getGeneId());
+           molecule.setSupporting_reads(1);
+           if(debug) { System.out.println("mono-exonic --> transcript_id/gene_id:" + transcripts.get(0).getTranscriptId()+"|"+transcripts.get(0).getGeneId()); } 
+        }
+    }
+    
+    public String getMostComplexGene()
+    {
+        String mostRepeatedWord = "";
+        try{
+            ArrayList<String> list = new ArrayList<>();
+            for(TranscriptRecord transcriptrecord : transcripts)
+                list.add(transcriptrecord.getGeneId());
 
+            mostRepeatedWord  = list.stream()
+              .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
+              .entrySet()
+              .stream()
+              .max(Comparator.comparing(Entry::getValue))
+              .get()
+              .getKey();
+            
+            list = null;
+        }
+        catch(Exception e){ e.printStackTrace();  System.out.println(transcripts.size() + "\t" + transcripts.get(0).getGeneId()); }
+        
+        return mostRepeatedWord;
+    }
+    /*
     public void setIsoformStrict(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA)
     {
         List list1=null;
@@ -246,32 +393,10 @@ public class MoleculeDataset {
            molecule.setTranscriptId(transcripts.get(0).getTranscriptId());
            molecule.setGeneId(transcripts.get(0).getGeneId());
            molecule.setSupporting_reads(1);
-           if(debug) { System.out.println("mono-exonic --> transcript_id/gene_id:" + transcripts.get(0).getTranscriptId()+"|"+transcripts.get(0).getGeneId()); }
-           
+           if(debug) { System.out.println("mono-exonic --> transcript_id/gene_id:" + transcripts.get(0).getTranscriptId()+"|"+transcripts.get(0).getGeneId()); } 
         }
     }
-    
-    public String getMostComplexGene(List<TranscriptRecord> transcripts)
-    {
-        String mostRepeatedWord = "";
-        try{
-            ArrayList<String> list = new ArrayList<>();
-            for(TranscriptRecord transcriptrecord : transcripts)
-                list.add(transcriptrecord.getGeneId());
 
-            mostRepeatedWord  = list.stream()
-              .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
-              .entrySet()
-              .stream()
-              .max(Comparator.comparing(Entry::getValue))
-              .get()
-              .getKey();
-        }
-        catch(Exception e){ e.printStackTrace();  System.out.println(transcripts.size() + "\t" + transcripts.get(0).getGeneId()); }
-        
-        return mostRepeatedWord;
-    }
-    
     public void setIsoformScore(Molecule molecule, List<TranscriptRecord> transcripts, int DELTA, boolean AMBIGUOUS_ASSIGN)
     {
         HashMap<Junction, HashSet<TranscriptRecord>> mapper = new HashMap<Junction, HashSet<TranscriptRecord>>();
@@ -373,6 +498,8 @@ public class MoleculeDataset {
             }
         }
     }
+    */
+    
     public void setFusions()
     {
         Molecule molecule = null;
@@ -414,7 +541,7 @@ public class MoleculeDataset {
         
         return bool;
     }
-
+    /*
     public List<int[]> junctionsFromExons(List<int[]> exons) {
         ArrayList lst = new ArrayList();
 
@@ -438,19 +565,19 @@ public class MoleculeDataset {
 
         return lst;
     }
-
+    */
     public void print(List<int[]> junctions) {
         for (int i = 0; i < junctions.size(); i++) {
             System.out.println(junctions.get(i)[0] + "-" + junctions.get(i)[1]);
         }
     }
 
-    public boolean map(List<int[]> lrr_exons, List<int[]> tr_exons, int DELTA, Molecule molecule)
+    public boolean map(List<Junction> juncRead, List<Junction> juncRef, int DELTA, Molecule molecule)
     {   
         boolean bool = true;
-	if(tr_exons.size() > 0 && tr_exons.size() == lrr_exons.size()) {
-            for (int i = 0; i < tr_exons.size(); i++) {
-                if (!isIn((int[]) tr_exons.get(i), lrr_exons, DELTA))
+	if(juncRef.size() > 0 && juncRef.size() == juncRead.size()) {
+            for (int i = 0; i < juncRef.size(); i++) {
+                if (!isIn((Junction) juncRef.get(i), juncRead, DELTA))
                     bool = false;
             }
         }
@@ -458,43 +585,26 @@ public class MoleculeDataset {
             bool = false;
         
         // get all junctions of all reads/molecules
-        for (int i = 0; i < tr_exons.size(); i++) {
-            if (isIn((int[]) tr_exons.get(i), lrr_exons, DELTA))
-                 molecule.addJunction(tr_exons.get(i));
+        for (int i = 0; i < juncRef.size(); i++) {
+            if (isIn((Junction) juncRef.get(i), juncRead, DELTA))
+                 molecule.addJunction(juncRef.get(i));
         }
         
         return bool;
     }
 
-    public boolean isIn(int[] paramArrayOfInt, List<int[]> paramList, int DELTA) {
+    public boolean isIn(Junction j, List<Junction> lst, int DELTA)
+    {
         boolean bool = false;
-        for (int[] arrayOfInt : paramList) {
-            if ((Math.abs(arrayOfInt[0] - paramArrayOfInt[0]) <= DELTA) && (Math.abs(arrayOfInt[1] - paramArrayOfInt[1]) <= DELTA)) {
+        for(Junction jlist : lst) {
+            if ((Math.abs(jlist.getStart() - j.getStart()) <= DELTA) && (Math.abs(jlist.getEnd() - j.getEnd()) <= DELTA)) {
                 bool = true;
             }
         }
         return bool;
     }
-
-    private static int[] toIntArray(String paramString) throws NumberFormatException {
-        paramString = StringUtils.stripEnd(paramString, ",");
-        String[] arrayOfString = paramString.split(",");
-        int[] arrayOfInt = new int[arrayOfString.length];
-
-        for (int i = 0; i < arrayOfString.length; i++) {
-            arrayOfInt[i] = Integer.valueOf(arrayOfString[i]).intValue();
-        }
-        return arrayOfInt;
-    }
-
-    public String getSizesOfSequence(List<DNASequence> lst) {
-        String t = "";
-        for (int i = 0; i < lst.size(); i++) {
-            t += new Integer(((DNASequence) lst.get(i)).getSequenceAsString().length()) + ",";
-        }
-        return t;
-    }
-    public Matrix produceMatrix(UCSCRefFlatParser model, HashSet<String> authorizedCells)
+    
+    public Matrix produceMatrix(HashSet<String> authorizedCells)
     {
         int nb = 0;
         Matrix matrix = new Matrix(authorizedCells);
@@ -595,7 +705,8 @@ public class MoleculeDataset {
 
     }
 
-    private synchronized void write(String rslt) {
+    private synchronized void write(String rslt)
+    {
         try {
             os.writeBytes(rslt);
             // thats a mess.... but it works, need to change ket of 

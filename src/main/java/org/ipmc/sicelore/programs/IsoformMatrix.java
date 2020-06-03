@@ -84,8 +84,8 @@ public class IsoformMatrix extends CommandLineProgram
         this.cellList = new CellList(CSV); 
         log.info(new Object[]{"\tCells detected\t\t[" + this.cellList.size() + "]"});
         
-        if(!"STRICT".equals(METHOD) && !"SCORE".equals(METHOD)){
-            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, please choose STRICT or SCORE only"});
+        if(!"STRICT".equals(METHOD)){
+            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, only STRICT method allowed (SCORE disabled)"});
             return 0;
         }
 
@@ -96,14 +96,10 @@ public class IsoformMatrix extends CommandLineProgram
 
     protected void process()
     {
-        UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, MAPQV0, false, true, true);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        
-        bam = null;
-        System.gc();
-        
-        dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
+        dataset.initModel(REFFLAT);
+        dataset.setIsoforms(DELTA, METHOD, AMBIGUOUS_ASSIGN);
         
         File ISOMATRIX   = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isomatrix.txt");
         File ISOMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isometrics.txt");
@@ -115,11 +111,11 @@ public class IsoformMatrix extends CommandLineProgram
         File MOLINFOS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
         File outISOBAM = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isobam.bam");
 
-        Matrix matrix = dataset.produceMatrix(model, this.cellList);
+        Matrix matrix = dataset.produceMatrix(this.cellList);
         log.info(new Object[]{"\twriteJunctionMatrix\t[start]"});
         matrix.writeJunctionMatrix(JUNCMATRIX, JUNCMETRICS);
         log.info(new Object[]{"\twriteIsoformMatrix\t[start]"});
-        matrix.writeIsoformMatrix(ISOMATRIX, ISOMETRICS, MOLINFOS, model);
+        matrix.writeIsoformMatrix(ISOMATRIX, ISOMETRICS, MOLINFOS, dataset.getModel());
         log.info(new Object[]{"\twriteGeneMatrix\t\t[start]"});
         matrix.writeGeneMatrix(GENEMATRIX, GENEMETRICS);
         log.info(new Object[]{"\twriteCellMetrics\t[start]"});

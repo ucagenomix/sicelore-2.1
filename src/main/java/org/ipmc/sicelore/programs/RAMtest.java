@@ -83,10 +83,10 @@ public class RAMtest extends CommandLineProgram
 	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP, RNTAG);
         
         this.cellList = new CellList(CSV); 
-        log.info(new Object[]{"\tCells detected\t\t[" + this.cellList.size() + "]"});
+        log.info(new Object[]{"\t\tCells detected\t\t[" + this.cellList.size() + "]"});
         
-        if(!"STRICT".equals(METHOD) && !"SCORE".equals(METHOD)){
-            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, please choose STRICT or SCORE only"});
+        if(!"STRICT".equals(METHOD)){
+            log.info(new Object[]{"\tIsoform method: [" + METHOD + "] not allowed, only STRICT method allowed (SCORE disabled)"});
             return 0;
         }
 
@@ -97,11 +97,22 @@ public class RAMtest extends CommandLineProgram
 
     protected void process()
     {
-        UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         LongreadParser bam = new LongreadParser(INPUT, MAPQV0, false, true, true);
         MoleculeDataset dataset = new MoleculeDataset(bam);
-        dataset.setIsoforms(model, DELTA, METHOD, AMBIGUOUS_ASSIGN);
+        dataset.initModel(REFFLAT);
         
+        log.info(new Object[]{"\tstart sleeping after dataset"});
+        try{
+            TimeUnit.SECONDS.sleep(30);
+        }catch(Exception e){}
+        
+        dataset.setIsoforms(DELTA, METHOD, AMBIGUOUS_ASSIGN);
+
+        log.info(new Object[]{"\tstart sleeping after setIsoforms"});
+        try{
+            TimeUnit.SECONDS.sleep(30);
+        }catch(Exception e){}
+
         File ISOMATRIX   = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isomatrix.txt");
         File ISOMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isometrics.txt");
         File JUNCMATRIX  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_juncmatrix.txt");
@@ -112,11 +123,17 @@ public class RAMtest extends CommandLineProgram
         File MOLINFOS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
         File outISOBAM = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isobam.bam");
 
-        Matrix matrix = dataset.produceMatrix(model, this.cellList);
+        Matrix matrix = dataset.produceMatrix(this.cellList);
+        
+        log.info(new Object[]{"\tstart sleeping after produceMatrix"});
+        try{
+            TimeUnit.SECONDS.sleep(30);
+        }catch(Exception e){}
+        
         log.info(new Object[]{"\twriteJunctionMatrix\t[start]"});
         matrix.writeJunctionMatrix(JUNCMATRIX, JUNCMETRICS);
         log.info(new Object[]{"\twriteIsoformMatrix\t[start]"});
-        matrix.writeIsoformMatrix(ISOMATRIX, ISOMETRICS, MOLINFOS, model);
+        matrix.writeIsoformMatrix(ISOMATRIX, ISOMETRICS, MOLINFOS, dataset.getModel());
         log.info(new Object[]{"\twriteGeneMatrix\t\t[start]"});
         matrix.writeGeneMatrix(GENEMATRIX, GENEMETRICS);
         log.info(new Object[]{"\twriteCellMetrics\t[start]"});
@@ -132,7 +149,7 @@ public class RAMtest extends CommandLineProgram
         
         log.info(new Object[]{"\tstart sleeping 2"});
         try{
-            TimeUnit.SECONDS.sleep(240);
+            TimeUnit.SECONDS.sleep(30);
         }catch(Exception e){}
 
         

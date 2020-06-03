@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.tribble.annotation.Strand;
+import java.util.regex.Pattern;
 
 public class LongreadRecord implements Comparable<LongreadRecord>
 {
@@ -28,6 +29,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     private String geneId;
     //private String[] geneIds;
     private List<int[]> exons;
+    private List<Junction> junctions;
     //private double rpkm;
     private byte[] cdna;
     //private String orientation;
@@ -107,6 +109,11 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             int umiEnd = ((Integer) r.getAttribute(UMIENDTAG) != null) ? (Integer) r.getAttribute(UMIENDTAG) : 0; 		// +1 is start of polyA with --------------TTTT read orientation !!!
             int tsoEnd = ((Integer) r.getAttribute(TSOENDTAG) != null) ? (Integer) r.getAttribute(TSOENDTAG) : 0;
             int polyAEnd = ((Integer) r.getAttribute(POLYAENDTAG) != null) ? (Integer) r.getAttribute(POLYAENDTAG) : 0;
+            
+            // we would need a tag instead
+            int polyAStart = polyAStartFromReadName(record.name);
+            if(polyAStart > 0)
+                polyAEnd = polyAStart-1;
             
             //boolean isSoftOrHardClipped = false;
             int sizeStartToClip = 0;
@@ -231,9 +238,31 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             for (i = 0; i < exonStarts.length; i++)
                 record.exons.add(new int[]{exonStarts[i], exonEnds[i]});
             
+            record.junctions = new ArrayList();
+            for (i = 1; i < record.exons.size(); i++) {
+                int j = ((int[]) record.exons.get(i - 1))[1];
+                int k = ((int[]) record.exons.get(i))[0];
+                record.junctions.add(new Junction(j, k));
+            }
+            
         } catch (Exception e) { throw new LongreadParseException("Invalid Bam file. " + record.name + ", Can't parse: ", e); }
 
         return record;
+    }
+    
+    
+    static int polyAStartFromReadName(String name)
+    {
+        int PAst = 0;
+        // a7f6c0db-f0e0-498a-8037-aea6986ffbf6_REV_PAst=1341_PAen=1369_AEnd=1396_TS=46_bc=CCGCGGGTACGAAGAA_ed=0_ed_sec=6_bcStart=1395_bcEnd=1380_sq=AAAAAAAAAATACCCGCAGATATTCTTCGTACCCGCGGAGA_qv=23.9_
+        String[] tab = name.split("_");
+        for(int i=0;i<tab.length;i++){
+            if(Pattern.matches("^PAst=.*", tab[i])){
+                String[] t = tab[i].split("=");
+                PAst = new Integer(t[1]).intValue();
+            }
+        }
+        return PAst;
     }
     
     /*
@@ -321,9 +350,9 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     
     //public boolean getIsSecondaryOrSupplementary() { return isSecondaryOrSupplementary; }
 
-    public List<int[]> getExons() {
-        return this.exons;
-    }
+    public List<int[]> getExons() { return this.exons; }
+    
+    public List<Junction> getJunctions() { return this.junctions; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name=name; }

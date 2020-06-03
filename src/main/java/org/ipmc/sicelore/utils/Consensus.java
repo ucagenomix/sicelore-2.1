@@ -18,8 +18,8 @@ public class Consensus implements Callable<String>
     private List<SubConsensus> sequences;
     private String name;
     private String cons;
-    private int MAX = 20;
     
+    protected static int MAX;
     protected static String TMPDIR;
     protected static String POAPATH;
     protected static String RACONPATH;
@@ -35,7 +35,7 @@ public class Consensus implements Callable<String>
         this.name = name;
         this.sequences = new ArrayList<SubConsensus>();
         
-        // sort LongreadRecords on minimap2 "de" max to min value (hope so)
+        // sort LongreadRecords on minimap2 "de" max to min value
         Collections.sort(evidenceList);
         int max = this.MAX;
         if(evidenceList.size() < this.MAX)
@@ -85,7 +85,9 @@ public class Consensus implements Callable<String>
         decode[4] = 'G';
     }
 
-    public void setStaticParams(String tmp, String poa, String racon, String minimap2){
+    public void setStaticParams(int MAX, String tmp, String poa, String racon, String minimap2)
+    {
+        this.MAX = MAX;
         this.TMPDIR = tmp;
         this.POAPATH = poa;
         this.RACONPATH = racon;
@@ -165,7 +167,7 @@ public class Consensus implements Callable<String>
                 line = fichier.readLine();
                 this.cons = fichier.readLine();
                 fichier.close();
-
+                
                 commande[2] = "rm "+TMPDIR+"/"+this.name+"_reads.fa "+TMPDIR+"/"+this.name+".pir "+TMPDIR+"/"+this.name+"_overlap.sam "+TMPDIR+"/"+this.name+"_consensus.fa "+TMPDIR+"/"+this.name+"_corrected_consensus.fa";
                 executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
                 executeCmd.run();

@@ -25,6 +25,10 @@ public class DeduplicateMolecule extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output deduplicate fasta file")
     public File OUTPUT;
+    @Argument(shortName = "TS0", doc = "TSO sequence (default=AACGCAGAGTACATGG)")
+    public String TSO = "AACGCAGAGTACATGG";
+    @Argument(shortName = "MAXPOS", doc = "Start number of nt. to search for TSO sequence (default=100)")
+    public int MAXPOS = 100;
  
     public DeduplicateMolecule() {
         log = Log.getInstance(DeduplicateMolecule.class);
@@ -33,6 +37,7 @@ public class DeduplicateMolecule extends CommandLineProgram {
     protected int doWork()
     {
         int count=0;
+        int tsocut=0;
         String line = null;
         BufferedOutputStream os = null;
         IOUtil.assertFileIsReadable(INPUT);
@@ -51,22 +56,44 @@ public class DeduplicateMolecule extends CommandLineProgram {
                 
                     if(!"null".equals(seq)){
                         count++;
-
+                        
+                        int region = (seq.length() < MAXPOS)?seq.length():MAXPOS;
+                        
+                        // remove remaining TSO if found in the first 100nt.
+                        // TSO = AAGCAGTGGTATCAACGCAGAGTACATGG
+                        int xx = 0;
+                        if((xx = seq.substring(0,region).indexOf(TSO)) > 0){
+                            seq = seq.substring(xx+TSO.length());
+                            tsocut++;
+                        }
+                        else if((xx = seq.substring(0,region).indexOf(TSO.substring(0,10))) > 0){
+                            seq = seq.substring(xx+16);
+                            tsocut++;
+                        }
+                        else if((xx = seq.substring(0,region).indexOf(TSO.substring(6,16))) > 0){
+                            seq = seq.substring(xx+10);
+                            tsocut++;
+                        }
+                        
                         line = line.replace(">", "");
                         line = line.replace("\\|", "-");
                         String[] ids = line.split("-");
                         String key = ids[0]+ids[1];
                         int rn = new Integer(ids[2]).intValue();
 
-                        if(! map.containsKey(ids[0]+ids[1]))
+                        if(! map.containsKey(key))
                             map.put(key, new Molecule(ids[0], ids[1], seq, rn));
                         else{
+                            
+                            //log.info(new Object[]{"already seen\t" + ids[0]+"\t"+ids[1]+"\t"+seq.length()+"\t"+rn+"\t"+map.get(key).getConsensus().length()+"\t"+map.get(key).getRn()});
+                            
                             if(map.get(key).getRn() < rn)
                                 map.put(key, new Molecule(ids[0], ids[1], seq, rn));
                             else if(map.get(key).getRn() == rn){
                                 if(map.get(key).getConsensus().length() < seq.length())
                                     map.put(key, new Molecule(ids[0], ids[1], seq, rn));
                             }
+                            //log.info(new Object[]{"kept\t\t" +map.get(key).getConsensus().length()+"\t"+map.get(key).getRn()}); 
                         }
                     }
                 }
@@ -77,9 +104,12 @@ public class DeduplicateMolecule extends CommandLineProgram {
 
         log.info(new Object[]{"loadFasta\tEND..."});
         log.info(new Object[]{"loadFasta\t" + count + " sequences loaded"});
+        log.info(new Object[]{"loadFasta tso\t"+tsocut});
         log.info(new Object[]{"loadFasta\t" + map.size() + " molecules"});
+        log.info(new Object[]{"loadFasta\tEND..."});
         
         log.info(new Object[]{"writeFasta\tSTART..."});
+        
         try {
             os = new BufferedOutputStream(new java.io.FileOutputStream(OUTPUT));
             Set cles = map.keySet();

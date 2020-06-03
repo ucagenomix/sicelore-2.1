@@ -50,6 +50,8 @@ public class ComputeConsensus extends CommandLineProgram {
     public boolean MAPQV0 = false;
     //@Argument(shortName = "FASTQ", doc = "The .FASTQ file")
     //public File FASTQ;
+    @Argument(shortName = "MAXREADS", doc = "Maximum number of reads per UMI to use for consensus sequence calling (default=20)", optional=true)
+    public int MAXREADS = 20;
 
     public ComputeConsensus() {
         log = Log.getInstance(ComputeConsensus.class);
@@ -73,7 +75,7 @@ public class ComputeConsensus extends CommandLineProgram {
             log.info(new Object[]{"Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
-            c.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
+            c.setStaticParams(MAXREADS,TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
             
             LongreadRecord lrr = new LongreadRecord();
             lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP,RNTAG);

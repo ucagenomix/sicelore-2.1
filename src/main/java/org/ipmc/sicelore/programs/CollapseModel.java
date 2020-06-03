@@ -50,6 +50,8 @@ public class CollapseModel extends CommandLineProgram
     public String TMPDIR = "/share/data/scratch/sicelore/";
     @Argument(shortName = "T", doc = "The number of threads (default 20)")
     public int nThreads = 20;
+    @Argument(shortName = "MAXUMIS", doc = "Maximum number of UMIs per isoform to use for consensus sequence calling (default=20)", optional=true)
+    public int MAXUMIS = 20;
     
     @Argument(shortName = "SHORT", doc = "The short read SAM or BAM file fot junction validation")
     public File SHORT;
@@ -105,7 +107,7 @@ public class CollapseModel extends CommandLineProgram
             log.info(new Object[]{"\t# Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
-            c.setStaticParams(TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
+            c.setStaticParams(MAXUMIS,TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
             this.doConsCall = true; // change to true if needed
         }
         

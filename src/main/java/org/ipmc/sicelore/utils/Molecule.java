@@ -11,7 +11,7 @@ public class Molecule
 {
     private List<Longread> longreads;
     private HashSet<String> geneIds;
-    private HashSet<int[]> junctionSet;
+    private HashSet<Junction> junctionSet;
     private String barcode;
     private String umi;
     private int rn;
@@ -26,7 +26,7 @@ public class Molecule
     public Molecule(String barcode, String umi, int rn) {
         this.longreads = new ArrayList<Longread>();
         this.geneIds = new HashSet<String>();
-        this.junctionSet = new HashSet<int[]>();
+        this.junctionSet = new HashSet<Junction>();
         this.barcode = barcode;
         this.umi = umi;
         this.rn = rn;
@@ -35,7 +35,7 @@ public class Molecule
     public Molecule(String barcode, String umi, String consensus, int rn) {
         //this.longreads = new ArrayList<Longread>();
         //this.geneIds = new HashSet<String>();
-        this.junctionSet = new HashSet<int[]>();
+        this.junctionSet = new HashSet<Junction>();
         this.barcode = barcode;
         this.consensus = consensus;
         this.umi = umi;
@@ -44,7 +44,7 @@ public class Molecule
     
     public List<Longread> getLongreads() { return longreads; }
     public HashSet<String> getGeneIds() { return geneIds; }
-    public HashSet<int[]> getJunctionSet() { return this.junctionSet; }
+    public HashSet<Junction> getJunctionSet() { return this.junctionSet; }
     
     public String getBarcode() { return this.barcode; }
     public String getUmi() { return this.umi; }
@@ -105,7 +105,7 @@ public class Molecule
             this.geneIds.add((String)iterator.next());
     }
     
-    public void addJunction(int[] j)
+    public void addJunction(Junction j)
     {
         this.junctionSet.add(j);
     }

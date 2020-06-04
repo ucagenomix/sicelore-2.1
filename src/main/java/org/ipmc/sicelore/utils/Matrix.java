@@ -201,11 +201,11 @@ public class Matrix
                 os2.write(new String("\t" + total + "\n").getBytes());
             }
             
-            os3.write(new String("cellBC\tUMI\tnbReads\tnbSupportingReads\tpctId\tgeneId\ttranscriptId\n").getBytes());
+            os3.write(new String("cellBC\tUMI\tnbReads\tnbSupportingReads\tmappingPctId\tsnpPhredScore\tgeneId\ttranscriptId\n").getBytes());
             Iterator<Molecule> it = this.molecules.iterator();
             while(it.hasNext()) {
                 Molecule m = it.next();
-                os3.write(new String(m.getBarcode() + "\t" + m.getUmi() + "\t" + m.getNumberOfReads() + "\t" + m.getSupporting_reads() + "\t" + m.getPctId() + "\t" + m.getGeneId() + "\t" + m.getTranscriptId() + "\n").getBytes());
+                os3.write(new String(m.getBarcode() + "\t" + m.getUmi() + "\t" + m.getNumberOfReads() + "\t" + m.getSupporting_reads() + "\t" + m.getPctId() + "\t" + m.getSnpPhredScore() + "\t" + m.getGeneId() + "\t" + m.getTranscriptId() + "\n").getBytes());
             }
             
             os.close();

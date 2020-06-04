@@ -81,18 +81,18 @@ public class LongreadParser implements LongreadModelParser {
         }
         
         log.info(new Object[]{"\tend..."});
-        log.info(new Object[]{"\tTotal SAMrecords\t[" + total_records + "]"});
-        log.info(new Object[]{"\tSAMrecords valid\t[" + valid_records + "]"});
-        log.info(new Object[]{"\tSAMrecords unvalid\t[" + unvalid_records + "]"});
-        log.info(new Object[]{"\tSAMrecords mapqv=0\t[" + mapqv0_records + "]"});
-        log.info(new Object[]{"\tSAMrecords no gene\t[" + gene_unset + "]"});
-        log.info(new Object[]{"\tSAMrecords no UMI\t[" + umi_unset + "]"});
-        log.info(new Object[]{"\tSAMrecords chimeria\t[" + chimeria_records + "]"});
-        log.info(new Object[]{"\tSAMrecords reversed\t[" + reversed_records + "]"});
+        log.info(new Object[]{"\tTotal SAMrecords\t" + total_records});
+        log.info(new Object[]{"\tSAMrecords valid\t" + valid_records});
+        log.info(new Object[]{"\tSAMrecords unvalid\t" + unvalid_records});
+        log.info(new Object[]{"\tSAMrecords mapqv=0\t" + mapqv0_records});
+        log.info(new Object[]{"\tSAMrecords no gene\t" + gene_unset});
+        log.info(new Object[]{"\tSAMrecords no UMI\t" + umi_unset});
+        log.info(new Object[]{"\tSAMrecords chimeria\t" + chimeria_records});
+        log.info(new Object[]{"\tSAMrecords reversed\t" + reversed_records});
         //log.info(new Object[]{"\tSAMrecords null\t[" + null_records + "]"});
         //log.info(new Object[]{"\tSAMrecords not primary\t[" + not_primary_records + "]"});
-        log.info(new Object[]{"\tTotal reads\t\t[" + mapLongreads.size() + "]"});
-        log.info(new Object[]{"\tTotal reads multiSAM\t[" + multiRec.size() + "]"});
+        log.info(new Object[]{"\tTotal reads\t\t" + mapLongreads.size()});
+        log.info(new Object[]{"\tTotal reads multiSAM\t" + multiRec.size()});
     }
 
     public LongreadRecord parseSAMRecord(SAMRecord r) throws LongreadParseException

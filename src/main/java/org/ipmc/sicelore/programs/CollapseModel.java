@@ -95,19 +95,19 @@ public class CollapseModel extends CommandLineProgram
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(CSV);
         
-        String POAPATH = this.findExecutableOnPath("poa");
-        String RACONPATH = this.findExecutableOnPath("racon");
-        String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
+        String SPOAPATH = this.findExecutableOnPath("poa");
+        //String RACONPATH = this.findExecutableOnPath("racon");
+        //String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
         
-        if(POAPATH == null)
+        if(SPOAPATH == null)
             log.info(new Object[]{"\t# Unable to find poa, please add it to your PATH"});
-        else if(RACONPATH == null)
-            log.info(new Object[]{"\t# Unable to find racon, please add it to your PATH"});
-        else if(MINIMAP2PATH == null)
-            log.info(new Object[]{"\t# Unable to find minimap2, please add it to your PATH"});
+        //else if(RACONPATH == null)
+        //    log.info(new Object[]{"\t# Unable to find racon, please add it to your PATH"});
+        //else if(MINIMAP2PATH == null)
+        //    log.info(new Object[]{"\t# Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
-            c.setStaticParams(MAXUMIS,TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
+            c.setStaticParams(MAXUMIS,TMPDIR,SPOAPATH);
             this.doConsCall = true; // change to true if needed
         }
         

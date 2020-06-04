@@ -11,6 +11,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -41,8 +43,10 @@ public class SNPMatrix extends CommandLineProgram {
     public String UMITAG = "U8";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
-    @Argument(shortName = "RN_min", doc = "Minimum read number to take into account the molecule (default=0, means all)")
-    public int RN_min = 0;
+    @Argument(shortName = "MINRN", doc = "Minimum read number to keep the molecule for SNP calling (default=0, means all)")
+    public int MINRN = 0;
+    @Argument(shortName = "MINQV", doc = "Minimum QV score at position to keep the molecule for SNP calling (default=0, means all)")
+    public int MINQV = 0;
 
     public CellList cellList;
     
@@ -84,6 +88,7 @@ public class SNPMatrix extends CommandLineProgram {
                     boolean strand = ("-".equals(tok[2]))?true:false;
                     String gene = tok[3];
                     int total=0;
+                    int lowqv=0;
                     nb++;
                     
                     String[] pos = { tok[1] };
@@ -99,11 +104,12 @@ public class SNPMatrix extends CommandLineProgram {
                             pl.record(r);
                             LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, false);
 
-                            if (lrr != null && lrr.getRn() >= RN_min) {
+                            if (lrr != null && lrr.getRn() >= MINRN) {
                                 Longread lr = new Longread(r.getReadName());
                                 lr.addRecord(lrr);
                                 String readString = r.getReadString();
-
+                                String qvString = r.getBaseQualityString();
+                                
                                 Integer[] posInt = new Integer[arr.length];
                                 for (int i = 0; i < arr.length; i++) {
                                     posInt[i] = r.getReadPositionAtReferencePosition(arr[i]);
@@ -114,8 +120,14 @@ public class SNPMatrix extends CommandLineProgram {
 
                                 if (min > 0 && readString.length() > max) {
                                     String[] nuc = new String[posInt.length];
-                                    for (int i = 0; i < arr.length; i++) {
+                                    int[] qv = new int[posInt.length];
+                                    int min_qv = 100;
+                                    
+                                    for(int i = 0; i < arr.length; i++) {
                                         nuc[i] = readString.substring(posInt[i] - 1, posInt[i]);
+                                        qv[i] = (int)(qvString.substring(posInt[i] - 1, posInt[i]).charAt(0)) - 33;
+                                        if(qv[i]<min_qv)
+                                            min_qv = qv[i];
                                     }
 
                                     if (r.getReadNegativeStrandFlag()) {
@@ -124,18 +136,24 @@ public class SNPMatrix extends CommandLineProgram {
                                         }
                                     }
                                     
-                                    total++;
-                                    Molecule molecule = new Molecule(lrr.getBarcode(), lrr.getUmi(), lrr.getRn());
-                                    molecule.addLongread(lr);
-                                    molecule.setGeneId(gene);
-                                    molecule.setTranscriptId(chromosome + ":" + String.join("|", pos) + ".." + String.join("", nuc));
-                                    matrix.addMolecule(molecule);
+                                    // keep high QV molecules only
+                                    if(min_qv >= MINQV){
+                                        total++;
+                                        Molecule molecule = new Molecule(lrr.getBarcode(), lrr.getUmi(), lrr.getRn());
+                                        molecule.addLongread(lr);
+                                        molecule.setGeneId(gene);
+                                        molecule.setTranscriptId(chromosome + ":" + String.join("|", pos) + ".." + String.join("", nuc));
+                                        molecule.setSnpPhredScore(StringUtils.join(ArrayUtils.toObject(qv), ","));
+                                        matrix.addMolecule(molecule);
+                                    }
+                                    else
+                                        lowqv++;
                                 }
                             }
                         }
                     }
                     iter.close();
-                    log.info(new Object[]{"processing...\t\t" + line + "\t[" + total + " hits]\t"});
+                    log.info(new Object[]{"processing...\t\t" + line + "\t" + total + " hits, " + lowqv + " hits lowQV"});
                 }
                 line = fichier.readLine();
             }
@@ -145,8 +163,8 @@ public class SNPMatrix extends CommandLineProgram {
         if(matrix.getMatrice().size() > 0){
             File MATRIX = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_matrix.txt");
             File METRICS = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_metrics.txt");
-            File molinfos = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
-            matrix.writeIsoformMatrix(MATRIX, METRICS, molinfos, null);
+            File MOLINFOS = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
+            matrix.writeIsoformMatrix(MATRIX, METRICS, MOLINFOS, null);
         }
         else
             log.info(new Object[]{"end of processing...\t\tnothing has been detected, check your input parameters, no output files generated\t"});

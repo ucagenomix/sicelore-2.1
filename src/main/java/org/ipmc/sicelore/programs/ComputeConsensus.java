@@ -63,19 +63,19 @@ public class ComputeConsensus extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         //IOUtil.assertFileIsReadable(FASTQ);
                 
-        String POAPATH = this.findExecutableOnPath("poa");
-        String RACONPATH = this.findExecutableOnPath("racon");
-        String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
+        String SPOAPATH = this.findExecutableOnPath("spoa");
+        //String RACONPATH = this.findExecutableOnPath("racon");
+        //String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
         
-        if(POAPATH == null)
-            log.info(new Object[]{"Unable to find poa, please add it to your PATH"});
-        else if(RACONPATH == null)
-            log.info(new Object[]{"Unable to find racon, please add it to your PATH"});
-        else if(MINIMAP2PATH == null)
-            log.info(new Object[]{"Unable to find minimap2, please add it to your PATH"});
+        if(SPOAPATH == null)
+            log.info(new Object[]{"Unable to find spoa, please add it to your PATH"});
+        //else if(RACONPATH == null)
+        //    log.info(new Object[]{"Unable to find racon, please add it to your PATH"});
+        //else if(MINIMAP2PATH == null)
+        //    log.info(new Object[]{"Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
-            c.setStaticParams(MAXREADS,TMPDIR,POAPATH,RACONPATH,MINIMAP2PATH);
+            c.setStaticParams(MAXREADS,TMPDIR,SPOAPATH);
             
             LongreadRecord lrr = new LongreadRecord();
             lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP,RNTAG);

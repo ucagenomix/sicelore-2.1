@@ -17,6 +17,9 @@ public class Molecule
     private int rn;
     private Float pctId;
     private String consensus = "";
+    private String consensusQV = "";
+    private String snpPhredScore = "";
+    
     private String geneId = "undef";
     private String transcriptId = "undef";
     private int supporting_reads=0;
@@ -42,6 +45,17 @@ public class Molecule
         this.rn=rn;
     }
     
+    public Molecule(String barcode, String umi, String consensus, String consensusQV, int rn) {
+        //this.longreads = new ArrayList<Longread>();
+        //this.geneIds = new HashSet<String>();
+        this.junctionSet = new HashSet<Junction>();
+        this.barcode = barcode;
+        this.consensus = consensus;
+        this.consensusQV = consensusQV;
+        this.umi = umi;
+        this.rn=rn;
+    }
+    
     public List<Longread> getLongreads() { return longreads; }
     public HashSet<String> getGeneIds() { return geneIds; }
     public HashSet<Junction> getJunctionSet() { return this.junctionSet; }
@@ -52,6 +66,12 @@ public class Molecule
     
     public String getConsensus() { return this.consensus; }
     public void setConsensus(String consensus) { this.consensus = consensus; }
+    
+    public String getConsensusQV() { return this.consensusQV; }
+    public void setConsensusQV(String consensusQV) { this.consensusQV = consensusQV; }
+    
+    public String getSnpPhredScore() { return this.snpPhredScore; }
+    public void setSnpPhredScore(String snpPhredScore) { this.snpPhredScore = snpPhredScore; }
     
     public int getRn() { return this.rn; }
     public void setRn(int rn) { this.rn = rn; }

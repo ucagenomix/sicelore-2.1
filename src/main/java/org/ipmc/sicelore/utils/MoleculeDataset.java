@@ -93,7 +93,7 @@ public class MoleculeDataset {
             if(molecule.getGeneIds().size() > 1)
                 multiIG++;
         }        
-        log.info(new Object[]{"\tTotal molecule reads\t\t" + totalReads});
+        log.info(new Object[]{"\tTotal molecule reads\t" + totalReads});
         log.info(new Object[]{"\tTotal molecule multiIG\t" + multiIG});
     }
     
@@ -712,7 +712,7 @@ public class MoleculeDataset {
             // thats a mess.... but it works, need to change ket of 
             // this.mapMolecules ligne 68, does this will break something else ?
             String[] tmp = rslt.split("\n");
-            tmp[0] = tmp[0].replaceAll(">","");
+            tmp[0] = tmp[0].replaceAll("@","");
             String[] tmp2 = tmp[0].split("-");
             this.mapMolecules.get(tmp2[0]+":"+tmp2[1]).setConsensus(tmp[1]);
         } catch (Exception e) { e.printStackTrace(); }

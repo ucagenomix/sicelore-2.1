@@ -12,11 +12,7 @@ requires:
 
 * Java 8,
 
-* [Minimap2](https://github.com/lh3/minimap2),
-
-* [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2)
-
-* [racon](https://github.com/isovic/racon)
+* [spoa](https://github.com/rvaser/spoa)
 
 * [fastp](https://github.com/OpenGene/fastp)
 
@@ -270,7 +266,7 @@ command shown is for BAM batch "0001.sub.bam"
 
 ```
 
-java -jar -Xmx12g sicelor.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE
+java -jar -Xmx12g sicelor.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=refFlat.txt TAG=GE
 samtools index 0001.sub.GE.bam
 
 ```
@@ -635,13 +631,17 @@ samtools index GEUS10xAttributes.umifound.bam
 
 **use ComputeConsensus (sicelore.jar)**
 
-The pipeline allows to compute the consensus sequence for molecule in .bam file. First step is loading all the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
+The pipeline allows to compute the consensus sequence for molecule detected  in input .bam file. First step is loading the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
 
-Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value; (iii) More than two reads per molecule, a consensus sequence is comppute using [poa](https://github.com/tanghaibao/bio-pipeline/tree/master/poaV2) multiple alignment using a set of reads for the molecule. By default the top MAXREADS (default=20) reads having the lowest divergence to the reference ("de" minimap2 SAMrecord tag value) are taken for consensus calling. The consensus sequence is then [racon](https://github.com/isovic/racon) polished using the same set of reads for the molecule.
+Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value; (iii) More than two reads per molecule, a consensus sequence is comppute using [spoa](https://github.com/rvaser/spoa) multiple alignment using a set of reads for the molecule. 
 
-The speed of consensus sequence computation is dependent of the sequencing depth wich induce a low/high number of multi-reads molecules. It is about 250k UMIs/hour on a 20 core compute node using 20 threads. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
+By default the top MAXREADS (default=20) reads having the lowest divergence to the reference ("de" minimap2 SAMrecord tag value) are taken for consensus calling.
 
-MINIMAP2, POA and RACON path are detected from your PATH variable, please add executables path to your PATH variable.
+
+
+The speed of consensus sequence computation is dependent of the sequencing depth which induce a low/high number of multi-reads molecules for which a consensus sequence is computed. In a standard whole transcriptome experiment having roughly 50% of the molecules having more than 2 reads the speed is about 600k UMIs/hour on a 20 core compute node using 20 threads. For time calculation optimization, this step could be parrallelized, for instance on a per chromosome basis, and dispense on a calcul cluster.
+
+SPOA executable needs to be in your PATH variable.
 
 
 **splitting bam by chromosomes**
@@ -664,7 +664,7 @@ GEUS10xAttributes.umifound.chr1.bam file containing cellBC (BC tag) and UMI (U8 
 
 **OUTPUT=** (required)
 
-Consensus sequence in fasta format for all molecules detected. Name of each molecules set to CellBC(BC), UMIs(U8) and read number RN) ">BC|UMI|RN"
+Consensus sequence in fastq format for all molecules detected. Name of each molecules set to CellBC(BC), UMIs(U8) and read number RN) ">BC-UMI-RN"
 
 **THREADS=,T=** (required)
 
@@ -682,7 +682,7 @@ Temporary directory
 
 ```
 
-java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fa T=20 TMPDIR=/tmp/ POAPATH=/share/apps/local/bio-pipeline/poaV2/ RACONPATH=/share/apps/local/racon/bin/ MINIMAP2PATH=/share/apps/local/minimap2/
+java -jar -Xmx44g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fq T=20 TMPDIR=/scracth/tmp/
 
 ```
 
@@ -692,20 +692,20 @@ java -jar -Xmx22g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1
 
 If ComputeConsensus step has been split per chromosome, we need to deduplicate molecules from genes having multiple copies in the genome.
 
-First we need to concatenate all chromosomes fasta file then use ***DeduplicateMolecule*** pipeline (sicelore.jar)
+First we need to concatenate all chromosomes fastq files then use ***DeduplicateMolecule*** pipeline (sicelore.jar)
 
 ```
 
 cat */molecules.chr*.fa > molecules.fa
-java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecules.fa O=deduplicate.fa
+java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecules.fq O=deduplicate.fq
 
 ```
 
-Molecule consensus sequences can then be mapped to the reference genome to generate a molecules.bam BAM file for further analysis.
+Molecule consensus sequences can then be mapped to the reference genome to generate a molecules.bam file for further analysis.
 
 ```
 
-minimap2 -ax splice -uf --sam-hit-only -t 20 --junc-bed junctions.bed $BUILD.mmi molecules.fa > molecules.sam
+minimap2 -ax splice -uf --sam-hit-only -t 20 --junc-bed junctions.bed $BUILD.mmi molecules.fq > molecules.sam
 samtools view -Sb molecules.sam -o unsorted.bam
 samtools sort unsorted.bam -o molecules.bam
 samtools index molecules.bam
@@ -722,7 +722,7 @@ Add gene name tag (GE) to molecules SAM records
 
 ```
 
-java -jar -Xmx12g sicelor.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE
+java -jar -Xmx22g sicelor.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE
 samtools index molecules.GE.bam
 
 ```
@@ -881,9 +881,13 @@ chromosome,position,strand,name
 ...
 ```
 
-**RN_min** (required)
+**MINRN** (required)
 
-Minimum number of reads for a molecule to be taken into account for SNP calling (default=0, meaning all molecules)
+Minimum read number to keep the molecule for SNP calling (default=0, means all)
+
+**MINQV** (required)
+
+Minimum QV score at position to keep the molecule for SNP calling (default=0, means all)
 
 **OUTPUT=** (required)
 
@@ -891,11 +895,11 @@ Output directory.
 
 **PREFIX**
 
-Prefix for _matrix.txt and _metrics.txt tab-delimited output text files
+Prefix for _matrix.txt/_metrics.txt/_molinfos.txt tab-delimited output text files
 
 ```
 
-java -jar -Xmx22g sicelor.jar SNPMatrix I=molecule.tags.bam RN_min=0 CSV=barcodes.csv SNP=snp_description.csv O=/path/to/output/directory/ PREFIX=snp
+java -jar -Xmx22g sicelor.jar SNPMatrix I=molecule.tags.bam MINRN=0 MINQV=0 CSV=barcodes.csv SNP=snp_description.csv O=/path/to/output/directory/ PREFIX=snp
 
 ```
 
@@ -911,7 +915,7 @@ Total number of molecules per SNP position - base observed in dataset
 
 **PREFIX**_molinfos.txt
 
-Per molecule information
+Per molecule per SNP position information
 
 <a id="fusion-calling"></a>
 

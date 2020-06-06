@@ -1,6 +1,7 @@
-# SiCeLoRe
 
-<img src="sicelore.png">
+<p align="center">
+  <img src="sicelore.png">
+</p>
 
 SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell barcode / UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell Nanopore or PacBIo long read sequencing data.
 

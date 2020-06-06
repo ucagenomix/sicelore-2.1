@@ -26,7 +26,7 @@ public class ComputeConsensus extends CommandLineProgram {
     public File OUTPUT;
     @Argument(shortName = "T", doc = "The number of threads (default 20)")
     public int nThreads = 20;
-    @Argument(shortName = "TMPDIR", doc = "TMPDIR")
+    @Argument(shortName = "TMPDIR", doc = "Full path to TMPDIR")
     public String TMPDIR = "/share/data/scratch/sicelore/";
     @Argument(shortName = "CELLTAG", doc = "Cell barcode tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
@@ -52,6 +52,8 @@ public class ComputeConsensus extends CommandLineProgram {
     //public File FASTQ;
     @Argument(shortName = "MAXREADS", doc = "Maximum number of reads per UMI to use for consensus sequence calling (default=20)", optional=true)
     public int MAXREADS = 20;
+    @Argument(shortName = "DEBUG", doc = "Debug mode, print consensus command and do not delete temp files (default=false)", optional=true)
+    public boolean DEBUG = false;
 
     public ComputeConsensus() {
         log = Log.getInstance(ComputeConsensus.class);
@@ -75,7 +77,7 @@ public class ComputeConsensus extends CommandLineProgram {
         //    log.info(new Object[]{"Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
-            c.setStaticParams(MAXREADS,TMPDIR,SPOAPATH);
+            c.setStaticParams(MAXREADS,TMPDIR,SPOAPATH,DEBUG);
             
             LongreadRecord lrr = new LongreadRecord();
             lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP,RNTAG);

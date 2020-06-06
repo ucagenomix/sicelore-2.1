@@ -39,7 +39,7 @@ public class DeduplicateMolecule extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         
-        if(Pattern.matches(".*fq$", INPUT.getName().toLowerCase()) || Pattern.matches(".*fastq$", INPUT.getName().toLowerCase()))
+        if(Pattern.matches(".*\\.fq", INPUT.getName().toLowerCase()) || Pattern.matches(".*\\.fastq", INPUT.getName().toLowerCase()))
             processFastq();
         else
             processFasta();

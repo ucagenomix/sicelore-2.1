@@ -1,5 +1,7 @@
 # SiCeLoRe
 
+<img src="sicelore.png">
+
 SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell barcode / UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell Nanopore or PacBIo long read sequencing data.
 
 Typically starting with a single cell short read bam file and Nanopore or PacBio long reads, the workflow integrates several sequential steps for cell barcode and UMI assignment to long reads (guided by short read data), transcript isoform identification, generation of molecules consensus sequences (UMI-guided error-correction) and production of [isoforms / junctions / SNPs x cells] count matrices for new modalities integration into standard single cell RNA-seq statistical analysis.
@@ -266,7 +268,7 @@ command shown is for BAM batch "0001.sub.bam"
 
 ```
 
-java -jar -Xmx12g sicelor.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=refFlat.txt TAG=GE
+java -jar -Xmx12g sicelor.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index 0001.sub.GE.bam
 
 ```
@@ -676,7 +678,7 @@ Maximum number of reads per UMI to use for consensus sequence calling (default=2
 
 **TMPDIR=** (required)
 
-Temporary directory
+Full path to temporary directory
 
 **example below is for chromosome 1, repeat for all chromosomes**
 
@@ -722,7 +724,7 @@ Add gene name tag (GE) to molecules SAM records
 
 ```
 
-java -jar -Xmx22g sicelor.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE
+java -jar -Xmx22g sicelor.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index molecules.GE.bam
 
 ```
@@ -956,8 +958,7 @@ samtools sort unsorted.bam -o clipped_reads.bam
 samtools index clipped_reads.bam
 
 # add gene names to Nanopore SAM records
-cd ~/Drop-seq_tools-1.13/jar/
-java -jar -Xmx12g dropseq.jar TagReadWithGeneExon I=clipped_reads.bam O=clipped_reads.GE.bam ANNOTATIONS_FILE=~/cellranger_references/refdata-cellranger-mm10-1.2.0/genes/genes.gtf TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx12g sicelor.jar AddGeneNameTag I=clipped_reads.bam O=clipped_reads.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index clipped_reads.GE.bam
 
 # add read sequence and QV values to Nanopore SAM records

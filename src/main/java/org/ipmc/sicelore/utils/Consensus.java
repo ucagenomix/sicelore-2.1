@@ -21,6 +21,7 @@ public class Consensus implements Callable<String>
     protected static int MAX;
     protected static String TMPDIR;
     protected static String SPOAPATH;
+    protected static boolean DEBUG;
     //protected static String RACONPATH;
     //protected static String MINIMAP2PATH;
     
@@ -86,11 +87,12 @@ public class Consensus implements Callable<String>
         decode[4] = 'G';
     }
 
-    public void setStaticParams(int MAX, String tmp, String spoa)
+    public void setStaticParams(int MAX, String tmp, String spoa, boolean debug)
     {
         this.MAX = MAX;
         this.TMPDIR = tmp;
         this.SPOAPATH = spoa;
+        this.DEBUG = debug;
         //this.RACONPATH = racon;
         //this.MINIMAP2PATH = minimap2;
     }
@@ -214,7 +216,8 @@ public class Consensus implements Callable<String>
                 // compute consensus with SPOA
                 String[] commande = {"bash", "-c" , ""};
                 commande[2] = SPOAPATH + " -r 2 "+TMPDIR+"/"+this.name+"_reads.fa > "+TMPDIR+"/"+this.name+".msa";
-                //System.out.println(commande[2]);
+                if(this.DEBUG)
+                    System.out.println(commande[2]);
                 ExecuteCmd executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
                 executeCmd.run();
                 
@@ -222,9 +225,11 @@ public class Consensus implements Callable<String>
                 this.cons = consensusMsa.getCons();
                 this.qv = consensusMsa.getQv();
                 
-                commande[2] = "rm "+TMPDIR+"/"+this.name+"_reads.fa "+TMPDIR+"/"+this.name+".msa";
-                executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
-                //executeCmd.run();
+                if(!this.DEBUG){
+                    commande[2] = "rm "+TMPDIR+"/"+this.name+"_reads.fa "+TMPDIR+"/"+this.name+".msa";
+                    executeCmd = new ExecuteCmd(commande, new String[0], TMPDIR);
+                    executeCmd.run();
+                }
             }
         }catch(Exception e){ e.printStackTrace(); }
         

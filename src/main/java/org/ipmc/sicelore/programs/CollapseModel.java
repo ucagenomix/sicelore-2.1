@@ -9,7 +9,6 @@ import java.io.*;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import java.util.HashSet;
 import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
@@ -30,8 +29,8 @@ public class CollapseModel extends CommandLineProgram
     public int DELTA = 2;
     @Argument(shortName = "MINEVIDENCE", doc = "Minimum evidence for Novel isoforms to be kept (default=2 molecules)")
     public int MINEVIDENCE = 2;
-    @Argument(shortName = "RNMIN", doc = "Minimum number of reads to consider the UMI for Novel isoforms identification (default=3 reads)")
-    public int RNMIN = 3;
+    @Argument(shortName = "RNMIN", doc = "Minimum number of reads to consider the UMI for Novel isoforms identification (default=1 read)")
+    public int RNMIN = 1;
     @Argument(shortName = "OUTDIR", doc = "The output directory")
     public File OUTDIR;
     @Argument(shortName = "PREFIX", doc = "Prefix for output file names (default=CollapseModel)")
@@ -46,12 +45,14 @@ public class CollapseModel extends CommandLineProgram
     public String ISOFORMTAG = "IT";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
-    @Argument(shortName = "TMPDIR", doc = "TMPDIR")
+    @Argument(shortName = "TMPDIR", doc = "Full path to TMPDIR")
     public String TMPDIR = "/share/data/scratch/sicelore/";
     @Argument(shortName = "T", doc = "The number of threads (default 20)")
     public int nThreads = 20;
     @Argument(shortName = "MAXUMIS", doc = "Maximum number of UMIs per isoform to use for consensus sequence calling (default=20)", optional=true)
     public int MAXUMIS = 20;
+    @Argument(shortName = "DEBUG", doc = "Debug mode, print consensus command and do not delete temp files (default=false)", optional=true)
+    public boolean DEBUG = false;
     
     @Argument(shortName = "SHORT", doc = "The short read SAM or BAM file fot junction validation")
     public File SHORT;
@@ -107,7 +108,7 @@ public class CollapseModel extends CommandLineProgram
         //    log.info(new Object[]{"\t# Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
-            c.setStaticParams(MAXUMIS,TMPDIR,SPOAPATH);
+            c.setStaticParams(MAXUMIS,TMPDIR,SPOAPATH,DEBUG);
             this.doConsCall = true; // change to true if needed
         }
         

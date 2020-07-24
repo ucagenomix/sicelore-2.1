@@ -55,13 +55,16 @@ public class SplitBamPerCluster extends CommandLineProgram {
                 
                 if("".equals(str1)){}
                 else{
-                    String[] localObject = str1.split(",");
-
-                    localHashMap1.put(localObject[0], localObject[1]);
-                    localHashMap1.put(localObject[0] + "-1", localObject[1]);
-
-                    if (!localHashMap2.containsKey(localObject[1]))
-                        localHashMap2.put(localObject[1], new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(localSAMFileHeader, true, new File(OUTPUT.getAbsolutePath() + "/" + localObject[1] + ".bam")));
+                    str1 = str1.replaceAll("\"","");
+                    str1 = str1.replaceAll(" ","_");
+                    String[] line = str1.split(",");
+                    line[0] = line[0].replaceAll("-1","");
+                    
+                    localHashMap1.put(line[0], line[1]);
+                    localHashMap1.put(line[0] + "-1", line[1]);
+                    
+                    if (!localHashMap2.containsKey(line[1]))
+                        localHashMap2.put(line[1], new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(localSAMFileHeader, true, new File(OUTPUT.getAbsolutePath() + "/" + line[1] + ".bam")));
                 }
                 str1 = br.readLine();
             }
@@ -76,6 +79,9 @@ public class SplitBamPerCluster extends CommandLineProgram {
                 if (str3 != null) {
                     ((SAMFileWriter) localHashMap2.get((String) localHashMap1.get(str2))).addAlignment((SAMRecord) localObject);
                 }
+                //else{
+                //    System.out.println(str2 + " not found");
+                //}
             }
 
             localSamReader.close();
@@ -84,9 +90,8 @@ public class SplitBamPerCluster extends CommandLineProgram {
             while (localIterator.hasNext()) {
                 ((SAMFileWriter) localHashMap2.get((String) localIterator.next())).close();
             }
-        } catch (Exception localException) {
-            localException.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
+        
         return 0;
     }
 

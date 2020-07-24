@@ -88,8 +88,11 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         
         record.geneId = (String) r.getAttribute(GENETAG);
         record.barcode = (String) r.getAttribute(CELLTAG);
+        record.barcode=record.barcode.replace("-1","");
         record.umi = (String) r.getAttribute(UMITAG);
         record.mapqv = r.getMappingQuality();
+        
+        //System.out.println(record.barcode + "\t" + r.getReadUnmappedFlag());
         
         if (record.barcode == null || r.getReadUnmappedFlag())
              return null;
@@ -103,6 +106,8 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             
             //record.isSecondaryOrSupplementary = r.isSecondaryOrSupplementary();
             record.de = ((Float) r.getAttribute("de") != null) ? (Float) r.getAttribute("de") : (Float) r.getAttribute("df"); // minimap 2.17 (de) versus 2.10 (df)
+            if(record.de == null)
+                record.de = new Float(1);
             record.rn = ((Integer) r.getAttribute(RNTAG) != null) ? (Integer) r.getAttribute(RNTAG) : 1;
             
             //String orientation = (String) r.getAttribute("AR");  // if exists US is "TSO------------------------AAAA-UMI-BC-ADAPTOR"

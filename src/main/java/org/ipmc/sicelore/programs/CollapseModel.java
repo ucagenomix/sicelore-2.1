@@ -51,6 +51,10 @@ public class CollapseModel extends CommandLineProgram
     public int nThreads = 20;
     @Argument(shortName = "MAXUMIS", doc = "Maximum number of UMIs per isoform to use for consensus sequence calling (default=20)", optional=true)
     public int MAXUMIS = 20;
+    @Argument(shortName = "MINPS", doc = "Default Phred Score for molecule having only 1 or 2 reads (default=3)", optional=true)
+    public int MINPS = 3;
+    @Argument(shortName = "MAXPS", doc = "Default Phred score for 100% base aggrement (default=20)", optional=true)
+    public int MAXPS = 20;
     @Argument(shortName = "DEBUG", doc = "Debug mode, print consensus command and do not delete temp files (default=false)", optional=true)
     public boolean DEBUG = false;
     
@@ -108,7 +112,11 @@ public class CollapseModel extends CommandLineProgram
         //    log.info(new Object[]{"\t# Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
-            c.setStaticParams(MAXUMIS,TMPDIR,SPOAPATH,DEBUG);
+            c.setStaticParams(MAXUMIS,TMPDIR,SPOAPATH,DEBUG, MINPS);
+            
+            ConsensusMsa cmsa = new ConsensusMsa();
+            cmsa.setStaticParams(MAXPS);
+            
             this.doConsCall = true; // change to true if needed
         }
         

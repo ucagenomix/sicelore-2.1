@@ -52,6 +52,10 @@ public class ComputeConsensus extends CommandLineProgram {
     //public File FASTQ;
     @Argument(shortName = "MAXREADS", doc = "Maximum number of reads per UMI to use for consensus sequence calling (default=20)", optional=true)
     public int MAXREADS = 20;
+    @Argument(shortName = "MINPS", doc = "Default Phred Score for molecule having only 1 or 2 reads (default=3)", optional=true)
+    public int MINPS = 3;
+    @Argument(shortName = "MAXPS", doc = "Default Phred score for 100% base aggrement (default=20)", optional=true)
+    public int MAXPS = 20;
     @Argument(shortName = "DEBUG", doc = "Debug mode, print consensus command and do not delete temp files (default=false)", optional=true)
     public boolean DEBUG = false;
 
@@ -77,7 +81,10 @@ public class ComputeConsensus extends CommandLineProgram {
         //    log.info(new Object[]{"Unable to find minimap2, please add it to your PATH"});
         else{
             Consensus c = new Consensus();
-            c.setStaticParams(MAXREADS,TMPDIR,SPOAPATH,DEBUG);
+            c.setStaticParams(MAXREADS,TMPDIR,SPOAPATH,DEBUG, MINPS);
+            
+            ConsensusMsa cmsa = new ConsensusMsa();
+            cmsa.setStaticParams(MAXPS);
             
             LongreadRecord lrr = new LongreadRecord();
             lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP,RNTAG);

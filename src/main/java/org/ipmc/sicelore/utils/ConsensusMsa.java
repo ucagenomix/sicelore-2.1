@@ -15,6 +15,10 @@ public class ConsensusMsa
     private String qv;
     private HashSet<char[]> msa;
             
+    protected static int MAXPS;
+    
+    public ConsensusMsa() {}
+    
     public ConsensusMsa(String file)
     {
         msa = new HashSet<char[]>();
@@ -36,6 +40,11 @@ public class ConsensusMsa
         process();
     }
     
+    public void setStaticParams(int MAXPS)
+    {
+        this.MAXPS = MAXPS;
+    }
+
     public void process()
     {
         String seq = "";
@@ -60,9 +69,9 @@ public class ConsensusMsa
             if(consArray[i] != '-'){
                 seq += consArray[i];
                 if(qvs[i] == 1.0)
-                    final_qvs[index] = 75;
+                    final_qvs[index] = 33 + MAXPS;
                 else
-                    final_qvs[index] = 33+(int)Math.round(-10*Math.log10(1.0-qvs[i]));
+                    final_qvs[index] = 33 + (int)Math.round(-10*Math.log10(1.0-qvs[i]));
                 
                 //System.out.println(i + " = " + qvs[i] + "\t" + final_qvs[index]);
                 

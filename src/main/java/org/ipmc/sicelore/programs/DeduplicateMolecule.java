@@ -15,7 +15,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Remove duplicate molecule from Fasta/Fastq file.", oneLineSummary = "Remove duplicate molecule from Fasta/Fastq file.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Remove duplicate molecule from Fasta/Fastq file. Default is select for RN optimization.", oneLineSummary = "Remove duplicate molecule from Fasta/Fastq file. Default is select for RN optimization.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class DeduplicateMolecule extends CommandLineProgram {
 
@@ -29,7 +29,11 @@ public class DeduplicateMolecule extends CommandLineProgram {
     public String TSO = "AACGCAGAGTACATGG";
     @Argument(shortName = "MAXPOS", doc = "Number of nucleotides to search for TSO sequence if still in consensus (default=100 first nt.)")
     public int MAXPOS = 100;
+    @Argument(shortName = "SELECT", doc = "Wether or not select molecule optimizing RN and length.")
+    public boolean SELECT = true;
  
+    public int tsocut=0;
+    
     public DeduplicateMolecule() {
         log = Log.getInstance(DeduplicateMolecule.class);
     }
@@ -39,18 +43,66 @@ public class DeduplicateMolecule extends CommandLineProgram {
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
         
-        if(Pattern.matches(".*\\.fq", INPUT.getName().toLowerCase()) || Pattern.matches(".*\\.fastq", INPUT.getName().toLowerCase()))
-            processFastq();
+        if(Pattern.matches(".*\\.fq", INPUT.getName().toLowerCase()) || Pattern.matches(".*\\.fastq", INPUT.getName().toLowerCase())){
+            if(SELECT)
+                processFastq();
+            else
+                processFastqNoSelection();
+        }
         else
             processFasta();
         
         return 0;
     }
     
+    protected String cleanTso(String ss)
+    {
+        int region = (ss.length() < MAXPOS)?ss.length():MAXPOS;
+        // remove remaining TSO if found in the first 100nt.
+        // TSO = AAGCAGTGGTATCAACGCAGAGTACATGG
+        int xx = 0;
+        if((xx = ss.substring(0,region).indexOf(TSO)) > 0){
+            ss = ss.substring(xx+TSO.length());
+            tsocut++;
+        }
+        else if((xx = ss.substring(0,region).indexOf(TSO.substring(0,10))) > 0){
+            ss = ss.substring(xx+16);
+            tsocut++;
+        }
+        else if((xx = ss.substring(0,region).indexOf(TSO.substring(6,16))) > 0){
+            ss = ss.substring(xx+10);
+            tsocut++;
+        }
+        return ss;
+    }
+    
+    protected FastqRecord cleanTso(FastqRecord f)
+    {
+        int region = (f.getSeq().length() < MAXPOS)?f.getSeq().length():MAXPOS;
+        // remove remaining TSO if found in the first 100nt.
+        // TSO = AAGCAGTGGTATCAACGCAGAGTACATGG
+        int xx = 0;
+        if((xx = f.getSeq().substring(0,region).indexOf(TSO)) > 0){
+            f.setSeq(f.getSeq().substring(xx+TSO.length()));
+            f.setQual(f.getQual().substring(xx+TSO.length()));
+            tsocut++;
+        }
+        else if((xx = f.getSeq().substring(0,region).indexOf(TSO.substring(0,10))) > 0){
+            f.setSeq(f.getSeq().substring(xx+16));
+            f.setQual(f.getQual().substring(xx+16));
+            tsocut++;
+        }
+        else if((xx = f.getSeq().substring(0,region).indexOf(TSO.substring(6,16))) > 0){
+            f.setSeq(f.getSeq().substring(xx+10));
+            f.setQual(f.getQual().substring(xx+10));
+            tsocut++;
+        }
+        return f;
+    }
+    
     protected void processFasta()
     {
         int count=0;
-        int tsocut=0;
         String line = null;
         BufferedOutputStream os = null;
         HashMap<String, Molecule> map = new HashMap<String, Molecule>();
@@ -65,24 +117,7 @@ public class DeduplicateMolecule extends CommandLineProgram {
                 
                     if(!"null".equals(seq)){
                         count++;
-                        
-                        int region = (seq.length() < MAXPOS)?seq.length():MAXPOS;
-                        
-                        // remove remaining TSO if found in the first 100nt.
-                        // TSO = AAGCAGTGGTATCAACGCAGAGTACATGG
-                        int xx = 0;
-                        if((xx = seq.substring(0,region).indexOf(TSO)) > 0){
-                            seq = seq.substring(xx+TSO.length());
-                            tsocut++;
-                        }
-                        else if((xx = seq.substring(0,region).indexOf(TSO.substring(0,10))) > 0){
-                            seq = seq.substring(xx+16);
-                            tsocut++;
-                        }
-                        else if((xx = seq.substring(0,region).indexOf(TSO.substring(6,16))) > 0){
-                            seq = seq.substring(xx+10);
-                            tsocut++;
-                        }
+                        seq = cleanTso(seq);
                         
                         line = line.replace(">", "");
                         line = line.replace("\\|", "-");
@@ -93,16 +128,12 @@ public class DeduplicateMolecule extends CommandLineProgram {
                         if(! map.containsKey(key))
                             map.put(key, new Molecule(ids[0], ids[1], seq, rn));
                         else{
-                            
-                            //log.info(new Object[]{"already seen\t" + ids[0]+"\t"+ids[1]+"\t"+seq.length()+"\t"+rn+"\t"+map.get(key).getConsensus().length()+"\t"+map.get(key).getRn()});
-                            
                             if(map.get(key).getRn() < rn)
                                 map.put(key, new Molecule(ids[0], ids[1], seq, rn));
                             else if(map.get(key).getRn() == rn){
-                                if(map.get(key).getConsensus().length() < seq.length())
+                                if(map.get(key).getConsensusLength() < seq.length())
                                     map.put(key, new Molecule(ids[0], ids[1], seq, rn));
                             }
-                            //log.info(new Object[]{"kept\t\t" +map.get(key).getConsensus().length()+"\t"+map.get(key).getRn()}); 
                         }
                     }
                 }
@@ -156,26 +187,8 @@ public class DeduplicateMolecule extends CommandLineProgram {
                     if(!"null".equals(seq)){
                         count++;
                         
-                        int region = (seq.length() < MAXPOS)?seq.length():MAXPOS;
-                        
-                        // remove remaining TSO if found in the first 100nt.
-                        // TSO = AAGCAGTGGTATCAACGCAGAGTACATGG
-                        int xx = 0;
-                        if((xx = seq.substring(0,region).indexOf(TSO)) > 0){
-                            seq = seq.substring(xx+TSO.length());
-                            qual = qual.substring(xx+TSO.length());
-                            tsocut++;
-                        }
-                        else if((xx = seq.substring(0,region).indexOf(TSO.substring(0,10))) > 0){
-                            seq = seq.substring(xx+16);
-                            qual = qual.substring(xx+16);
-                            tsocut++;
-                        }
-                        else if((xx = seq.substring(0,region).indexOf(TSO.substring(6,16))) > 0){
-                            seq = seq.substring(xx+10);
-                            qual = qual.substring(xx+10);
-                            tsocut++;
-                        }
+                        FastqRecord f = new FastqRecord("x",seq,qual);
+                        f = cleanTso(f);
                         
                         line = line.replace("@", "");
                         line = line.replace("\\|", "-");
@@ -184,13 +197,13 @@ public class DeduplicateMolecule extends CommandLineProgram {
                         int rn = new Integer(ids[2]).intValue();
 
                         if(! map.containsKey(key))
-                            map.put(key, new Molecule(ids[0], ids[1], seq, qual, rn));
+                            map.put(key, new Molecule(ids[0], ids[1], f.getSeq(), f.getQual(), rn));
                         else{
                             if(map.get(key).getRn() < rn)
-                                map.put(key, new Molecule(ids[0], ids[1], seq, qual, rn));
+                                map.put(key, new Molecule(ids[0], ids[1], f.getSeq(), f.getQual(), rn));
                             else if(map.get(key).getRn() == rn){
-                                if(map.get(key).getConsensus().length() < seq.length())
-                                    map.put(key, new Molecule(ids[0], ids[1], seq, qual, rn));
+                                if(map.get(key).getConsensusLength() < f.getSeq().length())
+                                    map.put(key, new Molecule(ids[0], ids[1], f.getSeq(), f.getQual(), rn));
                             }
                         }
                     }
@@ -221,6 +234,56 @@ public class DeduplicateMolecule extends CommandLineProgram {
         } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
 
         log.info(new Object[]{"writeFastQ\tEND..."});
+    }
+    
+    protected void processFastqNoSelection()
+    {
+        int count=0;
+        int tsocut=0;
+        String line = null;
+        BufferedOutputStream os = null;
+        HashMap<String, Molecule> map = new HashMap<String, Molecule>();
+        
+        log.info(new Object[]{"load/write FastQ\tSTART..."});
+        try{
+            BufferedReader fichier = new BufferedReader(new FileReader(INPUT));
+            os = new BufferedOutputStream(new java.io.FileOutputStream(OUTPUT));
+            
+            line = fichier.readLine();
+            while(line != null) {
+                if(Pattern.matches("^@.*", line)){
+                    String seq = fichier.readLine();
+                    String tmp = fichier.readLine();
+                    String qual = fichier.readLine();
+                    
+                    if(!"null".equals(seq)){
+                        count++;
+                        FastqRecord f = new FastqRecord("x",seq,qual);
+                        f = cleanTso(f);
+                        
+                        line = line.replace("@", "");
+                        line = line.replace("\\|", "-");
+                        String[] ids = line.split("-");
+                        String key = ids[0]+ids[1];
+                        int rn = new Integer(ids[2]).intValue();
+
+                        if(! map.containsKey(key)){
+                            map.put(key, new Molecule(ids[0], ids[1], "", "", rn));
+                            os.write(new String("@" + ids[0] + "-" + ids[1] + "-" + rn + "\n" + f.getSeq() + "\n+\n" + f.getQual() + "\n").getBytes());
+                        }
+                    }
+                }
+                line = fichier.readLine();
+            }
+            fichier.close();
+            os.close();
+        } catch (Exception e) { e.printStackTrace(); try { os.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
+
+        log.info(new Object[]{"load/write FastQ\tEND..."});
+        log.info(new Object[]{"loadFastQ\t" + count + " sequences loaded"});
+        log.info(new Object[]{"loadFastQ tso\t"+tsocut});
+        log.info(new Object[]{"loadFastQ\t" + map.size() + " molecules"});
     }
 
     public static void main(String[] paramArrayOfString) {

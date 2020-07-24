@@ -16,8 +16,9 @@ public class Molecule
     private String umi;
     private int rn;
     private Float pctId;
-    private String consensus = "";
-    private String consensusQV = "";
+    private byte[] consensus;
+    private byte[] consensusQV;
+    private int consensusLength;
     private String snpPhredScore = "";
     
     private String geneId = "undef";
@@ -40,7 +41,7 @@ public class Molecule
         //this.geneIds = new HashSet<String>();
         this.junctionSet = new HashSet<Junction>();
         this.barcode = barcode;
-        this.consensus = consensus;
+        this.consensus = consensus.getBytes();;
         this.umi = umi;
         this.rn=rn;
     }
@@ -50,8 +51,9 @@ public class Molecule
         //this.geneIds = new HashSet<String>();
         this.junctionSet = new HashSet<Junction>();
         this.barcode = barcode;
-        this.consensus = consensus;
-        this.consensusQV = consensusQV;
+        this.consensusLength = consensus.length();
+        this.consensus = consensus.getBytes();
+        this.consensusQV = consensusQV.getBytes();
         this.umi = umi;
         this.rn=rn;
     }
@@ -64,11 +66,14 @@ public class Molecule
     public String getUmi() { return this.umi; }
     public Float getPctId() { return this.pctId; }
     
-    public String getConsensus() { return this.consensus; }
-    public void setConsensus(String consensus) { this.consensus = consensus; }
+    public int getConsensusLength() { return this.consensusLength; }
+    public void setConsensusLength(int consensusLength) { this.consensusLength = consensusLength; }
+
+    public byte[] getConsensus() { return this.consensus; }
+    public void setConsensus(byte[] consensus) { this.consensus = consensus; }
     
-    public String getConsensusQV() { return this.consensusQV; }
-    public void setConsensusQV(String consensusQV) { this.consensusQV = consensusQV; }
+    public byte[] getConsensusQV() { return this.consensusQV; }
+    public void setConsensusQV(byte[] consensusQV) { this.consensusQV = consensusQV; }
     
     public String getSnpPhredScore() { return this.snpPhredScore; }
     public void setSnpPhredScore(String snpPhredScore) { this.snpPhredScore = snpPhredScore; }

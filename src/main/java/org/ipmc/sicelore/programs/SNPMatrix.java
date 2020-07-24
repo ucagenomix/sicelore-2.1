@@ -19,7 +19,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import org.ipmc.sicelore.utils.*;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "SNP/editing events detection/quantification (cellBC/UMI count matrix).", oneLineSummary = "SNP/editing event detection/quantification (cellBC/UMI count matrix).", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "SNP/editing events detection/quantification (cellBC/UMI count matrix).", oneLineSummary = "SNP/editing event detection/quantification (cellBC/UMI count matrix).", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class SNPMatrix extends CommandLineProgram {
 
@@ -61,6 +61,13 @@ public class SNPMatrix extends CommandLineProgram {
         IOUtil.assertFileIsReadable(CSV);
         IOUtil.assertFileIsReadable(SNP);
         //IOUtil.assertFileIsReadable(REFFLAT);
+        
+        int total_hits=0;
+        int total_lowrn=0;
+        int total_lowqv=0;
+        
+        LongreadRecord lrr = new LongreadRecord();
+	lrr.setStaticParams(CELLTAG,UMITAG,"GN","TE","UE","PE","US",150, RNTAG);
 
         this.cellList = new CellList(CSV); 
         log.info(new Object[]{"Cells detected\t\t[" + this.cellList.size() + "]"});
@@ -68,7 +75,7 @@ public class SNPMatrix extends CommandLineProgram {
         
         SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
         htsjdk.samtools.SAMFileHeader samFileHeader = samReader.getFileHeader();
-        htsjdk.samtools.SAMSequenceDictionary dictionnary = samFileHeader.getSequenceDictionary() ;
+        htsjdk.samtools.SAMSequenceDictionary dictionnary = samFileHeader.getSequenceDictionary();
         
         //editing.csv event list to quantify description file
         //chromosome,position,strand,name
@@ -88,7 +95,8 @@ public class SNPMatrix extends CommandLineProgram {
                     boolean strand = ("-".equals(tok[2]))?true:false;
                     String gene = tok[3];
                     int total=0;
-                    int lowqv=0;
+                    int lowQV=0;
+                    int lowRN=0;
                     nb++;
                     
                     String[] pos = { tok[1] };
@@ -102,14 +110,16 @@ public class SNPMatrix extends CommandLineProgram {
 
                         if (strand == r.getReadNegativeStrandFlag()) {
                             pl.record(r);
-                            LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, false);
-
-                            if (lrr != null && lrr.getRn() >= MINRN) {
+                            lrr = LongreadRecord.fromSAMRecord(r, false);
+                            
+                            //System.out.println(lrr + "\t" + lrr.getRn() + "\t" + r.getReadString());
+                            
+                            if (lrr != null){
                                 Longread lr = new Longread(r.getReadName());
                                 lr.addRecord(lrr);
                                 String readString = r.getReadString();
                                 String qvString = r.getBaseQualityString();
-                                
+
                                 Integer[] posInt = new Integer[arr.length];
                                 for (int i = 0; i < arr.length; i++) {
                                     posInt[i] = r.getReadPositionAtReferencePosition(arr[i]);
@@ -118,13 +128,14 @@ public class SNPMatrix extends CommandLineProgram {
                                 int min = Collections.min(Arrays.asList(posInt));
                                 int max = Collections.max(Arrays.asList(posInt));
 
-                                if (min > 0 && readString.length() > max) {
+                                if(min > 0 && readString.length() > max) {
                                     String[] nuc = new String[posInt.length];
                                     int[] qv = new int[posInt.length];
                                     int min_qv = 100;
-                                    
+
                                     for(int i = 0; i < arr.length; i++) {
                                         nuc[i] = readString.substring(posInt[i] - 1, posInt[i]);
+                                        //System.out.println(r.getReadName()+"\t"+lrr.getRn()+"\t"+posInt[i]+"\t"+readString.length()+"\t"+qvString.length());
                                         qv[i] = (int)(qvString.substring(posInt[i] - 1, posInt[i]).charAt(0)) - 33;
                                         if(qv[i]<min_qv)
                                             min_qv = qv[i];
@@ -135,25 +146,32 @@ public class SNPMatrix extends CommandLineProgram {
                                             nuc[i] = complementBase(nuc[i].charAt(0));
                                         }
                                     }
-                                    
-                                    // keep high QV molecules only
-                                    if(min_qv >= MINQV){
-                                        total++;
-                                        Molecule molecule = new Molecule(lrr.getBarcode(), lrr.getUmi(), lrr.getRn());
-                                        molecule.addLongread(lr);
-                                        molecule.setGeneId(gene);
-                                        molecule.setTranscriptId(chromosome + ":" + String.join("|", pos) + ".." + String.join("", nuc));
-                                        molecule.setSnpPhredScore(StringUtils.join(ArrayUtils.toObject(qv), ","));
-                                        matrix.addMolecule(molecule);
+
+                                    if(lrr.getRn() >= MINRN) {
+                                        // keep high QV molecules only
+                                        if(min_qv >= MINQV){
+                                            total++;
+                                            Molecule molecule = new Molecule(lrr.getBarcode(), lrr.getUmi(), lrr.getRn());
+                                            molecule.addLongread(lr);
+                                            molecule.setGeneId(gene);
+                                            molecule.setTranscriptId(chromosome + ":" + String.join("|", pos) + ".." + String.join("", nuc));
+                                            molecule.setSnpPhredScore(StringUtils.join(ArrayUtils.toObject(qv), ","));
+                                            matrix.addMolecule(molecule);
+                                        }
+                                        else
+                                            lowQV++;
                                     }
                                     else
-                                        lowqv++;
+                                        lowRN++;
                                 }
                             }
                         }
                     }
                     iter.close();
-                    log.info(new Object[]{"processing...\t\t" + line + "\t" + total + " hits, " + lowqv + " hits lowQV"});
+                    log.info(new Object[]{"processing...\t\t" + line + "\t" + total + " hits, " + lowRN + " lowRN, " + lowQV + " lowQV"});
+                    total_hits+=total;
+                    total_lowrn+=lowRN;
+                    total_lowqv+=lowQV;
                 }
                 line = fichier.readLine();
             }
@@ -161,13 +179,16 @@ public class SNPMatrix extends CommandLineProgram {
         } catch (Exception e) { e.printStackTrace(); }
 
         if(matrix.getMatrice().size() > 0){
-            File MATRIX = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_matrix.txt");
-            File METRICS = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_metrics.txt");
-            File MOLINFOS = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
+            File MATRIX = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_snpmatrix.txt");
+            File METRICS = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_snpmetrics.txt");
+            File MOLINFOS = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_snpmolinfos.txt");
             matrix.writeIsoformMatrix(MATRIX, METRICS, MOLINFOS, null);
         }
         else
-            log.info(new Object[]{"end of processing...\t\tnothing has been detected, check your input parameters, no output files generated\t"});
+            log.info(new Object[]{"end of processing...\tnothing has been detected, check your input parameters, no output files generated\t"});
+        
+        
+        log.info(new Object[]{"STATISTICS...\t\thits=" + total_hits + ", lowRN=" + total_lowrn + ", lowQV= " + total_lowqv});
         
         return 0;
     }

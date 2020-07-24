@@ -28,7 +28,7 @@ import org.ipmc.sicelore.utils.MoleculeDataset;
 import picard.cmdline.CommandLineProgram;
 import gnu.trove.THashMap;
 
-@CommandLineProgramProperties(summary = "Detect fusion genes.", oneLineSummary = "Detect fusion genes.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Detect fusion genes.", oneLineSummary = "Detect fusion genes.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class FusionDetector extends CommandLineProgram
 { 
@@ -104,9 +104,9 @@ public class FusionDetector extends CommandLineProgram
             }
         }
 
-        File MATRIX = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_matrix.txt");
-        File METRICS = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_metrics.txt");
-        File molinfos = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
+        File MATRIX = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_fusmatrix.txt");
+        File METRICS = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_fusmetrics.txt");
+        File molinfos = new File(OUTPUT.getAbsolutePath() + "/" + PREFIX + "_fusmolinfos.txt");
         matrix.writeIsoformMatrix(MATRIX, METRICS, molinfos, null);
         
         return 0;

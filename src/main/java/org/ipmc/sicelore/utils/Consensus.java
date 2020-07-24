@@ -22,6 +22,7 @@ public class Consensus implements Callable<String>
     protected static String TMPDIR;
     protected static String SPOAPATH;
     protected static boolean DEBUG;
+    protected static int MINPS;
     //protected static String RACONPATH;
     //protected static String MINIMAP2PATH;
     
@@ -87,12 +88,13 @@ public class Consensus implements Callable<String>
         decode[4] = 'G';
     }
 
-    public void setStaticParams(int MAX, String tmp, String spoa, boolean debug)
+    public void setStaticParams(int MAX, String tmp, String spoa, boolean debug, int MINPS)
     {
         this.MAX = MAX;
         this.TMPDIR = tmp;
         this.SPOAPATH = spoa;
         this.DEBUG = debug;
+        this.MINPS = MINPS;
         //this.RACONPATH = racon;
         //this.MINIMAP2PATH = minimap2;
     }
@@ -183,7 +185,6 @@ public class Consensus implements Callable<String>
     }
     */
     
-    
     // new method using spoa for QV calues export
     public String call() throws Exception
     {
@@ -240,7 +241,7 @@ public class Consensus implements Callable<String>
     {
         String ret = "";
         for(int i=0; i<size; i++){
-            String s = Character.toString((char)45);
+            String s = Character.toString((char)(33+MINPS)); // this is the defautl QV value for 1 or 2 reads consensus, set to MINPS 
             ret += s;
         }
         return ret;

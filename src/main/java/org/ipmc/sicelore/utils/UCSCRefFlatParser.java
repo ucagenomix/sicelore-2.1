@@ -36,7 +36,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
     public UCSCRefFlatParser refmodel;
     public int DELTA = 2;
     public int MINEVIDENCE = 5;
-    public int RNMIN = 3;
+    public int RNMIN = 1;
     public int NOVELINDEX=1;
                
     private ListeningExecutorService oneNanoporeReadexecutor;

@@ -13,8 +13,6 @@ import org.biojava.nbio.core.util.ConcurrencyTools;
 import com.google.common.util.concurrent.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
-import org.biojava.nbio.core.sequence.DNASequence;
 import gnu.trove.THashMap;
 import gnu.trove.THashSet;
 
@@ -714,7 +712,7 @@ public class MoleculeDataset {
             String[] tmp = rslt.split("\n");
             tmp[0] = tmp[0].replaceAll("@","");
             String[] tmp2 = tmp[0].split("-");
-            this.mapMolecules.get(tmp2[0]+":"+tmp2[1]).setConsensus(tmp[1]);
+            this.mapMolecules.get(tmp2[0]+":"+tmp2[1]).setConsensus(tmp[1].getBytes());
         } catch (Exception e) { e.printStackTrace(); }
     }
 }

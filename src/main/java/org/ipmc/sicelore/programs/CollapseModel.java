@@ -100,7 +100,7 @@ public class CollapseModel extends CommandLineProgram
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(CSV);
         
-        String SPOAPATH = this.findExecutableOnPath("poa");
+        String SPOAPATH = this.findExecutableOnPath("spoa");
         //String RACONPATH = this.findExecutableOnPath("racon");
         //String MINIMAP2PATH = this.findExecutableOnPath("minimap2");
         

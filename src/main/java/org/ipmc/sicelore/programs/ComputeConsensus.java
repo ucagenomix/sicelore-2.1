@@ -47,7 +47,7 @@ public class ComputeConsensus extends CommandLineProgram {
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
     public int MAXCLIP = 150;
     @Argument(shortName = "MAPQV0", doc = "Wether or not to keep mapqv=0 SAM records (default=false)", optional=true)
-    public boolean MAPQV0 = false;
+    public boolean MAPQV0 = false; // maybe better if true, need to be checkedfor futur projects, we might loose around 10% of UMI assign reads, not necessary molecule but depth
     //@Argument(shortName = "FASTQ", doc = "The .FASTQ file")
     //public File FASTQ;
     @Argument(shortName = "MAXREADS", doc = "Maximum number of reads per UMI to use for consensus sequence calling (default=20)", optional=true)

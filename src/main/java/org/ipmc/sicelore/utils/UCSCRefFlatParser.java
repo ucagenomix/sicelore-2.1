@@ -93,10 +93,10 @@ public class UCSCRefFlatParser implements GeneModelParser {
     public TranscriptRecord parseLine(String line) throws GTFParseException {
         String[] fields = line.split("\t");
         TranscriptRecord record = TranscriptRecord.fromRefFlat(fields);
-
-        if (record.getChrom().contains("_")) {
-            return null;
-        }
+        
+        //if (record.getChrom().contains("_")) {
+        //    return null;
+        //}
         if (record.getExonBases() == 0) {
             return null;
         }

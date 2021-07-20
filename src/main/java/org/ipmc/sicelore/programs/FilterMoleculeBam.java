@@ -25,12 +25,12 @@ public class FilterMoleculeBam extends CommandLineProgram {
     public File OUTPUT;
     @Argument(shortName = "RNTAG", doc = "The read number tag (default=RN)")
     public String RNTAG = "RN";
-    @Argument(shortName = "VALUE", doc = "The value cutoff (TAG > value)")
-    public int VALUE; 
+    @Argument(shortName = "VALUE", doc = "The value cutoff (default=1)")
+    public int VALUE=1; 
     @Argument(shortName = "ISOTAG", doc = "The isoform tag (default=IT)")
     public String ISOTAG = "IT";
-    @Argument(shortName = "UNDEF", doc = "Wether or not to keep molecule not define at the isoform level (ISOTAG=\"undef\") (Default=false)")
-    public boolean UNDEF = false;
+    @Argument(shortName = "UNDEF", doc = "Wether or not to keep molecules not define at the isoform level (ISOTAG=\"undef\") (Default=true)")
+    public boolean UNDEF = true;
 
     public FilterMoleculeBam() {
         log = Log.getInstance(FilterMoleculeBam.class);
@@ -51,10 +51,10 @@ public class FilterMoleculeBam extends CommandLineProgram {
                 int rn = (Integer) r.getAttribute(RNTAG);
                 
                 //if(rn > VALUE)
-                if(rn > VALUE){
-                    if(UNDEF && IT.equals("undef"))
+                if(rn >= VALUE){
+                    if(!UNDEF && !"undef".equals(IT))
                         localSAMFileWriter.addAlignment(r);
-                    else if(! UNDEF && ! IT.equals("undef"))
+                    else if(UNDEF)
                         localSAMFileWriter.addAlignment(r);
                 }
             }

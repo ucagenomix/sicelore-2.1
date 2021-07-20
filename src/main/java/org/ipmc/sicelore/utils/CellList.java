@@ -24,6 +24,5 @@ public class CellList extends HashSet<String>
             }
             fichier.close();
         } catch (Exception e) { e.printStackTrace(); }
-        
    }
 }

@@ -37,9 +37,9 @@ public class SNPMatrix extends CommandLineProgram {
     public File OUTPUT;
     @Argument(shortName = "PREFIX", doc = "The output file prefix (default=snp)")
     public String PREFIX = "snp";
-    @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
+    @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC; illumina=BC)", optional=true)
     public String CELLTAG = "BC";
-    @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
+    @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8, illumina=UB)", optional=true)
     public String UMITAG = "U8";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
@@ -185,7 +185,7 @@ public class SNPMatrix extends CommandLineProgram {
             matrix.writeIsoformMatrix(MATRIX, METRICS, MOLINFOS, null);
         }
         else
-            log.info(new Object[]{"end of processing...\tnothing has been detected, check your input parameters, no output files generated\t"});
+            log.info(new Object[]{"end of processing...\tnothing has been detected, check your input parameters (if Illumina set CELLBC=CB UMITAG=UB), no output files generated\t"});
         
         
         log.info(new Object[]{"STATISTICS...\t\thits=" + total_hits + ", lowRN=" + total_lowrn + ", lowQV= " + total_lowqv});

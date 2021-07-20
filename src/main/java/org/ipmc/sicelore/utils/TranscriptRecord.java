@@ -186,7 +186,7 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
 
     public int getNbUmis() { return nbUmis; }
     public int getNbCells() { return nbCells; }
-
+    
     public void setJunctionReads(int junctionReads) { this.junctionReads = junctionReads; }
     public int getJunctionReads() { return this.junctionReads; }
     
@@ -409,4 +409,38 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
         }
         return numbers;
     }
+    
+    public int getDistanceTo3p(int genomic_pos)
+    {
+        int dist = 0;
+        
+        if(strand.equals(Strand.NEGATIVE)){
+            for (int i = 0; i<this.exons.size(); i++) {
+                int[] ex = this.exons.get(i);
+                
+                
+                if(ex[0] < genomic_pos){
+                    if(ex[1] > genomic_pos)
+                        dist += genomic_pos-ex[0];
+                    else
+                        dist += ex[1]-ex[0];
+                }
+            }
+        }
+        else{
+            for (int i = 0; i<this.exons.size(); i++) {
+                int[] ex = this.exons.get(i);
+                
+                if(ex[1] > genomic_pos){
+                    if(ex[0] < genomic_pos)
+                        dist += ex[1]-genomic_pos;
+                    else
+                        dist += ex[1]-ex[0];
+                }
+            }
+        }
+        //System.out.println(transcriptId + "-->" + dist);
+    	return dist; 
+    }
+    
 }

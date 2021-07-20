@@ -88,7 +88,6 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         
         record.geneId = (String) r.getAttribute(GENETAG);
         record.barcode = (String) r.getAttribute(CELLTAG);
-        record.barcode=record.barcode.replace("-1","");
         record.umi = (String) r.getAttribute(UMITAG);
         record.mapqv = r.getMappingQuality();
         
@@ -97,6 +96,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         if (record.barcode == null || r.getReadUnmappedFlag())
              return null;
         
+        record.barcode=record.barcode.replace("-1","");
         try {
             record.name = r.getReadName();
             record.chrom = r.getReferenceName();
@@ -133,7 +133,8 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             String str = null;
             String readSequence = null;
             if(load_sequence){
-                r.getReadString();
+                //System.out.println(record.name+","+tsoEnd+","+polyAStart+","+polyAEnd+","+r.getReadString());
+                readSequence = r.getReadString();
                 if((String)r.getAttribute(USTAG) != null)
                     readSequence = (String)r.getAttribute(USTAG);
                 //else
@@ -250,7 +251,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                 record.junctions.add(new Junction(j, k));
             }
             
-        } catch (Exception e) { throw new LongreadParseException("Invalid Bam file. " + record.name + ", Can't parse: ", e); }
+        } catch (Exception e) { throw new LongreadParseException("Invalid Bam file. " + record.name + ", Can't parse: "); }
 
         return record;
     }
@@ -387,6 +388,9 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         return txEnd;
     }
     
+    public String printFas() {
+        return ">" + name + "\n" + new String(cdna) +"\n";
+    }
     /*
     public int getExonCount() {
         return exonCount;

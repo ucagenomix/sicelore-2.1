@@ -25,6 +25,7 @@ import picard.annotation.GeneAnnotationReader;
 import htsjdk.samtools.util.OverlapDetector;
 import picard.annotation.Gene;
 import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.SAMRecordIterator;
 import picard.annotation.LocusFunction;
 
 @CommandLineProgramProperties(summary = "Add a gene name tag to SAM records case it overlaps an exon", oneLineSummary = "Add a gene name tag to SAM records case it overlaps an exon.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
@@ -54,8 +55,7 @@ public class AddGeneNameTag extends CommandLineProgram
 
     public AddGeneNameTag() {
         log = Log.getInstance(AddGeneNameTag.class);
-        pl = new ProgressLogger(log);
-        
+        pl = new htsjdk.samtools.util.ProgressLogger(log, 1000000, "\tProcessed\t", "Records");
         metrics = new ReadTaggingMetric();  
     }
 
@@ -63,6 +63,12 @@ public class AddGeneNameTag extends CommandLineProgram
         IOUtil.assertFileIsReadable(REFFLAT);
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsWritable(OUTPUT);
+        
+        //System.setProperty("samjdk.use_async_io_read_samtools", "true");
+        //System.setProperty("samjdk.samjdk.use_async_io_write_samtools", "true");
+        
+        System.out.println(htsjdk.samtools.Defaults.allDefaults());
+        
         process();
 
         return 0;
@@ -70,22 +76,27 @@ public class AddGeneNameTag extends CommandLineProgram
 
     protected void process()
     {
-        SamReader samReader = SamReaderFactory.makeDefault().open(INPUT);
-        htsjdk.samtools.SAMFileHeader samFileHeader = samReader.getFileHeader();
+        
+        
+        htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(INPUT);
+        htsjdk.samtools.SAMFileHeader samFileHeader = inputSam.getFileHeader();
         samFileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
         SAMFileWriter samFileWriter = new SAMFileWriterFactory().makeSAMOrBAMWriter(samFileHeader, true, OUTPUT);
         
         OverlapDetector<Gene> geneOverlapDetector = GeneAnnotationReader.loadRefFlat(REFFLAT, samFileHeader.getSequenceDictionary());
-        log.info(new Object[]{"Loaded " + geneOverlapDetector.getAll().size() + " genes."});
-
+        log.info(new Object[]{"Loaded " + geneOverlapDetector.getAll().size() + " transcripts."});
+        
         try{
-            for(SAMRecord r : samReader){
+            for(SAMRecord r : inputSam){
                 pl.record(r);
+                //log.info(new Object[]{"processing :" + r.getReadName()});
+                
                 if (!r.getReadUnmappedFlag())
                     r = setGeneExons(r, geneOverlapDetector);
+                
                 samFileWriter.addAlignment(r);
             }
-            samReader.close();
+            inputSam.close();
             samFileWriter.close();
         } catch (Exception e) { e.printStackTrace(); }
         
@@ -96,7 +107,7 @@ public class AddGeneNameTag extends CommandLineProgram
     {
         Map<Gene, LocusFunction> map = getLocusFunctionForReadByGene(r, geneOverlapDetector);
         
-        //log.info(new Object[]{"map.size :" + map.size()});
+        //log.info(new Object[]{"map.size :" + map.size() + "," + map.keySet()});
         
         java.util.Set<Gene> exonsForRead = getConsistentExons(r, map.keySet(), ALLOW_MULTI_GENE_READS);
         
@@ -115,17 +126,20 @@ public class AddGeneNameTag extends CommandLineProgram
         if(USE_STRAND_INFO) {
             genes = getGenesConsistentWithReadStrand(genes, r);
         }
-        if ((genes.size() > 1) && (!ALLOW_MULTI_GENE_READS)) {
-            log.error(new Object[] { "There should only be 1 gene assigned to a read for DGE purposes." });
-        }
+        //if ((genes.size() > 1) && (!ALLOW_MULTI_GENE_READS)) {
+        //    log.error(new Object[] { "There should only be 1 gene assigned to a read for DGE purposes." });
+        //}
         
-        String finalGeneName = getCompoundGeneName(genes);
         String finalGeneStrand = getCompoundStrand(genes);
-
+        String finalGeneName = getCompoundGeneName(genes);
+        
         if (f != null)
             r.setAttribute(FUNCTIONTAG, f.toString());
+        
         if ((finalGeneName != null) && (finalGeneStrand != null)) {
+            
             r.setAttribute(GENETAG, finalGeneName);
+            //log.info(new Object[]{"finalGeneName :" + finalGeneName});
             r.setAttribute(STRANDTAG, finalGeneStrand);
         }
         else {

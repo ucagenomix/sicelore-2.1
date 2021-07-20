@@ -169,107 +169,112 @@ public class MoleculeDataset {
     // 29/05/2020
     public void setIsoformStrictNew(Molecule molecule, int DELTA)
     {
-        List<Junction> list1 = null;
         boolean debug = false;
-        
         this.candidates = new THashMap<String, Integer>();
         this.transcripts = this.model.select(molecule.getGeneIdsArray());
         
         if(debug) { System.out.println("transcripts:" + transcripts); }
         if(debug) { System.out.println("molecule:" + molecule.getBarcode() + "\t" + molecule.getUmi() + "\t" + molecule.getGeneIds().toString()); }
         
-        List<Longread> longreads = molecule.getLongreads();
-        for(Longread lr : longreads){
-            List<LongreadRecord> records = lr.getLongreadrecords();
-            
-            for(LongreadRecord lrr : records){
-                List<Junction> list = lrr.getJunctions();
-                
-                if(debug) { System.out.println("o "+lrr.getName() + "("+list.size()+" junctions)"); }
-                
-                for(TranscriptRecord transcriptrecord : transcripts){
-                    list1 = transcriptrecord.getJunctions();
-                    
-                    if(debug) { System.out.println("\t"+transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId() + "("+list1.size()+" junctions)"); }
-                    
-                    if(map(list, list1, DELTA, molecule)){
-                        
-                        if(debug) { System.out.println("\tmatch"); }
-                        
-                        String key = transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId();
-                        if(candidates.containsKey(key))
-                            candidates.put(key, candidates.get(key) + 1);
-                        else
-                            candidates.put(key, 1);
-                    }
-                }
-            }
-        }
-        
-        if(debug) { System.out.println("candidates:" + candidates); }
-        
-        if(candidates.size() > 0){
-            
-            if(debug) { System.out.println("we have candidate(s):" + candidates.size()); }
-            
-            this.bestCandidates = new THashSet<String>();
-            int maxValueInMap=(Collections.max(candidates.values()));  // This will return max value in the Hashmap
-            for(Map.Entry<String, Integer> entry : candidates.entrySet()) {  // Iterate through hashmap
-                if (entry.getValue() == maxValueInMap) { bestCandidates.add(entry.getKey()); }
-            }
-            
-            if(bestCandidates.size() == 1){
-                this.onematch++;
-                String g = (String)bestCandidates.iterator().next();
-                molecule.setTranscriptId(g.split("\\|")[0]);
-                molecule.setGeneId(g.split("\\|")[1]);
-                molecule.setSupporting_reads(candidates.get(g));
-                
-                if(debug) { System.out.println("only one best candidate --> transcript_id/gene_id:" + g); }
-            }
-            else{
-                // ambiguous is true, mutiple isoforms are valid
-                // but in STICT mode we have all exons and we set to one of the possible isoform
-                // need to solve Gapsh case where competing with pseudogenes
-                // get the transcripts with the more exons for instance
-                // but need to records the transcriptRecords before
-                this.ambiguous++;
-                int index = new Random().nextInt(bestCandidates.size());
-                String g = (String)(bestCandidates.toArray()[index]);
-                molecule.setTranscriptId(g.split("\\|")[0]);
-                molecule.setGeneId(g.split("\\|")[1]);
-                molecule.setSupporting_reads(candidates.get(g));
-                // we set the geneId at least
-                //molecule.setTranscriptId("undef");
-                //molecule.setGeneId(g.split("\\|")[1]);
-            }
-        }
-        else{
-            // KL 22/04/2020
-            // case multiGene here, like Pkm / RP23-320D23.6
-            // set to the more complex gene, the one with the more isoforms in List<TranscriptRecord> transcripts
-            // need some bug fix here in the future verson !!!!
-            this.nomatch++;
-            //int index = new Random().nextInt(molecule.getGeneIds().size());
-            //Iterator<String> iter = molecule.getGeneIds().iterator();
-            //for (int i = 0; i < index; i++) { iter.next(); }
-            molecule.setTranscriptId("undef");
-            //molecule.setGeneId((String) iter.next());
-            molecule.setGeneId(getMostComplexGene());
-            if(debug) { System.out.println("no candidate --> gene_id:" + molecule.getGeneId()); }
-        }
-        
         // only 1 mono-exonic transcript in the model --> we do set the isoform
-        if(transcripts.size() == 1 && list1.isEmpty()){
+        if(transcripts.size() == 1 && transcripts.get(0).getJunctions().isEmpty()){
            this.monoexon++;
            molecule.setTranscriptId(transcripts.get(0).getTranscriptId());
            molecule.setGeneId(transcripts.get(0).getGeneId());
            molecule.setSupporting_reads(1);
            if(debug) { System.out.println("mono-exonic --> transcript_id/gene_id:" + transcripts.get(0).getTranscriptId()+"|"+transcripts.get(0).getGeneId()); } 
         }
+        // we need to define which is the best transcriptrecord
+        else{
+            List<Longread> longreads = molecule.getLongreads();
+            for(Longread lr : longreads){
+                List<LongreadRecord> records = lr.getLongreadrecords();
+
+                for(LongreadRecord lrr : records){
+                    List<Junction> list = lrr.getJunctions();
+
+                    if(debug) { System.out.println("o "+lrr.getName() + "("+list.size()+" junctions)"); }
+
+                    for(TranscriptRecord transcriptrecord : transcripts){
+                        List<Junction> list1 = transcriptrecord.getJunctions();
+
+                        if(debug) { System.out.println("\t"+transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId() + "("+list1.size()+" junctions)"); }
+
+                        if(map(list, list1, DELTA, molecule)){
+
+                            if(debug) { System.out.println("\tmatch"); }
+
+                            String key = transcriptrecord.getTranscriptId() + "|" + transcriptrecord.getGeneId();
+                            if(candidates.containsKey(key))
+                                candidates.put(key, candidates.get(key) + 1);
+                            else
+                                candidates.put(key, 1);
+                        }
+                    }
+                }
+            }
+
+            if(candidates.size() > 0){
+
+                if(debug) { System.out.println("we have candidate(s):" + candidates.size()); }
+
+                this.bestCandidates = new THashSet<String>();
+                int maxValueInMap=(Collections.max(candidates.values()));  // This will return max value in the Hashmap
+                for(Map.Entry<String, Integer> entry : candidates.entrySet()) {  // Iterate through hashmap
+                    if (entry.getValue() == maxValueInMap) { bestCandidates.add(entry.getKey()); }
+                }
+
+                if(bestCandidates.size() == 1){
+                    this.onematch++;
+                    String g = (String)bestCandidates.iterator().next();
+                    molecule.setTranscriptId(g.split("\\|")[0]);
+                    molecule.setGeneId(g.split("\\|")[1]);
+                    molecule.setSupporting_reads(candidates.get(g));
+
+                    if(debug) { System.out.println("only one best candidate --> transcript_id/gene_id:" + g); }
+                }
+                else{
+                    // ambiguous is true, mutiple isoforms are valid
+                    // but in STICT mode we have all exons and we set to one of the possible isoform
+                    // need to solve Gapsh case where competing with pseudogenes
+                    // get the transcripts with the more exons for instance
+                    // but need to records the transcriptRecords before
+                    this.ambiguous++;
+                    int index = new Random().nextInt(bestCandidates.size());
+                    String g = (String)(bestCandidates.toArray()[index]);
+                    molecule.setTranscriptId(g.split("\\|")[0]);
+                    molecule.setGeneId(g.split("\\|")[1]);
+                    molecule.setSupporting_reads(candidates.get(g));
+                    // we set the geneId at least
+                    //molecule.setTranscriptId("undef");
+                    //molecule.setGeneId(g.split("\\|")[1]);
+                }
+            }
+            // no condaidates and several transcripts
+            else if(transcripts.size() > 0){
+                if(debug) { System.out.println("no candidate: choose beteen " + transcripts.size() + " transcripts -> get the most complex one"); }
+                // KL 22/04/2020
+                // case multiGene here, like Pkm / RP23-320D23.6
+                // set to the more complex gene, the one with the more isoforms in List<TranscriptRecord> transcripts
+                // need some bug fix here in the future verson !!!!
+                this.nomatch++;
+                //int index = new Random().nextInt(molecule.getGeneIds().size());
+                //Iterator<String> iter = molecule.getGeneIds().iterator();
+                //for (int i = 0; i < index; i++) { iter.next(); }
+                molecule.setTranscriptId("undef");
+                //molecule.setGeneId((String) iter.next());
+                molecule.setGeneId(getGeneIdForMostComplexTranscript());
+                if(debug) { System.out.println("no candidate --> gene_id:" + molecule.getGeneId()); }
+            }
+            //else{ // we have a problem here no transcripts for genes (GE:tag) in model
+
+                //System.out.println(transcripts.size() + "\t" + molecule.getBarcode()+ ":"  + molecule.getUmi() + "\t" + molecule.getGeneIdsArray());
+
+            //}
+        }
     }
     
-    public String getMostComplexGene()
+    public String getGeneIdForMostComplexTranscript()
     {
         String mostRepeatedWord = "";
         try{
@@ -287,7 +292,7 @@ public class MoleculeDataset {
             
             list = null;
         }
-        catch(Exception e){ e.printStackTrace();  System.out.println(transcripts.size() + "\t" + transcripts.get(0).getGeneId()); }
+        catch(Exception e){ e.printStackTrace(); }
         
         return mostRepeatedWord;
     }

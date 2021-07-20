@@ -113,14 +113,6 @@ public class IsoformMatrix extends CommandLineProgram
 
         Matrix matrix = dataset.produceMatrix(this.cellList);
         
-        log.info(new Object[]{"\tMatrix cells size\t[" + matrix.getCellMetrics().size() + "]"});
-        log.info(new Object[]{"\tMatrix genes size\t[" + matrix.getGeneMetrics().size() + "]"});
-        log.info(new Object[]{"\tMatrix junctions size\t[" + matrix.getMatriceJunction().size() + "]"});
-        log.info(new Object[]{"\tMatrix isoforms size\t[" + matrix.getMatrice().size() + "]"});
-        log.info(new Object[]{"\tMatrix isoforms counts\t[" + matrix.getTotal_count() + "]"});
-        log.info(new Object[]{"\tMatrix isoforms define\t[" + matrix.getTotal_isoform_def() + "]"});
-        log.info(new Object[]{"\tMatrix isoforms undefine[" + matrix.getTotal_isoform_undef() + "]"});
-        
         log.info(new Object[]{"\twriteJunctionMatrix\t[start]"});
         matrix.writeJunctionMatrix(JUNCMATRIX, JUNCMETRICS);
         log.info(new Object[]{"\twriteIsoformMatrix\t[start]"});
@@ -129,6 +121,14 @@ public class IsoformMatrix extends CommandLineProgram
         matrix.writeGeneMatrix(GENEMATRIX, GENEMETRICS);
         log.info(new Object[]{"\twriteCellMetrics\t[start]"});
         matrix.writeCellMetrics(CELLMETRICS);
+        
+        log.info(new Object[]{"\tMatrix cells size\t[" + matrix.getCellMetrics().size() + "]"});
+        log.info(new Object[]{"\tMatrix genes size\t[" + matrix.getGeneMetrics().size() + "]"});
+        log.info(new Object[]{"\tMatrix junctions size\t[" + matrix.getMatriceJunction().size() + "]"});
+        log.info(new Object[]{"\tMatrix isoforms size\t[" + matrix.getMatrice().size() + "]"});
+        log.info(new Object[]{"\tMatrix isoforms counts\t[" + matrix.getTotal_count() + "]"});
+        log.info(new Object[]{"\tMatrix isoforms define\t[" + matrix.getTotal_isoform_def() + "]"});
+        log.info(new Object[]{"\tMatrix isoforms undefine[" + matrix.getTotal_isoform_undef() + "]"});
         
         if(ISOBAM){
             log.info(new Object[]{"\tProducing ISOBAM\t[true]"});

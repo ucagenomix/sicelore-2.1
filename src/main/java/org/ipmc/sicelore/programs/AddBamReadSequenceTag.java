@@ -60,8 +60,9 @@ public class AddBamReadSequenceTag extends CommandLineProgram {
                 
                 String seq = new String((byte[]) localFastqLoader.getMap().get(name));
                 localSAMRecord.setAttribute(SEQTAG, seq);
-                //String qv = new String((byte[]) localFastqLoader.getMapQV().get(name));
-                //localSAMRecord.setAttribute(QVTAG, qv);
+                String qv = new String((byte[]) localFastqLoader.getMapQV().get(name));
+                localSAMRecord.setAttribute(QVTAG, qv);
+                
                 localSAMFileWriter.addAlignment(localSAMRecord);
             }
             localSamReader.close();

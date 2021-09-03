@@ -53,6 +53,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     protected static String UMIENDTAG = "UE"; //UE
     protected static String POLYAENDTAG = "PE"; //PE
     protected static String USTAG = "US"; // US
+    protected static String CDNATAG = "CS"; // CS
     protected static int MAXCLIP = 150; // 150
     
     //FastqLoader fastq;
@@ -195,6 +196,10 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                 record.cdna = str.getBytes();
                 if("".equals(str))
                     record.cdna = readSequence.getBytes();
+                // added 01/09/2021 -> cDNA tag added after barcodes assignment
+                // using AddBamReadSequenceTag SEQTAG=CS
+                if((String)r.getAttribute(CDNATAG) != null)
+                    record.cdna = ((String)r.getAttribute(CDNATAG)).getBytes();
             }
 
             cigar = cigar.replaceAll("[0-9]+[IS]","");
@@ -251,7 +256,7 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                 record.junctions.add(new Junction(j, k));
             }
             
-        } catch (Exception e) { throw new LongreadParseException("Invalid Bam file. " + record.name + ", Can't parse: "); }
+        } catch (Exception e) { e.printStackTrace(); throw new LongreadParseException("Invalid Bam file. " + record.name + ", Can't parse: "); }
 
         return record;
     }

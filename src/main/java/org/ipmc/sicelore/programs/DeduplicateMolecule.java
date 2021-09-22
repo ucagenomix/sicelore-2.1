@@ -192,8 +192,12 @@ public class DeduplicateMolecule extends CommandLineProgram {
                     if(!"null".equals(seq)){
                         count++;
                         
+                        if(count%500000 == 0){
+                            log.info(new Object[]{count + " sequences processed [" + map.size() + "]"});
+                        }
+                        
                         FastqRecord f = new FastqRecord("x",seq,qual);
-                        f = cleanTso(f);
+                        //f = cleanTso(f);
                         
                         line = line.replace("@", "");
                         line = line.replace("\\|", "-");

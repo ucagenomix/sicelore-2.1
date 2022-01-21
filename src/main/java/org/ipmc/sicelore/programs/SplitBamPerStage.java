@@ -15,9 +15,9 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "Bam file cluster-by-cluster splitter.", oneLineSummary = "Bam file cluster-by-cluster splitter.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "Bam file stage-by-stage splitter.", oneLineSummary = "Bam file stage-by-stage splitter.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
-public class SplitBamPerCluster extends CommandLineProgram {
+public class SplitBamPerStage extends CommandLineProgram {
 
     private final Log log;
     private ProgressLogger pl;
@@ -25,12 +25,12 @@ public class SplitBamPerCluster extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The output directory")
     public File OUTPUT;
-    @Argument(shortName = "CSV", doc = "The \"cellBC,clusterName\" cluster file (.csv) no header !")
+    @Argument(shortName = "CSV", doc = "The \"sample,stage\" cluster file (.csv) no header !")
     public File CSV;
     @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
 
-    public SplitBamPerCluster() {
+    public SplitBamPerStage() {
         log = Log.getInstance(SplitBamPerCluster.class);
         pl = new ProgressLogger(log);
     }
@@ -41,7 +41,10 @@ public class SplitBamPerCluster extends CommandLineProgram {
 
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(CSV);
-
+        
+        String name = INPUT.getName();
+        name = name.replace(".bam","");
+        
         HashMap localHashMap1 = new HashMap();
         HashMap localHashMap2 = new HashMap();
 
@@ -57,13 +60,10 @@ public class SplitBamPerCluster extends CommandLineProgram {
                     str1 = str1.replaceAll("\"","");
                     str1 = str1.replaceAll(" ","_");
                     String[] line = str1.split(",");
-                    line[0] = line[0].replaceAll("-1","");
-                    
                     localHashMap1.put(line[0], line[1]);
-                    localHashMap1.put(line[0] + "-1", line[1]);
                     
                     if (!localHashMap2.containsKey(line[1]))
-                        localHashMap2.put(line[1], new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(localSAMFileHeader, true, new File(OUTPUT.getAbsolutePath() + "/" + line[1] + ".bam")));
+                        localHashMap2.put(line[1], new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(localSAMFileHeader, true, new File(OUTPUT.getAbsolutePath() + "/" + name + "-" + line[1] + ".bam")));
                 }
                 str1 = br.readLine();
             }
@@ -72,11 +72,14 @@ public class SplitBamPerCluster extends CommandLineProgram {
             for (Iterator localIterator = localSamReader.iterator(); localIterator.hasNext();) {
                 SAMRecord localObject = (SAMRecord) localIterator.next();
                 pl.record((SAMRecord) localObject);
+                
+                // TGGACGCGTAAGGATT-5891STDY9030807
                 String str2 = (String) ((SAMRecord) localObject).getAttribute(CELLTAG);
-                String str3 = (String) localHashMap1.get(str2);
+                String[] tmp = str2.split("-");
+                String str3 = (String) localHashMap1.get(tmp[1]);
 
                 if (str3 != null) {
-                    ((SAMFileWriter) localHashMap2.get((String) localHashMap1.get(str2))).addAlignment((SAMRecord) localObject);
+                    ((SAMFileWriter) localHashMap2.get((String) localHashMap1.get(tmp[1]))).addAlignment((SAMRecord) localObject);
                 }
                 //else{
                 //    System.out.println(str2 + " not found");

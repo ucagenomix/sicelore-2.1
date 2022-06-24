@@ -72,7 +72,7 @@ Indentifying novel transcripts isoforms
 
 ## Authors
 
-* Kevin Lebrigand2 <[lebrigand@ipmc.cnrs.fr](mailto:lebrigand@ipmc.cnrs.fr)>
+* Kevin Lebrigand <[lebrigand@ipmc.cnrs.fr](mailto:lebrigand@ipmc.cnrs.fr)>
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)](https://twitter.com/kevinlebrigand)
 
@@ -90,11 +90,11 @@ This test script should takes under 5mn to run, output files are located in ./ou
 
 git clone https://github.com/ucagenomix/sicelore.git
 cd sicelore
-chmod +x quickrun.sh
-dos2unix quickrun.sh
+chmod +x quickrun.v2.2.sh
+dos2unix quickrun.v2.2.sh
 export JAVA_HOME=<path to Java 1.8>
-export PATH=$PATH:<minimap2path>:<samtoolspath>:<raconpath>:<poapath>
-./quickrun.sh
+export PATH=$PATH:<minimap2path>:<samtoolspath>:<spoapath>
+./quickrun.v2.2.sh
 
 ```
 
@@ -255,9 +255,9 @@ can be generated with **`paftools.js gff2bed -j ann.gtf'** (Paftools is part of 
 
 ### add gene names to Nanopore SAM records
 
-**uses AddGeneNameTag (sicelor.jar)**
+**uses AddGeneNameTag (sicelore.v2.jar)**
 
-Add gene names to Nanopore SAMrecords GE tag using **AddGeneNameTag** (sicelor.jar) pipeline, long read optimization of code from [Drop-seq tools v1.13](http://mccarrolllab.com/download/1276/).
+Add gene names to Nanopore SAMrecords GE tag using **AddGeneNameTag** (sicelore.v2.jar) pipeline, long read optimization of code from [Drop-seq tools v1.13](http://mccarrolllab.com/download/1276/).
 
 If another tag is used for gene names, the Gene name SAM tag needs to be changed using the TAG argument in command line.
 
@@ -268,7 +268,7 @@ command shown is for BAM batch "0001.sub.bam"
 
 ```
 
-java -jar -Xmx12g sicelor.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx12g sicelore.v2.jar AddGeneNameTag I=0001.sub.bam O=0001.sub.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index 0001.sub.GE.bam
 
 ```
@@ -306,7 +306,7 @@ Gene function tag (default=XF)
 
 ### add read sequence and QV values to Nanopore SAM records
 
-**uses AddBamReadSequenceTag (sicelor.jar)**
+**uses AddBamReadSequenceTag (sicelore.v2.jar)**
 
 SAMrecords are tagged with read sequence (US tag) and read quality (UQ tag). Is used for BC/UMI assignment and molecule consensus calculation.
 
@@ -319,7 +319,7 @@ command shown for BAM batch "0001.sub.bam"
 
 ```
 
-java -jar -Xmx12g sicelor.jar AddBamReadSequenceTag I=0001.sub.GE.bam O=0001.sub.GEUS.bam FASTQ=0001.sub.fastq
+java -jar -Xmx12g sicelore.v2.jar AddBamReadSequenceTag I=0001.sub.GE.bam O=0001.sub.GEUS.bam FASTQ=0001.sub.fastq
 samtools index 0001.sub.GEUS.bam
 
 ```
@@ -631,7 +631,7 @@ samtools index GEUS10xAttributes.umifound.bam
 
 ## 6) Generate consensus sequences
 
-**use ComputeConsensus (sicelore.jar)**
+**use ComputeConsensus (sicelore.v2.jar)**
 
 The pipeline allows to compute the consensus sequence for molecule detected  in input .bam file. First step is loading the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
 
@@ -684,7 +684,7 @@ Full path to temporary directory
 
 ```
 
-java -jar -Xmx44g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fq T=20 TMPDIR=/scracth/tmp/
+java -jar -Xmx44g sicelore.v2.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fq T=20 TMPDIR=/scracth/tmp/
 
 ```
 
@@ -694,12 +694,12 @@ java -jar -Xmx44g sicelor.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1
 
 If ComputeConsensus step has been split per chromosome, we need to deduplicate molecules from genes having multiple copies in the genome.
 
-First we need to concatenate all chromosomes fastq files then use ***DeduplicateMolecule*** pipeline (sicelore.jar)
+First we need to concatenate all chromosomes fastq files then use ***DeduplicateMolecule*** pipeline (sicelore.v2.jar)
 
 ```
 
 cat */molecules.chr*.fa > molecules.fa
-java -jar -Xmx22g sicelor.jar DeduplicateMolecule I=molecules.fq O=deduplicate.fq
+java -jar -Xmx22g sicelore.v2.jar DeduplicateMolecule I=molecules.fq O=deduplicate.fq
 
 ```
 
@@ -718,24 +718,24 @@ samtools index molecules.bam
 
 ## 8) Tag molecule SAM records with gene names, cell barcodes, UMI sequence and reads number
 
-**uses AddGeneNameTag (sicelor.jar)** 
+**uses AddGeneNameTag (sicelore.v2.jar)** 
 
 Add gene name tag (GE) to molecules SAM records
 
 ```
 
-java -jar -Xmx22g sicelor.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx22g sicelore.v2.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index molecules.GE.bam
 
 ```
 
-**uses AddBamMoleculeTags (sicelor.jar)**
+**uses AddBamMoleculeTags (sicelore.v2.jar)**
 
 Add CellBC (BC), UMIs (U8) and read number (RN) tags from molecule read name to molecules SAM records
 
 ``` 
 
-java -jar -Xmx22g sicelor.jar AddBamMoleculeTags I=molecules.GE.bam O=molecules.GE.tags.bam
+java -jar -Xmx22g sicelore.v2.jar AddBamMoleculeTags I=molecules.GE.bam O=molecules.GE.tags.bam
 samtools index molecules.GE.tags.bam
 
 ```
@@ -744,7 +744,7 @@ samtools index molecules.GE.tags.bam
 
 ## 9) Transcript isoform expression quantification
 
-**uses IsoformMatrix (sicelore.jar)**
+**uses IsoformMatrix (sicelore.v2.jar)**
 
 This step can be done at the reads level but prefer using it at the molecules level after consensus calling as describes in the protocole. In case of processing at the read level here is the algotithm used.
 
@@ -851,7 +851,7 @@ molecule per molecules information (cellBC, UMI, nbReads, nbSupportingReads, gen
 
 ```
 
-java -jar -Xmx44g sicelor.jar IsoformMatrix I=molecules.tags.GE.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
+java -jar -Xmx44g sicelore.v2.jar IsoformMatrix I=molecules.tags.GE.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
 
 ```
 
@@ -859,7 +859,7 @@ java -jar -Xmx44g sicelor.jar IsoformMatrix I=molecules.tags.GE.bam GENETAG=GE U
 
 ## 10) Calling Single Nucleotide Polymorphisms cell by cell
 
-**use SNPMatrix (sicelore.jar)**
+**use SNPMatrix (sicelore.v2.jar)**
 
 Consensus sequence show higher sequence accuracy than raw nanopore reads and we can now call SNPs using the generated molecules bam file (molecules.tags.GE.bam)
 
@@ -901,7 +901,7 @@ Prefix for _matrix.txt/_metrics.txt/_molinfos.txt tab-delimited output text file
 
 ```
 
-java -jar -Xmx22g sicelor.jar SNPMatrix I=molecule.tags.bam MINRN=0 MINQV=0 CSV=barcodes.csv SNP=snp_description.csv O=/path/to/output/directory/ PREFIX=snp
+java -jar -Xmx22g sicelore.v2.jar SNPMatrix I=molecule.tags.bam MINRN=0 MINQV=0 CSV=barcodes.csv SNP=snp_description.csv O=/path/to/output/directory/ PREFIX=snp
 
 ```
 
@@ -923,7 +923,7 @@ Per molecule per SNP position information
 
 ## 11) Detecting fusion transcripts cell by cell
 
-**use ExportClippedReads and FusionDetector (sicelore.jar)**
+**use ExportClippedReads and FusionDetector (sicelore.v2.jar)**
 
 First step is exporting hard and soft clipped reads from dataset. A fusion transcript read map the genome in more than one unique location. It gives two differents minimap2 SAM records each including a portion of starting or ending clipping. Those reads might also comes from chimeric molecules produced during amplification step (i.e. PCR artefacts). Those PCR artefacts are arising mainly between transcripts having a high sequence similarity  and might preferentially happens wih highly expressed genes.
 
@@ -943,7 +943,7 @@ Minimum length of start/end hard/soft clipping needed far calling a read as clip
 
 ```
 
-java -jar -Xmx22g sicelor.jar ExportClippedReads I=GEUS10xAttributes.umifound.bam O=clipped_reads.fastq
+java -jar -Xmx22g sicelore.v2.jar ExportClippedReads I=GEUS10xAttributes.umifound.bam O=clipped_reads.fastq
 
 ```
 
@@ -958,11 +958,11 @@ samtools sort unsorted.bam -o clipped_reads.bam
 samtools index clipped_reads.bam
 
 # add gene names to Nanopore SAM records
-java -jar -Xmx12g sicelor.jar AddGeneNameTag I=clipped_reads.bam O=clipped_reads.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx12g sicelore.v2.jar AddGeneNameTag I=clipped_reads.bam O=clipped_reads.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index clipped_reads.GE.bam
 
 # add read sequence and QV values to Nanopore SAM records
-java -jar -Xmx12g sicelor.jar AddBamReadSequenceTag I=clipped_reads.GE.bam O=clipped_reads.GEUS.bam FASTQ=clipped_reads.fastq
+java -jar -Xmx12g sicelore.v2.jar AddBamReadSequenceTag I=clipped_reads.GE.bam O=clipped_reads.GEUS.bam FASTQ=clipped_reads.fastq
 samtools index clipped_reads.GEUS.bam
 
 # Add Nanopore Barcode/UMI
@@ -990,7 +990,7 @@ Prefix for _matrix.txt, _metrics.txt and _molinfos.txt tab-delimited output text
 
 ```
 
-java -jar -Xmx22g sicelor.jar FusionDetector I=clipped_reads.GEUS10xAttributes.umifound.bam O=/path/to/output/directory PREFIX=fus CSV=barcodes.csv
+java -jar -Xmx22g sicelore.v2.jar FusionDetector I=clipped_reads.GEUS10xAttributes.umifound.bam O=/path/to/output/directory PREFIX=fus CSV=barcodes.csv
 
 ```
 
@@ -1014,7 +1014,7 @@ per molecules (UMI/BC) fusion information
 
 ## 12) Detecting novel transcripts isoforms
 
-**use CollaspeModel (sicelore.jar)**
+**use CollaspeModel (sicelore.v2.jar)**
 
 SAM records are grouped per cellBC and UMI by transcript isoform based on exon makeup considering only UMI supported by RNMIN (default=1) reads. 
 Transcripts isoforms showing an exon structure supported by less than MINEVIDENCE (default=5) UMIs are filtered out. 
@@ -1103,7 +1103,7 @@ Junction validation cutoff (default = 1 read)
 
 ```
 
-java -jar -Xmx40g sicelor.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=SRA.E18brain.star.bam CAGE=Ressources/mm10.liftover.Fantom5.cage_peaks.bed POLYA=Ressources/mm10.gencode.vM24.polyAs.bed
+java -jar -Xmx40g sicelore.v2.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=SRA.E18brain.star.bam CAGE=Ressources/mm10.liftover.Fantom5.cage_peaks.bed POLYA=Ressources/mm10.gencode.vM24.polyAs.bed
 
 ```
 

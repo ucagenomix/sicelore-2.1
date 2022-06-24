@@ -67,7 +67,7 @@ public class SNPMatrix extends CommandLineProgram {
         int total_lowqv=0;
         
         LongreadRecord lrr = new LongreadRecord();
-	lrr.setStaticParams(CELLTAG,UMITAG,"GN","TE","UE","PE","US",150, RNTAG);
+	lrr.setStaticParams(CELLTAG,UMITAG,"GN","CS",150, RNTAG);
 
         this.cellList = new CellList(CSV); 
         log.info(new Object[]{"Cells detected\t\t[" + this.cellList.size() + "]"});

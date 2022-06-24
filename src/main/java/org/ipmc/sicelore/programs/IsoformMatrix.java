@@ -53,8 +53,8 @@ public class IsoformMatrix extends CommandLineProgram
     public String UMIENDTAG = "UE";
     @Argument(shortName = "POLYAENDTAG", doc = "PolyA end tag (default=PE)", optional=true)
     public String POLYAENDTAG = "PE";
-    @Argument(shortName = "USTAG", doc = "Read sequence tag (default=US)", optional=true)
-    public String USTAG = "US";
+    @Argument(shortName = "CDNATAG", doc = "cDNA sequence tag (default=CS)", optional=true)
+    public String CDNATAG = "CS";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
@@ -79,7 +79,7 @@ public class IsoformMatrix extends CommandLineProgram
         IOUtil.assertFileIsReadable(CSV);
 
         LongreadRecord lrr = new LongreadRecord();
-	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,MAXCLIP, RNTAG);
+	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,CDNATAG,MAXCLIP, RNTAG);
         
         this.cellList = new CellList(CSV); 
         log.info(new Object[]{"\tCells detected\t\t[" + this.cellList.size() + "]"});

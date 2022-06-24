@@ -250,7 +250,7 @@ public class MoleculeDataset {
                     //molecule.setGeneId(g.split("\\|")[1]);
                 }
             }
-            // no condaidates and several transcripts
+            // no candidates and several transcripts
             else if(transcripts.size() > 0){
                 if(debug) { System.out.println("no candidate: choose beteen " + transcripts.size() + " transcripts -> get the most complex one"); }
                 // KL 22/04/2020

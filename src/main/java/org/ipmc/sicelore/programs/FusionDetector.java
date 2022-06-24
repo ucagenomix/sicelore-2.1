@@ -61,7 +61,7 @@ public class FusionDetector extends CommandLineProgram
         Matrix matrix = new Matrix(cellList);
         
 	LongreadRecord lrr = new LongreadRecord();
-	lrr.setStaticParams("BC","U8","GE","TE","UE","PE","US",10000,"RN");
+	lrr.setStaticParams("BC","U8","GE","CS",10000,"RN");
 
         // umi not mandatory cos' 2ndary fusion SAM records without UMI !
         LongreadParser bam = new LongreadParser(INPUT, false, false, true, false);

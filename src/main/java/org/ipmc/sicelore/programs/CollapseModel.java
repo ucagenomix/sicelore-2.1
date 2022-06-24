@@ -43,6 +43,10 @@ public class CollapseModel extends CommandLineProgram
     public String GENETAG = "IG";
     @Argument(shortName = "ISOFORMTAG", doc = "Isoform tag (default=IT)", optional=true)
     public String ISOFORMTAG = "IT";
+    @Argument(shortName = "CDNATAG", doc = "cDNA sequence tag (default=CS)", optional=true)
+    public String CDNATAG = "CS";
+    @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
+    public int MAXCLIP = 150;
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
     @Argument(shortName = "TMPDIR", doc = "Full path to TMPDIR")
@@ -100,6 +104,9 @@ public class CollapseModel extends CommandLineProgram
         IOUtil.assertFileIsReadable(INPUT);
         IOUtil.assertFileIsReadable(CSV);
         
+        LongreadRecord lrr = new LongreadRecord();
+	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,CDNATAG,MAXCLIP, RNTAG);
+
         String SPOAPATH = this.findExecutableOnPath("spoa");
         //String RACONPATH = this.findExecutableOnPath("racon");
         //String MINIMAP2PATH = this.findExecutableOnPath("minimap2");

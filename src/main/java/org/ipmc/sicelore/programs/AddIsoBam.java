@@ -9,13 +9,10 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import java.io.*;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import java.util.HashSet;
 import java.util.List;
 import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
@@ -70,7 +67,7 @@ public class AddIsoBam extends CommandLineProgram
         LongreadRecord lrr = new LongreadRecord();
         MoleculeDataset md = new MoleculeDataset();
         
-	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,"TE","UE","PE","US",MAXCLIP,"RN");
+	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,"CS",MAXCLIP,"RN");
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         htsjdk.samtools.SamReader samReader = htsjdk.samtools.SamReaderFactory.makeDefault().open(INPUT);
         htsjdk.samtools.SAMFileHeader samFileHeader = samReader.getFileHeader();

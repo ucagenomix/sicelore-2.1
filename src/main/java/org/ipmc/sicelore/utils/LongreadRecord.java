@@ -49,10 +49,10 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     protected static String UMITAG = "U8"; // U8
     protected static String RNTAG = "RN"; // RN
     protected static String GENETAG = "GE"; //GE
-    protected static String TSOENDTAG = "TE"; //TE
-    protected static String UMIENDTAG = "UE"; //UE
-    protected static String POLYAENDTAG = "PE"; //PE
-    protected static String USTAG = "US"; // US
+    //protected static String TSOENDTAG = "TE"; //TE
+    //protected static String UMIENDTAG = "UE"; //UE
+    //protected static String POLYAENDTAG = "PE"; //PE
+    //protected static String USTAG = "US"; // US
     protected static String CDNATAG = "CS"; // CS
     protected static int MAXCLIP = 150; // 150
     
@@ -60,14 +60,14 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     
     public LongreadRecord() { }
 
-    public void setStaticParams(String celltag, String umitag, String genetag, String tsoendtag, String umiendtag, String polyaend, String ustag, int maxclip, String rntag){
+    public void setStaticParams(String celltag, String umitag, String genetag, String cdnatag, int maxclip, String rntag){
 	this.CELLTAG = celltag;
         this.UMITAG = umitag;
         this.GENETAG = genetag;
-        this.TSOENDTAG = tsoendtag;
-        this.UMIENDTAG = umiendtag;
-        this.POLYAENDTAG = polyaend;
-        this.USTAG = ustag;
+        //this.TSOENDTAG = tsoendtag;
+        //this.UMIENDTAG = umiendtag;
+        //this.POLYAENDTAG = polyaend;
+        this.CDNATAG = cdnatag;
         this.MAXCLIP = maxclip;
         this.RNTAG = rntag;
     }
@@ -112,9 +112,9 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             record.rn = ((Integer) r.getAttribute(RNTAG) != null) ? (Integer) r.getAttribute(RNTAG) : 1;
             
             //String orientation = (String) r.getAttribute("AR");  // if exists US is "TSO------------------------AAAA-UMI-BC-ADAPTOR"
-            int umiEnd = ((Integer) r.getAttribute(UMIENDTAG) != null) ? (Integer) r.getAttribute(UMIENDTAG) : 0; 		// +1 is start of polyA with --------------TTTT read orientation !!!
-            int tsoEnd = ((Integer) r.getAttribute(TSOENDTAG) != null) ? (Integer) r.getAttribute(TSOENDTAG) : 0;
-            int polyAEnd = ((Integer) r.getAttribute(POLYAENDTAG) != null) ? (Integer) r.getAttribute(POLYAENDTAG) : 0;
+            //int umiEnd = ((Integer) r.getAttribute(UMIENDTAG) != null) ? (Integer) r.getAttribute(UMIENDTAG) : 0; 		// +1 is start of polyA with --------------TTTT read orientation !!!
+            //int tsoEnd = ((Integer) r.getAttribute(TSOENDTAG) != null) ? (Integer) r.getAttribute(TSOENDTAG) : 0;
+            //int polyAEnd = ((Integer) r.getAttribute(POLYAENDTAG) != null) ? (Integer) r.getAttribute(POLYAENDTAG) : 0;
             
             //boolean isSoftOrHardClipped = false;
             int sizeStartToClip = 0;
@@ -137,10 +137,11 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             // using AddBamReadSequenceTag SEQTAG=CS
             if(load_sequence && !record.isChimeria && !record.isReversed){
                 
-                // directly get the cDNA sequence (sicelore v3)
+                // directly get the cDNA sequence
                 if((String)r.getAttribute(CDNATAG) != null)
                     record.cdna = ((String)r.getAttribute(CDNATAG)).getBytes();
                 // else compute it by substring 
+                /*
                 else{
                     // we would need a tag instead
                     int polyAStart = polyAStartFromReadName(record.name);
@@ -195,8 +196,9 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                     if("".equals(str))
                         record.cdna = readSequence.getBytes();
                 }
+                */
             }
-            
+                
             cigar = cigar.replaceAll("[0-9]+[IS]","");
             cigartype = cigar.split("[0-9]+");
             cigarsize = cigar.split("[A-Z]");

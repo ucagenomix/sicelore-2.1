@@ -168,7 +168,7 @@ public class CollapseModel extends CommandLineProgram
         File GFFVALID = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".rn" + RNMIN + ".e" + MINEVIDENCE + ".final.gff");
         mymodel.exportFiles(TXT,FLAT,FLATVALID,GFF,GFFVALID);
         
-        // this is where we need to phase haplotype instead of aclling consensus/
+        // this is where we need to phase haplotype instead of calling consensus/
         // allelic determination and output an allele specific counting matrix
         // define nachor for phasing: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5025529/
         // on the todo list !!

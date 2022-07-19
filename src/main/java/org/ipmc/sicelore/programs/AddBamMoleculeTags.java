@@ -13,7 +13,7 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
-@CommandLineProgramProperties(summary = "SAMrecord IG/BC/U8 tagging from molecule bam read names.", oneLineSummary = "SAMrecord IG/BC/U8 tagging from molecule bam read names.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
+@CommandLineProgramProperties(summary = "SAMrecord BC/U8/RN tagging from molecule bam read names.", oneLineSummary = "SAMrecord BC/U8/RN tagging from molecule bam read names.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature
 public class AddBamMoleculeTags extends CommandLineProgram {
 
@@ -27,10 +27,6 @@ public class AddBamMoleculeTags extends CommandLineProgram {
     public String CELLTAG = "BC";
     @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
     public String UMITAG = "U8";
-    @Argument(shortName = "GENETAG", doc = "Gene name tag (default=IG)", optional=true)
-    public String GENETAG = "IG";
-    @Argument(shortName = "ISOTAG", doc = "Isoform name tag (default=IT)", optional=true)
-    public String ISOTAG = "IT";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
 

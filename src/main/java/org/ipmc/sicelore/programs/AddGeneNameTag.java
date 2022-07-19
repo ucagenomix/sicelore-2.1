@@ -9,8 +9,6 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import java.io.*;
 import java.util.*;
 import htsjdk.samtools.util.IOUtil;
@@ -25,7 +23,6 @@ import picard.annotation.GeneAnnotationReader;
 import htsjdk.samtools.util.OverlapDetector;
 import picard.annotation.Gene;
 import htsjdk.samtools.AlignmentBlock;
-import htsjdk.samtools.SAMRecordIterator;
 import picard.annotation.LocusFunction;
 
 @CommandLineProgramProperties(summary = "Add a gene name tag to SAM records case it overlaps an exon", oneLineSummary = "Add a gene name tag to SAM records case it overlaps an exon.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)

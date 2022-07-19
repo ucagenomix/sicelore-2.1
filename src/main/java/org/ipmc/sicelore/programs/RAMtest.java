@@ -56,6 +56,8 @@ public class RAMtest extends CommandLineProgram
     public String POLYAENDTAG = "PE";
     @Argument(shortName = "CDNATAG", doc = "cDNA sequence tag (default=CS)", optional=true)
     public String CDNATAG = "CS";
+    @Argument(shortName = "USTAG", doc = "read sequence tag (default=US)", optional=true)
+    public String USTAG = "US";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
@@ -80,7 +82,7 @@ public class RAMtest extends CommandLineProgram
         IOUtil.assertFileIsReadable(CSV);
 
         LongreadRecord lrr = new LongreadRecord();
-	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,CDNATAG,MAXCLIP, RNTAG);
+        lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,CDNATAG,MAXCLIP, RNTAG);
         
         this.cellList = new CellList(CSV); 
         log.info(new Object[]{"\t\tCells detected\t\t[" + this.cellList.size() + "]"});

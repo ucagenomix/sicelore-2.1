@@ -41,8 +41,22 @@ public class SNPMatrix extends CommandLineProgram {
     public String CELLTAG = "BC";
     @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8, illumina=UB)", optional=true)
     public String UMITAG = "U8";
+    @Argument(shortName = "GENETAG", doc = "Gene name tag (default=GE)", optional=true)
+    public String GENETAG = "GE";
+    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (default=TE)", optional=true)
+    public String TSOENDTAG = "TE";
+    @Argument(shortName = "UMIENDTAG", doc = "UMI end tag (default=UE)", optional=true)
+    public String UMIENDTAG = "UE";
+    @Argument(shortName = "POLYAENDTAG", doc = "PolyA end tag (default=PE)", optional=true)
+    public String POLYAENDTAG = "PE";
+    @Argument(shortName = "CDNATAG", doc = "cDNA sequence tag (default=CS)", optional=true)
+    public String CDNATAG = "CS";
+    @Argument(shortName = "USTAG", doc = "read sequence tag (default=US)", optional=true)
+    public String USTAG = "US";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
+    @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
+    public int MAXCLIP = 150;
     @Argument(shortName = "MINRN", doc = "Minimum read number to keep the molecule for SNP calling (default=0, means all)")
     public int MINRN = 0;
     @Argument(shortName = "MINQV", doc = "Minimum QV score at position to keep the molecule for SNP calling (default=0, means all)")
@@ -67,8 +81,8 @@ public class SNPMatrix extends CommandLineProgram {
         int total_lowqv=0;
         
         LongreadRecord lrr = new LongreadRecord();
-	lrr.setStaticParams(CELLTAG,UMITAG,"GN","CS",150, RNTAG);
-
+        lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,CDNATAG,MAXCLIP, RNTAG);
+        
         this.cellList = new CellList(CSV); 
         log.info(new Object[]{"Cells detected\t\t[" + this.cellList.size() + "]"});
         Matrix matrix = new Matrix(this.cellList);

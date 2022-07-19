@@ -44,6 +44,18 @@ public class AddIsoBam extends CommandLineProgram
     public String UMITAG = "U8";
     @Argument(shortName = "GENETAG", doc = "Gene name tag (default=IG)", optional=true)
     public String GENETAG = "IG";
+    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (default=TE)", optional=true)
+    public String TSOENDTAG = "TE";
+    @Argument(shortName = "UMIENDTAG", doc = "UMI end tag (default=UE)", optional=true)
+    public String UMIENDTAG = "UE";
+    @Argument(shortName = "POLYAENDTAG", doc = "PolyA end tag (default=PE)", optional=true)
+    public String POLYAENDTAG = "PE";
+    @Argument(shortName = "CDNATAG", doc = "cDNA sequence tag (default=CS)", optional=true)
+    public String CDNATAG = "CS";
+    @Argument(shortName = "USTAG", doc = "read sequence tag (default=US)", optional=true)
+    public String USTAG = "US";
+    @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
+    public String RNTAG = "RN";
     
     public CellList cellList;
     private ProgressLogger pl;
@@ -67,7 +79,7 @@ public class AddIsoBam extends CommandLineProgram
         LongreadRecord lrr = new LongreadRecord();
         MoleculeDataset md = new MoleculeDataset();
         
-	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,"CS",MAXCLIP,"RN");
+        lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,CDNATAG,MAXCLIP, RNTAG);
         UCSCRefFlatParser model = new UCSCRefFlatParser(REFFLAT);
         htsjdk.samtools.SamReader samReader = htsjdk.samtools.SamReaderFactory.makeDefault().open(INPUT);
         htsjdk.samtools.SAMFileHeader samFileHeader = samReader.getFileHeader();

@@ -5,6 +5,7 @@ package org.ipmc.sicelore.programs;
  * @author kevin lebrigand
  * 
  */
+import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -14,6 +15,7 @@ import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
 import java.util.HashMap;
+import java.util.List;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
@@ -25,8 +27,12 @@ public class CrispRstats extends CommandLineProgram
 { 
     @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;
-    @Argument(shortName = "O", doc = "The output histogram", optional=true)
-    public File OUTPUT;
+    @Argument(shortName = "HISTO", doc = "The output histogram", optional=true)
+    public File HISTO;
+    @Argument(shortName = "DETAIL", doc = "The output details per reads", optional=true)
+    public File DETAIL;
+    @Argument(shortName = "MINSIZE", doc = "Minimum deletion size to cinsider (default=10)")
+    public int MINSIZE=10;
     @Argument(shortName = "COORD", doc = "Genomic coordinate (default=21:17608000-17610000)")
     public String COORD="21:17608000-17610000";
     
@@ -49,9 +55,12 @@ public class CrispRstats extends CommandLineProgram
         
         DataOutputStream os = null;
         IOUtil.assertFileIsReadable(INPUT);
-        IOUtil.assertFileIsWritable(OUTPUT);
+        IOUtil.assertFileIsWritable(HISTO);
+        IOUtil.assertFileIsWritable(DETAIL);
         
         try {
+            os = new DataOutputStream(new FileOutputStream(DETAIL));
+
             SamReader sam = SamReaderFactory.makeDefault().open(INPUT);
             
             String chromosome = COORD.split(":")[0];
@@ -63,36 +72,60 @@ public class CrispRstats extends CommandLineProgram
                 SAMRecord r = iter.next();
                 pl.record(r);
                 records++;
+                String read_name = r.getReadName();
                 String cigar = r.getCigarString();
                 String[] cigartype = cigar.split("[0-9]+");
                 String[] cigarsize = cigar.split("[A-Z]");
+                List<AlignmentBlock> blocks = r.getAlignmentBlocks();
                 
+                //System.out.println(read_name+"\t"+cigar);
+                         
                 int maxdel=0;
-                for(int i=0; i < cigarsize.length; i++) {
+                
+                AlignmentBlock currBlock;
+                int block_index = 0;
+                int s = blocks.get(0).getReferenceStart();
+                int e = blocks.get(0).getReferenceStart();
+                int startBigestDeletion = 0;
+                for(int i = 0; i < cigarsize.length; i++) {
+                    currBlock = blocks.get(block_index);
+                    
+                    //if(i>0)
+                    //    System.out.println(block_index+"\t"+cigartype[i]+"\t"+cigarsize[i-1]+"\t"+currBlock.getReferenceStart() + "\t"+ currBlock.getLength());
+                    
+                    if("M".equals(cigartype[i])) { block_index++; }
+
                     if("D".equals(cigartype[i])){
                         int dd = new Integer(cigarsize[i-1]).intValue();
-                        if(dd > maxdel)
-                            maxdel = dd; 
+                        if(dd > maxdel){
+                            maxdel = dd;
+                            AlignmentBlock prevBlock = blocks.get(block_index-1);
+                            startBigestDeletion = prevBlock.getReferenceStart() + prevBlock.getLength();
+                            //System.out.println(startBigestDeletion);
+                        }
                     }
                 }
                 
                 if(maxdel > MAX)
                     MAX = maxdel;
                 
-                //System.out.println(cigar + "\n\t--> " + maxdel + "(" + MAX +")");
-                
-                if(this.histo.containsKey(maxdel))
-                    this.histo.put(maxdel,this.histo.get(maxdel) + 1);
-                else
-                    this.histo.put(maxdel,1);
+                if(maxdel >= MINSIZE){
+                    os.writeBytes(read_name + "\t" + startBigestDeletion + "\t" + maxdel + "\n");
+                    
+                    if(this.histo.containsKey(maxdel))
+                        this.histo.put(maxdel,this.histo.get(maxdel) + 1);
+                    else
+                        this.histo.put(maxdel,1);
+                }
             }
             sam.close();
+            os.close();
             
         } catch (Exception e) { e.printStackTrace(); } 
         finally { try { os.close(); } catch (Exception e) { System.err.println("can not close stream"); } }
 
         try {
-            os = new DataOutputStream(new FileOutputStream(OUTPUT));
+            os = new DataOutputStream(new FileOutputStream(HISTO));
             os.writeBytes("length\tnumber\n");
             
             for(int i=0; i<=MAX; i++){

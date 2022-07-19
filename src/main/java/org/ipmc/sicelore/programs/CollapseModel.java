@@ -43,8 +43,16 @@ public class CollapseModel extends CommandLineProgram
     public String GENETAG = "IG";
     @Argument(shortName = "ISOFORMTAG", doc = "Isoform tag (default=IT)", optional=true)
     public String ISOFORMTAG = "IT";
+    @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (default=TE)", optional=true)
+    public String TSOENDTAG = "TE";
+    @Argument(shortName = "UMIENDTAG", doc = "UMI end tag (default=UE)", optional=true)
+    public String UMIENDTAG = "UE";
+    @Argument(shortName = "POLYAENDTAG", doc = "PolyA end tag (default=PE)", optional=true)
+    public String POLYAENDTAG = "PE";
     @Argument(shortName = "CDNATAG", doc = "cDNA sequence tag (default=CS)", optional=true)
     public String CDNATAG = "CS";
+    @Argument(shortName = "USTAG", doc = "read sequence tag (default=US)", optional=true)
+    public String USTAG = "US";
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
     public int MAXCLIP = 150;
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
@@ -105,7 +113,7 @@ public class CollapseModel extends CommandLineProgram
         IOUtil.assertFileIsReadable(CSV);
         
         LongreadRecord lrr = new LongreadRecord();
-	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,CDNATAG,MAXCLIP, RNTAG);
+	lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,CDNATAG,MAXCLIP,RNTAG);
 
         String SPOAPATH = this.findExecutableOnPath("spoa");
         //String RACONPATH = this.findExecutableOnPath("racon");

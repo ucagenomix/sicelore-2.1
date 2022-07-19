@@ -27,7 +27,7 @@ public class ComputeConsensus extends CommandLineProgram {
     @Argument(shortName = "T", doc = "The number of threads (default 20)")
     public int nThreads = 20;
     @Argument(shortName = "TMPDIR", doc = "Full path to TMPDIR")
-    public String TMPDIR = "/share/data/scratch/sicelore/";
+    public String TMPDIR = "/export/data/scratch/sicelore/";
     @Argument(shortName = "CELLTAG", doc = "Cell barcode tag (default=BC)", optional=true)
     public String CELLTAG = "BC";
     @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
@@ -42,6 +42,8 @@ public class ComputeConsensus extends CommandLineProgram {
     public String POLYAENDTAG = "PE";
     @Argument(shortName = "CDNATAG", doc = "cDNA sequence tag (default=CS)", optional=true)
     public String CDNATAG = "CS";
+    @Argument(shortName = "USTAG", doc = "read sequence tag (default=US)", optional=true)
+    public String USTAG = "US";
     @Argument(shortName = "RNTAG", doc = "Read number tag (default=RN)", optional=true)
     public String RNTAG = "RN";
     @Argument(shortName = "MAXCLIP", doc = "Maximum cliping size at both read ends to call as chimeric read (default=150)", optional=true)
@@ -87,8 +89,8 @@ public class ComputeConsensus extends CommandLineProgram {
             cmsa.setStaticParams(MAXPS);
             
             LongreadRecord lrr = new LongreadRecord();
-            lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,CDNATAG,MAXCLIP,RNTAG);
-            
+            lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,CDNATAG,MAXCLIP,RNTAG);
+        
             //log.info(new Object[]{"loadFastq\tSTART..."});
             //FastqLoader fastq = new FastqLoader(FASTQ);
             //if(fastq.getMap().size()>0)

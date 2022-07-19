@@ -52,7 +52,7 @@ $samtools index $output_dir/GEUS10xAttributes_umifound_.bam
 #$java -jar -Xmx4g Jar/sicelore.v2.2.jar IsoformMatrix DELTA=2 METHOD=STRICT GENETAG=GE I=$output_dir/GEUS10xAttributes_umifound_.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat.txt CSV=Barcodes/cellBC.190.tsv OUTDIR=$output_dir PREFIX=sicread VALIDATION_STRINGENCY=SILENT
 
 # compute consensus sequence
-$java -jar -Xmx4g Jar/sicelore.v2.2.jar ComputeConsensus T=10 I=$output_dir/GEUS10xAttributes_umifound_.bam O=$output_dir/consensus.fq TMPDIR=$tmp_dir
+$java -jar -Xmx4g Jar/sicelore.v2.2.jar ComputeConsensus T=10 CDNATAG=US I=$output_dir/GEUS10xAttributes_umifound_.bam O=$output_dir/consensus.fq TMPDIR=$tmp_dir
 
 # map molecules to genome
 $minimap2 -ax splice -uf --MD --sam-hit-only -t 4 --junc-bed Gencode/gencode.v18.mm10.junctions.bed Data/chr4.fa.gz $output_dir/consensus.fq > $output_dir/molecule.sam

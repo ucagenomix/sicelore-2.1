@@ -22,36 +22,21 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     private Strand strand;
     private int txStart;
     private int txEnd;
-    //private int exonCount;
-    //private int exonBases;
-    //private int[] exonStarts;
-    //private int[] exonEnds;
     private String geneId;
-    //private String[] geneIds;
     private List<int[]> exons;
     private List<Junction> junctions;
-    //private double rpkm;
     private byte[] cdna;
-    //private String orientation;
-    //private int umiEnd;
-    //private int tsoEnd;
     private Float de;
     private int mapqv;
-    //private boolean isSoftOrHardClipped = false;
     private boolean isSecondaryOrSupplementary = false;
-    //private int sizeStartToClip;
-    //private int sizeEndToClip;
-    //private boolean is_associated = false;
     private boolean isChimeria = false;
-    private boolean isReversed = false;
     
     protected static String CELLTAG = "BC"; // BC
     protected static String UMITAG = "U8"; // U8
     protected static String RNTAG = "RN"; // RN
     protected static String GENETAG = "GE"; //GE
     protected static String TSOENDTAG = "TE"; //TE
-    protected static String UMIENDTAG = "UE"; //UE
-    protected static String POLYAENDTAG = "PE"; //PE
+    protected static String POLYASTARTTAG = "PS"; //PS
     protected static String USTAG = "US"; // US
     protected static String CDNATAG = "CS"; // CS
     protected static int MAXCLIP = 150; // 150
@@ -60,15 +45,14 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     
     public LongreadRecord() { }
 
-    public void setStaticParams(String celltag, String umitag, String genetag, String tsoendtag, String umiendtag, String polyaend, String ustag, String cdnatag, int maxclip, String rntag){
+    public void setStaticParams(String celltag, String umitag, String genetag, String tsoendtag, String polyastart, String ustag, String cdnatag, int maxclip, String rntag){
 	this.CELLTAG = celltag;
         this.UMITAG = umitag;
         this.GENETAG = genetag;
         this.TSOENDTAG = tsoendtag;
-        this.UMIENDTAG = umiendtag;
-        this.POLYAENDTAG = polyaend;
-        this.USTAG = USTAG;
-        this.CDNATAG = CDNATAG;
+        this.POLYASTARTTAG = polyastart;
+        this.USTAG = ustag;
+        this.CDNATAG = cdnatag;
         this.MAXCLIP = maxclip;
         this.RNTAG = rntag;
     }
@@ -92,8 +76,6 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         record.barcode = (String) r.getAttribute(CELLTAG);
         record.umi = (String) r.getAttribute(UMITAG);
         record.mapqv = r.getMappingQuality();
-        
-        //System.out.println(record.barcode + "\t" + r.getReadUnmappedFlag());
         
         if (record.barcode == null || r.getReadUnmappedFlag())
              return null;
@@ -131,19 +113,21 @@ public class LongreadRecord implements Comparable<LongreadRecord>
             
             // added 01/09/2021 -> cDNA tag added after barcodes assignment
             // using AddBamReadSequenceTag SEQTAG=CS
-            if(load_sequence && !record.isChimeria && !record.isReversed){
+            if(load_sequence && !record.isChimeria){
                 
                 // directly get the cDNA sequence
                 if((String)r.getAttribute(CDNATAG) != null)
                     record.cdna = ((String)r.getAttribute(CDNATAG)).getBytes();
-                else{ // else compute it by substring 
-                    String orientation = (String) r.getAttribute("AR");  // if exists US is "TSO------------------------AAAA-UMI-BC-ADAPTOR"
-                    //int umiEnd = ((Integer) r.getAttribute(UMIENDTAG) != null) ? (Integer) r.getAttribute(UMIENDTAG) : 0; 		// +1 is start of polyA with --------------TTTT read orientation !!!
-                    int tsoEnd = ((Integer) r.getAttribute(TSOENDTAG) != null) ? (Integer) r.getAttribute(TSOENDTAG) : 0;
-                    int polyAEnd = ((Integer) r.getAttribute(POLYAENDTAG) != null) ? (Integer) r.getAttribute(POLYAENDTAG) : 0;
-         
+                else{ // else compute it by substring
+                    
+                    // "TSO---------cdna------------AAAA-UMI-BC-ADAPTOR"
                     String readSequence = (String)r.getAttribute(USTAG);
-                    String str = readSequence.substring((tsoEnd != 0) ? tsoEnd : 0, (polyAEnd != 0 && polyAEnd < readSequence.length()-1) ? polyAEnd : readSequence.length()-1);
+                    int tsoEnd = ((Integer) r.getAttribute(TSOENDTAG) != null) ? (Integer) r.getAttribute(TSOENDTAG) : 0;
+                    int polyAStart = ((Integer) r.getAttribute(POLYASTARTTAG) != null) ? (Integer) r.getAttribute(POLYASTARTTAG) : 0;
+                    int cdna_start = (tsoEnd != 0) ? tsoEnd : 0;
+                    int cdna_end = (polyAStart != 0 && polyAStart < readSequence.length()-1) ? polyAStart : readSequence.length()-1;
+                    String str = readSequence.substring(cdna_start, cdna_end);
+                    //System.out.println(record.name+ "\t" + readSequence.length()+ "\t" + tsoEnd + "\t" + cdna_start + "\t" + polyAEnd + "\t" + cdna_end);
                     
                     record.cdna = str.getBytes();
                     if("".equals(str))
@@ -266,52 +250,14 @@ public class LongreadRecord implements Comparable<LongreadRecord>
         return str;
     }
 
-    public String getGeneId() {
-        return geneId;
-    }
-
-    //public String[] getGeneIds() {
-    //    return geneIds;
-    //}
-
-    public byte[] getCdna() {
-        return this.cdna;
-    }
-
-    public void setGeneId(String geneId) {
-        this.geneId = geneId;
-    }
-
-    public int getMapqv() {
-        return this.mapqv;
-    }
-    public float getDe() {
-        return this.de;
-    }
-    /*
-    public int getSizeStartToClip(){
-        return sizeStartToClip;
-    }
-    
-    public int getSizeEndToClip(){
-        return sizeEndToClip;
-    }
-    
-    public boolean getIsSoftOrHardClipped() {
-        return isSoftOrHardClipped;
-    }
-    */
-    public boolean getIsChimeria() {
-        return isChimeria;
-    }
-    public boolean getIsReversed() {
-        return isReversed;
-    }
-    
+    public String getGeneId() { return geneId; }
+    public byte[] getCdna() { return this.cdna; }
+    public void setGeneId(String geneId) { this.geneId = geneId; }
+    public int getMapqv() { return this.mapqv; }
+    public float getDe() { return this.de; }
+    public boolean getIsChimeria() { return isChimeria; }
     public boolean getIsSecondaryOrSupplementary() { return isSecondaryOrSupplementary; }
-
-    public List<int[]> getExons() { return this.exons; }
-    
+    public List<int[]> getExons() { return this.exons; }   
     public List<Junction> getJunctions() { return this.junctions; }
 
     public String getName() { return name; }
@@ -326,40 +272,12 @@ public class LongreadRecord implements Comparable<LongreadRecord>
     public int getRn() {return rn; }
     public void setRn(int rn) { this.rn=rn; }
 
-    public String getChrom() {
-        return chrom;
-    }
-
-    public Strand getStrand() {
-        return strand;
-    }
-
-    public int getTxStart() {
-        return txStart;
-    }
-
-    public int getTxEnd() {
-        return txEnd;
-    }
+    public String getChrom() { return chrom; }
+    public Strand getStrand() { return strand; }
+    public int getTxStart() { return txStart; }
+    public int getTxEnd() { return txEnd; }
     
     public String printFas() {
         return ">" + name + "\n" + new String(cdna) +"\n";
     }
-    /*
-    public int getExonCount() {
-        return exonCount;
-    }
-
-    public int getExonBases() {
-        return exonBases;
-    }
-
-    public int[] getExonStarts() {
-        return exonStarts;
-    }
-
-    public int[] getExonEnds() {
-        return exonEnds;
-    }
-    */
 }

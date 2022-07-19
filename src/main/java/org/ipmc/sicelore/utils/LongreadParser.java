@@ -17,8 +17,6 @@ public class LongreadParser implements LongreadModelParser {
     private htsjdk.samtools.util.ProgressLogger pl;
     private int unvalid_records = 0;
     private int chimeria_records = 0;
-    private int reversed_records = 0;
-    private int not_primary_records = 0;
     private int mapqv0_records = 0;
     private int null_records = 0;
     private int gene_unset = 0;
@@ -88,9 +86,6 @@ public class LongreadParser implements LongreadModelParser {
         log.info(new Object[]{"\tSAMrecords no gene\t" + gene_unset});
         log.info(new Object[]{"\tSAMrecords no UMI\t" + umi_unset});
         log.info(new Object[]{"\tSAMrecords chimeria\t" + chimeria_records});
-        log.info(new Object[]{"\tSAMrecords reversed\t" + reversed_records});
-        //log.info(new Object[]{"\tSAMrecords null\t[" + null_records + "]"});
-        //log.info(new Object[]{"\tSAMrecords not primary\t[" + not_primary_records + "]"});
         log.info(new Object[]{"\tTotal reads\t\t" + mapLongreads.size()});
         log.info(new Object[]{"\tTotal reads multiSAM\t" + multiRec.size()});
     }
@@ -101,7 +96,6 @@ public class LongreadParser implements LongreadModelParser {
         
         if(record == null) { unvalid_records++; null_records++; return null; }
         if(record.getIsChimeria()) { unvalid_records++; chimeria_records++; return null; }
-        if(record.getIsReversed()) { unvalid_records++; reversed_records++; return null; }
         if(this.is_gene_mandatory && (record.getGeneId() == null || "undef".equals(record.getGeneId()))) { unvalid_records++; gene_unset++; return null; }
         if(this.is_umi_mandatory && record.getUmi() == null) { unvalid_records++; umi_unset++; return null; }
         

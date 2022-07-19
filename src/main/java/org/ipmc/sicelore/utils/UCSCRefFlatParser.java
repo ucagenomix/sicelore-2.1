@@ -162,7 +162,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
                     
                     // never null case if umifound or isobam from isoformMatrix pipeline used
                     // but we filter out some not reliable reads just as in isoformMatrix
-                    if(lrr != null && lrr.getMapqv() > 0 && !lrr.getIsChimeria() && !lrr.getIsReversed() && RN >= this.RNMIN && cellList.contains(BC)){
+                    if(lrr != null && lrr.getMapqv() > 0 && !lrr.getIsChimeria() && RN >= this.RNMIN && cellList.contains(BC)){
                         
                         // we have a geneId
                         if(! "undef".equals(IG)){

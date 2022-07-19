@@ -36,10 +36,8 @@ public class ComputeConsensus extends CommandLineProgram {
     public String GENETAG = "IG";
     @Argument(shortName = "TSOENDTAG", doc = "TSO end tag (default=TE)", optional=true)
     public String TSOENDTAG = "TE";
-    @Argument(shortName = "UMIENDTAG", doc = "UMI end tag (default=UE)", optional=true)
-    public String UMIENDTAG = "UE";
-    @Argument(shortName = "POLYAENDTAG", doc = "PolyA end tag (default=PE)", optional=true)
-    public String POLYAENDTAG = "PE";
+    @Argument(shortName = "POLYASTARTTAG", doc = "PolyA start tag (default=PS)", optional=true)
+    public String POLYASTARTTAG = "PS";
     @Argument(shortName = "CDNATAG", doc = "cDNA sequence tag (default=CS)", optional=true)
     public String CDNATAG = "CS";
     @Argument(shortName = "USTAG", doc = "read sequence tag (default=US)", optional=true)
@@ -89,8 +87,8 @@ public class ComputeConsensus extends CommandLineProgram {
             cmsa.setStaticParams(MAXPS);
             
             LongreadRecord lrr = new LongreadRecord();
-            lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,UMIENDTAG,POLYAENDTAG,USTAG,CDNATAG,MAXCLIP,RNTAG);
-        
+            lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,POLYASTARTTAG,USTAG,CDNATAG,MAXCLIP,RNTAG);
+            
             //log.info(new Object[]{"loadFastq\tSTART..."});
             //FastqLoader fastq = new FastqLoader(FASTQ);
             //if(fastq.getMap().size()>0)

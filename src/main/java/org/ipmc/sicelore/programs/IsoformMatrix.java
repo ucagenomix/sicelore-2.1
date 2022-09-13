@@ -109,6 +109,7 @@ public class IsoformMatrix extends CommandLineProgram
         File GENEMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genemetrics.txt");
         File CELLMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_cellmetrics.txt");
         File MOLINFOS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
+        File LOGS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".log");
         File outISOBAM = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isobam.bam");
 
         Matrix matrix = dataset.produceMatrix(this.cellList);
@@ -129,6 +130,8 @@ public class IsoformMatrix extends CommandLineProgram
         log.info(new Object[]{"\tMatrix isoforms counts\t[" + matrix.getTotal_count() + "]"});
         log.info(new Object[]{"\tMatrix isoforms define\t[" + matrix.getTotal_isoform_def() + "]"});
         log.info(new Object[]{"\tMatrix isoforms undefine[" + matrix.getTotal_isoform_undef() + "]"});
+        
+        writeLOGS(LOGS, bam, dataset, matrix);
         
         if(ISOBAM){
             log.info(new Object[]{"\tProducing ISOBAM\t[true]"});
@@ -156,6 +159,62 @@ public class IsoformMatrix extends CommandLineProgram
                 samFileWriter.close();
             } catch (Exception e) { e.printStackTrace(); }
         }
+    }
+    
+    public void writeLOGS(File LOGS, LongreadParser bam, MoleculeDataset dataset, Matrix matrix) {
+        BufferedOutputStream os = null;
+        
+        try {
+            os = new BufferedOutputStream(new java.io.FileOutputStream(LOGS));
+        
+            os.write(new String("IsoformMatrix INPUT," + INPUT + "\n").getBytes());
+            os.write(new String("IsoformMatrix REFFLAT," + REFFLAT + "\n").getBytes());
+            os.write(new String("IsoformMatrix CSV," + CSV + "\n").getBytes());
+            os.write(new String("IsoformMatrix DELTA," + DELTA + "\n").getBytes());
+            os.write(new String("IsoformMatrix METHOD," + METHOD + "\n").getBytes());
+            os.write(new String("IsoformMatrix CELLTAG," + CELLTAG + "\n").getBytes());
+            os.write(new String("IsoformMatrix UMITAG," + UMITAG + "\n").getBytes());
+            os.write(new String("IsoformMatrix GENETAG," + GENETAG + "\n").getBytes());
+            os.write(new String("IsoformMatrix MAXCLIP," + MAXCLIP + "\n").getBytes());
+            os.write(new String("IsoformMatrix AMBIGUOUS_ASSIGN," + AMBIGUOUS_ASSIGN + "\n").getBytes());
+            os.write(new String("IsoformMatrix MAPQV0," + MAPQV0 + "\n").getBytes());
+            
+            os.write(new String("Total SAMrecords," + bam.getTotal_records() + "\n").getBytes());
+            os.write(new String("SAMrecords valid," + bam.getValid_records() + "\n").getBytes());
+            os.write(new String("SAMrecords unvalid," + bam.getUnvalid_records() + "\n").getBytes());
+            os.write(new String("SAMrecords mapqv=0," + bam.getMapqv0_records() + "\n").getBytes());
+            os.write(new String("SAMrecords no gene," + bam.getGene_unset() + "\n").getBytes());
+            os.write(new String("SAMrecords no UMI," + bam.getUmi_unset() + "\n").getBytes());
+            os.write(new String("SAMrecords chimeria," + bam.getChimeria_records() + "\n").getBytes());
+            os.write(new String("Total reads," + bam.getMapLongreads().size() + "\n").getBytes());
+            os.write(new String("Total reads multiSAM," + bam.getMultiRec().size() + "\n").getBytes());
+
+            os.write(new String("Total molecules," + dataset.getMapMolecules().size() + "\n").getBytes());
+            os.write(new String("Total molecule reads," + dataset.getTotalReads() + "\n").getBytes());
+            os.write(new String("Total molecule multiIG," + dataset.getMultiIG() + "\n").getBytes());
+
+            os.write(new String("UCSCRefFlatParser genes," + dataset.getModel().getMapGenesTranscripts().size() + "\n").getBytes());
+            os.write(new String("UCSCRefFlatParser transcripts," + dataset.getModel().getTranscriptsNumber() + "\n").getBytes());
+            
+            os.write(new String("SetIsoforms monoexon," + dataset.getMonoexon() + "\n").getBytes());
+            os.write(new String("SetIsoforms no match," + dataset.getNomatch()  + "\n").getBytes());
+            os.write(new String("SetIsoforms one match," + dataset.getOnematch() + "\n").getBytes());
+            os.write(new String("SetIsoforms ambiguous," + dataset.getAmbiguous() + "\n").getBytes());
+        
+            os.write(new String("Matrix cells size," + matrix.getCellMetrics().size() + "\n").getBytes());
+            os.write(new String("Matrix genes size," + matrix.getGeneMetrics().size() + "\n").getBytes());
+            os.write(new String("Matrix junctions size," + matrix.getMatriceJunction().size() + "\n").getBytes());
+            os.write(new String("Matrix isoforms size," + matrix.getMatrice().size() + "\n").getBytes());
+            os.write(new String("Matrix isoforms counts," + matrix.getTotal_count() + "\n").getBytes());
+            os.write(new String("Matrix isoforms define," + matrix.getTotal_isoform_def() + "\n").getBytes());
+            os.write(new String("Matrix isoforms undefined," + matrix.getTotal_isoform_undef() + "\n").getBytes());
+           
+            
+            os.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            try { os.close();  } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
     }
 
     public static void main(String[] args) {

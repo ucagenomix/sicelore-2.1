@@ -5,7 +5,7 @@ package org.ipmc.sicelore.utils;
  * @author kevin lebrigand
  * 
  */ 
-import htsjdk.tribble.annotation.Strand;
+import htsjdk.tribble.annotation.*;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 

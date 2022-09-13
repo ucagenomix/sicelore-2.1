@@ -38,7 +38,8 @@ public class UCSCRefFlatParser implements GeneModelParser {
     public int MINEVIDENCE = 5;
     public int RNMIN = 1;
     public int NOVELINDEX=1;
-               
+    public int transcriptsNumber = 0;
+    
     private ListeningExecutorService oneNanoporeReadexecutor;
     private Deque<Future<String>> future_list;
     private DataOutputStream os;
@@ -59,7 +60,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
             while ((line = reader.readLine()) != null) {
                 TranscriptRecord f = parseLine(line);
                 if (f != null) {
-                    nb++;
+                    transcriptsNumber++;
                     if (this.mapGenesTranscripts.containsKey(f.getGeneId())) {
                         ((ArrayList<TranscriptRecord>) this.mapGenesTranscripts.get(f.getGeneId())).add(f);
                     } else {
@@ -75,7 +76,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
 
         log.info(new Object[]{"UCSCRefFlatParser\tend..."});
         log.info(new Object[]{"Number of Genes Symbols\t[" + this.mapGenesTranscripts.size() + "]"});
-        log.info(new Object[]{"Number of Transcripts\t[" + nb + "]"});
+        log.info(new Object[]{"Number of Transcripts\t[" + transcriptsNumber + "]"});
     }
     
     public UCSCRefFlatParser(int DELTA, int MINEVIDENCE, int RNMIN, UCSCRefFlatParser refmodel)
@@ -132,6 +133,7 @@ public class UCSCRefFlatParser implements GeneModelParser {
     public THashMap<String, List<TranscriptRecord>> getMapGenesTranscripts() {
         return mapGenesTranscripts;
     }
+    public int getTranscriptsNumber(){ return transcriptsNumber; }
     
     public void loader(File INPUT, CellList cellList, String CELLTAG, String UMITAG, String GENETAG, String ISOFORMTAG, String RNTAG)
     {

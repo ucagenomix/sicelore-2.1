@@ -15,6 +15,8 @@ public class LongreadParser implements LongreadModelParser {
 
     private final Log log;
     private htsjdk.samtools.util.ProgressLogger pl;
+    private int total_records = 0;
+    private int valid_records = 0;
     private int unvalid_records = 0;
     private int chimeria_records = 0;
     private int mapqv0_records = 0;
@@ -28,11 +30,13 @@ public class LongreadParser implements LongreadModelParser {
     private boolean is_umi_mandatory = true;
     
     THashMap<String, Longread> mapLongreads;
+    private HashSet<String> multiRec;
     
     public LongreadParser()
     {
         log = Log.getInstance(LongreadParser.class);
         this.mapLongreads = new THashMap<String, Longread>();
+        this.multiRec = new HashSet<String>();
     }
     
     public LongreadParser(File bam, boolean keep_mapqv0, boolean load_sequence, boolean is_gene_mandatory, boolean is_umi_mandatory)
@@ -48,12 +52,11 @@ public class LongreadParser implements LongreadModelParser {
         pl = new htsjdk.samtools.util.ProgressLogger(log, 1000000, "\tProcessed\t", "Records");
 
         this.mapLongreads = new THashMap<String, Longread>();
-        htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(bam);
-
-        int total_records = 0;
-        int valid_records = 0;
-        HashSet<String> multiRec = new HashSet<String>();
+        this.multiRec = new HashSet<String>();
         
+        htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(bam);
+        //inputSam.enableIndexMemoryMapping(false);
+    
         try {
             for(SAMRecord r : inputSam) {
                 pl.record(r);
@@ -110,8 +113,16 @@ public class LongreadParser implements LongreadModelParser {
         
         return record;
     }
-
-    public THashMap<String, Longread> getMapLongreads() {
-        return this.mapLongreads;
-    }
+    
+    public int getTotal_records() { return total_records; }
+    public int getValid_records() { return valid_records; }
+    public int getUnvalid_records() { return unvalid_records; }
+    public int getChimeria_records() { return chimeria_records; }
+    public int getMapqv0_records() { return mapqv0_records; }
+    public int getNull_records() { return null_records; }
+    public int getGene_unset() { return gene_unset; }
+    public int getUmi_unset() { return umi_unset; }
+    
+    public HashSet<String> getMultiRec() { return this.multiRec; }
+    public THashMap<String, Longread> getMapLongreads() { return this.mapLongreads; }
 }

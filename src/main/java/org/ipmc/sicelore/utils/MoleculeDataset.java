@@ -43,6 +43,9 @@ public class MoleculeDataset {
     private int monoexon = 0;
     private int multimatchset = 0;
     
+    private int multiIG = 0;
+    private int totalReads = 0;
+    
     private UCSCRefFlatParser model;
     private THashMap<String, Integer> candidates;
     private List<TranscriptRecord> transcripts;
@@ -80,8 +83,6 @@ public class MoleculeDataset {
         }
         log.info(new Object[]{"\tTotal molecules\t\t" + this.mapMolecules.size()});
         
-        int multiIG = 0;
-        int totalReads = 0;
         //int totalRecords = 0;
         cles = this.mapMolecules.keySet();
         it = cles.iterator();
@@ -97,6 +98,13 @@ public class MoleculeDataset {
     
     public List<Molecule> select(String mygene){ return (List<Molecule>) mapGenes.get(mygene); }
     public THashMap<String, Molecule> getMapMolecules() { return this.mapMolecules; }
+    
+    public int getTotalReads() { return totalReads; }
+    public int getMultiIG() { return multiIG; }
+    public int getMonoexon() { return monoexon; }
+    public int getNomatch() { return nomatch; }
+    public int getOnematch() { return onematch; }
+    public int getAmbiguous() { return ambiguous; }
     
     public void initModel(File REFFLAT)
     {

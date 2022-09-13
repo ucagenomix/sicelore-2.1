@@ -88,8 +88,20 @@ public class AddGeneNameTag extends CommandLineProgram
                 pl.record(r);
                 //log.info(new Object[]{"processing :" + r.getReadName()});
                 
-                if (!r.getReadUnmappedFlag())
+                 if (!r.getReadUnmappedFlag())
                     r = setGeneExons(r, geneOverlapDetector);
+                /*
+                String name = r.getReadName();
+                String GE = (String) r.getAttribute("GE");
+                String IG = (String) r.getAttribute("IG");
+                
+                if(GE != null){
+                    if(!GE.equals(IG))
+                        log.info(new Object[]{name + "\t" + GE + "/" + IG});
+                }
+                else if(IG != null)
+                    log.info(new Object[]{name + "\t" + GE + "/" + IG});
+                */
                 
                 samFileWriter.addAlignment(r);
             }

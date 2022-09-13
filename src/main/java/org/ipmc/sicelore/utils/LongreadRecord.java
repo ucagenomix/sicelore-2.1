@@ -126,12 +126,12 @@ public class LongreadRecord implements Comparable<LongreadRecord>
                     int polyAStart = ((Integer) r.getAttribute(POLYASTARTTAG) != null) ? (Integer) r.getAttribute(POLYASTARTTAG) : 0;
                     int cdna_start = (tsoEnd != 0) ? tsoEnd : 0;
                     int cdna_end = (polyAStart != 0 && polyAStart < readSequence.length()-1) ? polyAStart : readSequence.length()-1;
-                    String str = readSequence.substring(cdna_start, cdna_end);
-                    //System.out.println(record.name+ "\t" + readSequence.length()+ "\t" + tsoEnd + "\t" + cdna_start + "\t" + polyAEnd + "\t" + cdna_end);
                     
-                    record.cdna = str.getBytes();
-                    if("".equals(str))
-                        record.cdna = readSequence.getBytes();
+                    record.cdna = readSequence.getBytes();
+                    if(cdna_start < cdna_end)
+                        record.cdna = readSequence.substring(cdna_start, cdna_end).getBytes();
+                    
+                    //System.out.println(record.name+ "\t" + readSequence.length()+ "\t" + tsoEnd + "\t" + cdna_start + "\t" + polyAEnd + "\t" + cdna_end);
                 }
             }
                 

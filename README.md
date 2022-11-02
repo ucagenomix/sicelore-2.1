@@ -1,7 +1,7 @@
 
 SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell barcode/spatial (Visium) and UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell / Spatial (Visium) Nanopore or PacBIo long read sequencing data.
 
-# Installation
+## Installation
 
 just copy files.
 
@@ -15,7 +15,7 @@ requires:
 
 * [spoa](https://github.com/rvaser/spoa) for UMI consensus sequence (optional step)
 
-# Workflow
+## Workflow
 
 [1) Adapter search, stranding, barcode assignment to reads](#nanopore-scan)
 
@@ -23,21 +23,11 @@ requires:
 [2) UMI assignment to Nanopore SAM records](#umi-assignment)
 
 
-[3.option1) Gene-/Isoform-/Junction-level matrices](#IsoformMatrixReads)
+[3) Generate cell/spatialBC x Gene-/Isoform-/Junction-level matrices]
 
-Identifies matching Gencode transcript isoforms and generates [cell x genes/isoforms/junctions] matrices.
-
-
-[3.option2) Gene-/Isoform-/Junction-level matrices using UMI consensus sequences](#IsoformMatrixMolecules)
-
-* Generates consensus sequence for multiple reads UMIs.
-
-* Consensus sequences are mapped to the reference genome
-
-* Adds gene names, cell barcode and UMI sequence.
-
-* Identifies matching Gencode transcript isoforms and generates cell/spatialBC x Gene-/Isoform-/Junction-level matrices
-
+    * [option 1: directly using cell/spatialBC-UMI annotated long-reads](#IsoformMatrixReads)
+    
+    * [option 2: using consensus sequences per UMI](#IsoformMatrixMolecules)
 
 
 ## Authors
@@ -53,18 +43,17 @@ Identifies matching Gencode transcript isoforms and generates [cell x genes/isof
 ## Quick run analysis
 
 We provide test data as a subsampling of reads for the Mus musculus Clta locus for the 190 cells dataset.
-It requires java 1.8 (JAVA_HOME), minimap2, samtools in your PATH as well as racon and poa (including blosum80.mat in same folder) for consensus calling part.
 This test script should takes under 5mn to run, output files are located in ./output_dir directory.
 
 ```
 
 git clone https://github.com/ucagenomix/sicelore.git
 cd sicelore
-chmod +x quickrun.v2.2.sh
-dos2unix quickrun.v2.2.sh
-export JAVA_HOME=<path to Java 1.8>
+chmod +x quickrun-2.1.sh
+dos2unix quickrun-2.1.sh
+export JAVA_HOME=<path to Java>
 export PATH=$PATH:<minimap2path>:<samtoolspath>:<spoapath>
-./quickrun.v2.2.sh
+./quickrun-2.1.sh
 
 ```
 
@@ -73,7 +62,7 @@ export PATH=$PATH:<minimap2path>:<samtoolspath>:<spoapath>
 
  
 
-# 1) Scan Nanopore reads - assign cell barcodes.
+## 1) Scan Nanopore reads - assign cell barcodes.
 
  
 
@@ -125,31 +114,18 @@ Generates a html file with stats.
 
 * If no config.xml file is found in the current path (working directory), the software takes the default config file from the directory where the applications (jars) are installed.
 
-*
-
 * If a 10xGenomics system was used, a file with a list of all possible barcodes (e.g.  3M-february-2018.txt.gz or 737K-august-2016.txt from Cellranger (gz compressed is o.k.) should be provided in the the same folder as the jar file. The path of the file must be in the config.xml  e.g. \<fileWithAllPossibleTenXbarcodes\>3M-february-2018.txt.gz\</fileWithAllPossibleTenXbarcodes\> will use the 3M-february-2018.txt.gz file. 
-
- 
-
- 
 
  
 
 ## Usage
 
- 
 
 ```bash
-
- 
-
 java -jar -Xmx300G <path>/NanoporeBC_UMI_finder.jar scanfastq -d <directory to start recursive search for fastq files> -o outPutDirectory --bcEditDistance 1
-
- 
-
--Xmx : allow the RAM you have available -Xmx300G is an example for running it on the Promethion
-
 ```
+
+-Xmx : allow the RAM you have available -Xmx300G is an example for running it on the Promethion server
 
 ## Comments
 
@@ -158,22 +134,14 @@ Input: fastq files or gzipped fastq files.  Use directly the fastq files generat
 Typically just provide the path to the fastq_pass folder of the sequencing data
 
  
-
 ## Parameters
-
- 
 
 ## **required:**
 
- 
 
 **-b,--bcEditDistance**
 
 edit distance for barcode assignment.  --bcEditDistance 1 is a good tradeoff between efficiency and specifity (typically >99.9%). Specifity can be estimated by re-running the program with the -e option where the read bc sequence gets replaced by a random sequence and comparing the number of barcode assigned reads.
-
- 
-
- 
 
 **-d,--inDir**
 

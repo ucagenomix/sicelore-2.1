@@ -39,13 +39,13 @@ $java -jar -Xmx4G Jar/NanoporeBC_UMI_finder-2.1.jar scanfastq -d $fastqdir -o $r
 find ${readscandir}/passed/ -type f -name '*' | xargs pigz -dc |  pigz > ${analysisdir}fastq_pass.fastq.gz
 
 # Step 2 - Mapping
-$minimap2 -ax splice -uf --sam-hit-only -t 4 --junc-bed Gencode/gencode.v18.mm10.junctions.bed Data/chr4.fa.gz ${analysisdir}fastq_pass.fastq.gz | $samtools view -bS -@ 60 - | $samtools sort -m 2G -@ 4 -o ${mappingdir}passed.bam -&& $samtools index ${mappingdir}passed.bam
+$minimap2 -ax splice -uf --sam-hit-only -t 4 --junc-bed Gencode/gencode.v38.chr4.bed Data/chr4.fa.gz ${analysisdir}fastq_pass.fastq.gz | $samtools view -bS -@ 60 - | $samtools sort -m 2G -@ 4 -o ${mappingdir}passed.bam -&& $samtools index ${mappingdir}passed.bam
 
 # Step 3 - UMI assignment to Nanopore SAM records
-$java -jar  -Xmx4G Jar/NanoporeBC_UMI_finder-2.1.jar assignumis --inFileNanopore ${mappingdir}passed.bam -o ${umidir}passedParsed.bam --annotationFile Gencode/gencode.v18.mm10.refFlat
+$java -jar  -Xmx4G Jar/NanoporeBC_UMI_finder-2.1.jar assignumis --inFileNanopore ${mappingdir}passed.bam -o ${umidir}passedParsed.bam --annotationFile Gencode/gencode.v38.chr4.refflat
 
 # Step 4 - option a
-$java -jar -Xmx4g Jar/Sicelore-2.1.jar IsoformMatrix I=${umidir}passedParsed.bam REFFLAT=Gencode/gencode.v18.mm10.refFlat CSV=${readscandir}BarcodesAssigned.tsv OUTDIR=$siceloredir PREFIX=reads VALIDATION_STRINGENCY=SILENT
+$java -jar -Xmx4g Jar/Sicelore-2.1.jar IsoformMatrix I=${umidir}passedParsed.bam REFFLAT=Gencode/gencode.v38.chr4.refflat CSV=${readscandir}BarcodesAssigned.tsv OUTDIR=$siceloredir PREFIX=reads VALIDATION_STRINGENCY=SILENT
 
 end=$SECONDS
 duration=$(( end - start ))

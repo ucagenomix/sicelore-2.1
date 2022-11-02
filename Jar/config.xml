@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
 To change this license header, choose License Headers in Project Properties.
 To change this template file, choose Tools | Templates
@@ -7,140 +7,275 @@ and open the template in the editor.
 
 <!--<Parameters nanoporeBAMgenelist_seperator="," /> -->
 <Parameters>
+ 
     <general>
-        <!--Max number of threads, if omitted will use  all cpus available -->
-        <!--
-        <N_Threads>5</N_Threads>
-        -->
-        <!--Number of nanopore SAM records processed in each thread  
-Don't set too low should be > 300 -->
-        <sam_read_chunk_size>500</sam_read_chunk_size>
-        <!--If no output file is specified, given directory is created in user.home directory -->
-        <output_directory>Nanopore_BC_UMIfinder</output_directory>
-        <!--If no output file is specified, will create outputfile = Nanoporeinputfile + output_filesuffix + .bam
-        if file exists will add integer before .bam to make file name unique        -->
-        <output_filesuffix>10xAttributes</output_filesuffix>
-        <minReadLength>200</minReadLength>
-        <!-- outfile for logs, if absent defaults to stdout-->
+        <!--SET TO FALSE IF NON-INTEL CPU -->
+        <intel_cpu>true</intel_cpu>
+        <!--If true will print somewhat more detailed info e.g; if SamRecord has issues -->
+        <verbose_errors>true</verbose_errors>
+        <!--Max number of threads, if omitted here and on cmd line will use  all cpus available -->
     </general>
-    <nanopore>
-        <!-- The region from the 3' end (poly A) of nanopore data to be searched for matching Illumina data. Should be bigger than
-        max fragment size used for Illumina seq. Note: Illumina read is the 5' of the most 3' fragment        --> 
-        <windowSizeForNanoporeMatching>500</windowSizeForNanoporeMatching>
-    </nanopore>
     
-    <files>
-        <!--
+    <!-- Parameters for fastq read scan. Other parameters relevant for Fastq scan : See also <polyAT> parameters and adapter and TSO parameters -->
+    <readscanner>
+         <minReadLength>200</minReadLength>
+               <!--        edit distance with which to merge barcodes when creating list of used barcodes 
+         if not provided or null will be set to barcode edit distance
+         should be at least as big as the ED for barcode search-->
+        <mergeBCsED>null</mergeBCsED>
+        <!--         cell barcodes with read counts this fold below the max reads for a cell won't be assigned-->
+         <cellsWithReadsnFoldBelowMaxToKeep>500</cellsWithReadsnFoldBelowMaxToKeep>
+        <!--        indicates whether readscanner should surve folders for new files - set this to true if you do the read scan for an ongoing run -->
+        <runningasdemon>false</runningasdemon>
+          <!--       n reads to analyze in 1st pass when run as demon -->
+        <nReadsAnalyzeFirstPass>20000000</nReadsAnalyzeFirstPass>
+        <!--        name of serialized stat file, used to merge stats-->
+        <serializedstatfile>stats.pojo</serializedstatfile>
+        <!--        search for barcode at position predicted from adapter finding +/- this value-->
+        <testPlusMinusPos>2</testPlusMinusPos>
+        <!--File with all possible 10x barcodes, one BC per line, can contain -1 after the BC sequence , can be gz compressed , SHOULD BE IN APPLICATION ROOT DIRECTORY-->
+       <fileWithAllPossibleTenXbarcodes>3M-february-2018.txt.gz</fileWithAllPossibleTenXbarcodes>
+       <!-- <fileWithAllPossibleTenXbarcodes>737K-august-2016.txt</fileWithAllPossibleTenXbarcodes> -->
+
+        <!--Prefix before polyA position, first A after cDNA -->
+        <pa_start_prefix>PS=</pa_start_prefix> 
+        <!--Prefix before polyA position, last A of polyA -->
+        <pa_end_prefix>PE=</pa_end_prefix> 
+        <!--Prefix before Adapter position, last adapter base before cellBC -->
+        <adapter_pos_prefix>AE=</adapter_pos_prefix>
+        <!--Prefix before TSO position in read, last TSO base before cDNA-->
+        <tso_pos_prefix>T=</tso_pos_prefix> 
+        <!--        Prefix before seq is between last adapter base and 42 bases further  downstream
+        sequence is forward on stranded read-->
+        <seq_prefix>X=</seq_prefix>
+        <!--        Prefix before mean qv -->
+        <qv_prefix>Q=</qv_prefix>
+  
+        <!--        Minimal mean BC qv to consider barcode for barcode list-->
+        <minMeanBCqv>8</minMeanBCqv>
+        <!--        Minimal mean Read qv to consider barcode for barcode list-->
+        <minMeanReadqv>8</minMeanReadqv>
+        <!--        Minimal consecutive 3p adapter matches to consider barcode for barcode list-->
+        <minAdapter3pMatches>8</minAdapter3pMatches>
+        <!--         minamal fold more counts in BC a than in b to merge b into a during generation of list of used barcodes-->
+        <minCountFold>10</minCountFold>
+        <!--        run BC assignment til this edit distance to test for secondary matches - note increasing this beyond 3 will slow down search quite a lot
+        should never be smaller than ED for barcode assignment , ideally set it to 2 for speed if BC assigned with ed=1 or to 3 for BC ED=2-->
+        <!--        <bcScanTestTilED>2</bcScanTestTilED>-->
+        <!--number of bases of adapter (the one b4 the BC) to include into the read sequence (adapter end, bc, umi, start of polyA) in readname-->
+        <nbasesOfAdapterSeqInReadname>3</nbasesOfAdapterSeqInReadname>
+    </readscanner>
+    
+    <!-- Parameters for BC/UMI assignment of BAM files -->
+<barcodeUMIFinder>
+           <!--If no output file is specified, given directory is created in user.home directory -->
+        <output_directory>Nanopore_BC_UMIfinder</output_directory>
+              <!--If no output file name is specified, will create outputfile = Nanoporeinputfile + output_filesuffix + .bam
+        if file exists will add integer before .bam to make file name unique        -->
+        <output_filesuffix>BC_UMI</output_filesuffix>
+   <!--Number of nanopore SAM records processed in each thread. Clustering in particular for targeted sequencing where many reads per gene are available, big chunk sizes improve clustering 
+        Should be > 10 000 , > 100 000 to find UMIs that are not in the Illumina data, increase to > 1,000,000 if you have enough RAM-->
+        <sam_records_chunk_size>500000</sam_records_chunk_size>
+              <!--
         if false will use stringent input BAM validation
         -->
         <lenient_input_BAM_validation>true</lenient_input_BAM_validation>
         <!--Seperator when multiple genes are in Nanopore Bam Entry -->
-        <nanoporeBAMgenelist_seperator>,</nanoporeBAMgenelist_seperator> 
-        <!-- sam tag with seq to analyze. If empty or not two char long, read in sam entry will be analyzed.
-        if two char tag is given, the read in this SAM tag will be analyzed. All positions refer to the analyzed read-->
-        <sequence_sam-tag>US</sequence_sam-tag> 
+        <nanoporeBAMgenelist_seperator>,</nanoporeBAMgenelist_seperator>  
         <!-- Gene name attribute in Nanopore BAM -->
         <gene_name_attribute>GE</gene_name_attribute>
-        <!-- mean QV attribute in Nanopore BAM 
-        leave empty or comment out if not used-->
-        <!--<QV-tag>UQ</QV-tag> -->   
-    </files>
+        <!-- Dropseq library (https://github.com/broadinstitute/Drop-seq/) function to use for tagging sam record with gene name should be either
+        DefaultTagger or on of the gene name taggers from the Broad Institutes Dropseq library : TagReadWithGeneExonFunction , TagReadWithGeneFunction -->
+        <tagGeneNameFunction>DefaultTagger</tagGeneNameFunction> 
+</barcodeUMIFinder>
+
+<!-- POLY AT FINDING PARAMETERS FOR FASTQ SCAN -->
     <polyAT>
         <!-- minimal length of polyA polyT -->
         <polyATlength>15</polyATlength>
         <!-- minimal fraction of polyA polyT -->
         <fractionATInPolyAT>0.75</fractionATInPolyAT>
         <!-- minimal length to flag internal polyA polyT (used to search artefactual dimers)-->
-        <internalpATlength>20</internalpATlength>
+        <internalpATlength>15</internalpATlength>
         <!-- minimal fraction of polyA polyT to search for internal adapter when polyAT-->
-        <internalFractionATInPolyAT>0.75</internalFractionATInPolyAT>
+        <internalFractionATInPolyAT>0.70</internalFractionATInPolyAT>
         <!-- minimal polyA polyT length to flag internal polyAT. If internal adapter found polyAT is allways reported even if below this cutoff-->
         <internalMinPolyATlengthForReporting>20</internalMinPolyATlengthForReporting>
         <!-- searches max this distance from end for polyA or poly T -->
-        <windowSearchForPolyA>100</windowSearchForPolyA>
+        <windowSearchForPolyA>150</windowSearchForPolyA>
     </polyAT>
-    <adapter>
-        <!-- pre-barcode adapter seq, searching just for the end of TSO is often more sensitive, has to be provided here or in command line-->
-        <adapterseq>CTTCCGATCT</adapterseq>
-        <!-- max number of needleman wunsch mismatches in adapter sequence-->  
-        <maxAdapterNeedlemanMismatches>3</maxAdapterNeedlemanMismatches>
-    </adapter>
-    <tso>
-        <!-- TSO sequence optional - will search for TSO if TSOseq is given here or on command line , searching just for the end of TSO is often more sensitive-->
-        <tsoSeq>GTACATGG</tsoSeq>
-        <!-- max number of needleman wunsch mismatches in TSO sequence-->
-        <maxTSO_NeedlemanMismatches>3</maxTSO_NeedlemanMismatches>
-        <!-- distance from end searched for TSO -->
-        <windowForTSOsearch>50</windowForTSOsearch>  
-    </tso>
     
+    <!-- PARAMETERS FOR FASTQ SCAN Adapter sequence for 3p barcoding experiments, the sequence preceeding the BC -->
+    <adapter_for3pBarcoding>
+        <!-- pre-barcode adapter seq CTACACGACGCTCTTCCGATCT, searching just for the end of TSO is often more sensitive, has to be provided here or in command line-->
+        <sequence>CTTCCGATCT</sequence>
+        <!-- pre-barcode adapter seq CTACACGACGCTCTTCCGATCT, used for more stringent searches e.g. for internal adapter search or for definition of used barcodes, in 1st pass of readscanner-->
+        <sequence_complete>CTACACGACGCTCTTCCGATCT</sequence_complete>
+        <!-- max number of needleman wunsch mismatches in adapter sequence-->  
+        <maxNeedlemanMismatches>3</maxNeedlemanMismatches>
+        <!-- max number of needleman wunsch mismatches in complete adapter sequence
+        can keep pretty high since poly A/T has to be close anyway-->  
+        <maxCompleteSeqNeedlemanMismatches>5</maxCompleteSeqNeedlemanMismatches>
+    </adapter_for3pBarcoding>
+    
+     <!-- PARAMETERS FOR FASTQ SCAN 5' Adapter sequence for 5p barcoding experiments, the sequence preceeding the BC at the 5' of the cDNA-->
+    <fiveprimeadapter_for5pBarcoding>
+        <!-- pre-barcode adapter seq CTACACGACGCTCTTCCGATCT, searching just for the end of TSO is often more sensitive, has to be provided here or in command line-->
+        <sequence>CTTCCGATCT</sequence>
+         <!-- pre-barcode adapter seq CTACACGACGCTCTTCCGATCT, used for more stringent searches e.g. for internal adapter search or for definition of used barcodes, in 1st pass of readscanner-->
+        <sequence_complete>CTACACGACGCTCTTCCGATCT</sequence_complete>
+        <!-- max number of needleman wunsch mismatches in adapter sequence 
+        can keep pretty high since poly A/T has to be close anyway-->         
+        <maxNeedlemanMismatches>3</maxNeedlemanMismatches>
+         <!-- max number of needleman wunsch mismatches in complete adapter sequence
+        can keep pretty high since poly A/T has to be close anyway-->  
+        <maxCompleteSeqNeedlemanMismatches>5</maxCompleteSeqNeedlemanMismatches>
+              <!-- window from ends to search for adapter-->  
+        <AdapterSearchWindow>110</AdapterSearchWindow>       
+    </fiveprimeadapter_for5pBarcoding>
+    <!-- PARAMETERS FOR FASTQ SCAN 3' Adapter sequence for 5p barcoding experiments, the sequence after the polyA at the 3' of the cDNA-->
+     <threeprimeadapter_for5pBarcoding>
+        <!-- pre-barcode adapter seq CTACACGACGCTCTTCCGATCT, searching just for the end of TSO is often more sensitive, has to be provided here or in command line-->
+        <sequence>AACGCAGAGTAC</sequence>
+         <!-- pre-barcode adapter seq CTACACGACGCTCTTCCGATCT, used for more stringent searches e.g. for internal adapter search or for definition of used barcodes, in 1st pass of readscanner-->
+        <sequence_complete>AAGCAGTGGTATCAACGCAGAGTAC</sequence_complete>
+        <!-- max number of needleman wunsch mismatches in adapter sequence-->  
+        <maxNeedlemanMismatches>3</maxNeedlemanMismatches>
+         <!-- max number of needleman wunsch mismatches in complete adapter sequence
+        can keep pretty high since poly A/T has to be close anyway-->  
+        <maxCompleteSeqNeedlemanMismatches>5</maxCompleteSeqNeedlemanMismatches>      
+    </threeprimeadapter_for5pBarcoding>
+    
+    <!-- PARAMETERS FOR FASTQ SCAN TSO sequence for 3p barcoding experiments, the sequence ar the 5' -->
+    <tso_for3pBarcoding>
+        <!-- TSO sequence for 3p barcoding experiments
+        optional AAGCAGTGGTATCAACGCAGAGTACATGG - 
+        will search for TSO if TSOseq is given here or on command line , 
+        searching just for the end of TSO is often more sensitive-->
+        <sequence>AACGCAGAGTACATGG</sequence>
+
+        <!-- max number of needleman wunsch mismatches in TSO sequence-->
+        <maxNeedlemanMismatches>5</maxNeedlemanMismatches>
+        <!-- min number of consecutive needleman matches in TSO sequence
+        match will pass even if max mismatches is exceeded if this condition is met-->
+        <minTSO_NeedlemanConsecutiveMatches>8</minTSO_NeedlemanConsecutiveMatches>
+        <!-- min sum of the two best consecutive needleman matches in TSO sequence
+        match will pass even if max mismatches is exceeded if this condition is met-->
+        <minTSO_TwoBestConsecutiveMatches>12</minTSO_TwoBestConsecutiveMatches>
+        <!-- distance from end searched for TSO -->
+        <windowForTSOsearch>90</windowForTSOsearch> 
+        <!-- offfset of end of TSO seq provided from real TSO end-->
+        <offsetTSOend>1</offsetTSOend>
+        <!--        TSO seq almost complete (Gn) lacking. Is used to search for internal TSOs to identify chimeric seqs-->
+        <sequence_complete>AAGCAGTGGTATCAACGCAGAGTACAT</sequence_complete>
+        <!-- max TSO mismatches for complete TSO seq for internal TSO search. Is used to search for internal TSOs to identify chimeric seqs-->
+        <maxCompleteSeqNeedlemanMismatches>6</maxCompleteSeqNeedlemanMismatches>
+    </tso_for3pBarcoding>
+    <!-- PARAMETERS FOR FASTQ SCAN TSO sequence for 5p barcoding experiments, the sequence after the UMI, just before the cDNA -->
+     <tso_for5pBarcoding>
+        <!-- TSO sequence for 3p barcoding experiments
+        optional AAGCAGTGGTATCAACGCAGAGTACATGG - 
+        will search for TSO if TSOseq is given here or on command line , 
+        searching just for the end of TSO is often more sensitive-->
+        <sequence>AACGCAGAGTACATGG</sequence>
+
+        <!-- max number of needleman wunsch mismatches in TSO sequence-->
+        <maxNeedlemanMismatches>5</maxNeedlemanMismatches>
+    </tso_for5pBarcoding>
+    
+    <!-- Parameters for BC/UMI assignment of BAM files -->
     <barcodes>
-        <!-- 
+        <!-- -->
+        <cell_bc_length>16</cell_bc_length>
+        <!--
+          USED ONLY FOR ILLUMINA GUIDED BC SEARCH
           XML file with dynamic UMI edit distances
           If just filename is given will search in user home and if not found in application install directory
           If complete path is given will look only for given file path
         -->
         <edit_distance_xml>bcMaxEditDistances.xml</edit_distance_xml>
         <!--
-        *************************************************************************** 
+        USED ONLY FOR ILLUMINA GUIDED BC SEARCH 
          Search for Illumina barcode in genomic region of nanopore data if data corresponding to Nanopore gene not found
          in Illumina data
         -->
         <test_BC_Genomic_Regions>true</test_BC_Genomic_Regions>  
-               <!--
-         *************************************************** 
+        <!--
+         USED ONLY FOR ILLUMINA GUIDED BC SEARCH 
          Search for Illumina barcode only in  genomic region of nanopore data won't search for corresponding Illumina gened
          in Illumina data
         -->
-        <test_ONLY_BC_Genomic_Regions>false</test_ONLY_BC_Genomic_Regions>         
-        <!-- cell_BC_bailout_after_ED: OPTIONAL cell bc comp with Illumina won't check higher ed if something
+        <test_ONLY_BC_Genomic_Regions>false</test_ONLY_BC_Genomic_Regions>      
+        <!-- USED ONLY FOR ILLUMINA GUIDED BC SEARCH
+        cell_BC_bailout_after_ED: OPTIONAL cell bc comp with Illumina won't check higher ed if something
          found. tests all possibillities til bailoutIfFoundAfterED and keeps
          going to next level only if nothing found. 
         No bailout makes only sense if correct stats for edit distance diff between best and second best match are required
         For optimal speed set it to 0 
         Comment out or enter 'null' if no bailout-->
         <cell_BC_bailout_after_ED>2</cell_BC_bailout_after_ED>
-        
-        <!-- OPTIONAL increase ED if < maxBCsforincrementBC_ED cell BCs to test for this gene 
+        <!-- USED ONLY FOR ILLUMINA GUIDED BC SEARCH
+        OPTIONAL increase ED if < maxBCsforincrementBC_ED cell BCs to test for this gene 
         only used if fixed edit distance is used--> 
         <incrementBC_ED_ifFewBCs>false</incrementBC_ED_ifFewBCs> 
         <!-- 
+        USED ONLY FOR ILLUMINA GUIDED BC SEARCH
         Only used when fixed edit distance limit is used
          maxBCsforincrementBC_ED: OPTIONAL if given, max ED for searching corresponding Illumina cell BC with same gene expressed will be increased by one 
          for Genes that are found in less than maxBCsforincrementBC_ED cells -> has to compare with less BCs -> higher ED possible
         -->
         <maxBCsforincrementBC_ED>300</maxBCsforincrementBC_ED>
-        <!-- REQUIRED check estimated pos +/- this offset. Taken also into account for max ED calculation when dynamic ED is used-->
-        <bc_posplusminus>1</bc_posplusminus>
-        <!-- REQUIRED Maximal ED to check all cell associated 10x BCs including the ones that do not have the actual gene expressed-->
+        <!--  USED ONLY FOR ILLUMINA GUIDED BC SEARCH
+        REQUIRED check estimated pos +/- this offset. Taken also into account for max ED calculation when dynamic ED is used-->
+        <bc_posplusminus>2</bc_posplusminus>
+        <!-- USED ONLY FOR ILLUMINA GUIDED BC SEARCH
+        REQUIRED Maximal ED to check all cell associated 10x BCs including the ones that do not have the actual gene expressed-->
         <maxEDtoCheckBCAll10xBCs>3</maxEDtoCheckBCAll10xBCs>
-        <!-- REQUIRED Maximal ED to check all 10x BCs - there are hundreds of thousands 10X BCs, testing for a too high ED will find rong matches-->
+        <!-- USED ONLY FOR ILLUMINA GUIDED BC SEARCH
+        REQUIRED Maximal ED to check all 10x BCs - there are hundreds of thousands 10X BCs, testing for a too high ED will find rong matches-->
         <maxEDtoCheckBCEmptyDrops>2</maxEDtoCheckBCEmptyDrops>
+                <!--
+        ONLY FOR ILLUMINA DATA GUIDED BC/UMI search
+        Window from polyA tail in which matching Illumina data are searched
+        Illumina matches are typically within a few hundred bases from the 3' end. A Nanopore read with the same UMI should have its 3' matched to the same region 
+        set it to > 1.5x the mean Illumina library fragment size.
+        --> 
+        <windowSizeForNanoporeMatching>400</windowSizeForNanoporeMatching>
+        <!--    UMIS BY CLUSTERING mapping at   distance from polyA(3'barcoding) or from 5' (5p barcoding) relevant for grouping of reads--> 
+        <distance_from_read_end_for_grouping>100</distance_from_read_end_for_grouping>
+        <!--    UMIS BY CLUSTERING     maximal distance on genome for two reads considered to match same genomic region-->
+        <max_GenomeDistance_forGrouping>500</max_GenomeDistance_forGrouping> 
     </barcodes>
     
     <umis>
         <!-- 
+        USED ONLY FOR ILLUMINA GUIDED UMI SEARCH
           XML file with dynamic UMI edit distances
           If just filename is given will search in user home and if not found in application install directory
           If complete path is given will look only only for given file path
         -->
         <edit_distance_xml>umiMaxEditDistances.xml</edit_distance_xml>
+        <!-- USED FOR UMI clustering
+        same thing for UMI clustering -->
+       <clusteringedit_distance_xml>umiClusteringEditDistances.xml</clusteringedit_distance_xml>
         <!-- 
-        Don't use for now!!!!!!
-          search for just 5' part of UMI, requires dynamic edit distance for UMIs set and the presence of data for this UMI length in the 
-            corresponding XML file for UMIs
+         Length of UMI
         -->
-        <!--
-                <umi_length_reduced>7</umi_length_reduced>
-        -->
-        <!-- 
-         OPTIONAL if given, max ED for searching corresponding Illumina cell UMIs for gene in cell  will be increased by one 
-         for Genes that have less than this umis in given cell -> has to compare with less UMIs -> higher ED possible
-         Only used if fixed edit distance used
-        -->
+        <umi_length>12</umi_length>
+        <!-- USED ONLY FOR ILLUMINA GUIDED UMI SEARCH -->
         <maxUMIsforincrementUMI_ED>50</maxUMIsforincrementUMI_ED> 
         <!-- REQUIRED check estimated pos +/- this offset. Taken also into account for max ED calculation when dynamic ED is used-->
-        <umi_posplusminus>1</umi_posplusminus>
+        <umi_posplusminus>2</umi_posplusminus>
+<!--        ED limit for complete link clustering of UMIs-->
+        <umi_completelinkclusteringED>2</umi_completelinkclusteringED>
+        <!--        ED limit for simple link clustering of UMIs. Simple link clustering is used for UMIs covered by a huge number of reads. Complete link clustering would take ages for huge clustering jobs-->
+        <umi_singlelinkclusteringED>1</umi_singlelinkclusteringED>
+        <!-- clustering jobs exceeding this number of reads for one gene and one cell will be rejected to avoid eternal CPU times for just one gene and cell. Barcodes that have issues are listed in the top of the gene count table csv  -->
+        <maxComplexityForUMIclustering>100000</maxComplexityForUMIclustering>
+<!--        when more than this reads are for one genomic region in a cell, will pre-group equal UMIs to reduce complexity of clustering job-->
+        <pregroup_for_clustering_threshold>1000</pregroup_for_clustering_threshold>
+        <!--  above this complexity (reads per cell and gene) will switch to SingleLinkClustering for task-->
+        <complexity_threshold_for_switch_to_single_link_clustering>3000</complexity_threshold_for_switch_to_single_link_clustering>
         <!--
         umi_bailout_afterED>: Stops testing higher Ed when found at or below this ED. If set will be faster 
         but diff between best and second best match will be wrong in some cases.
@@ -148,7 +283,7 @@ Don't set too low should be > 300 -->
         --> 
         <!-- <umi_bailout_afterED></umi_bailout_afterED> -->  
     </umis>
-    
+  
     <!-- Samflags will be added to output BAM if set here 
     To edit a flag, change the text after <samFlag>
         To removea flag comment the complete section for the flag
@@ -160,6 +295,16 @@ Don't set too low should be > 300 -->
         or delete it       
     --> 
     <samFlags>
+        <nanoporeReadSAMtag>
+            <ReadId>
+                <samFlag>SX</samFlag>
+                <description>Read number, used as id to easily identify a read</description>
+            </ReadId> 
+            <ReadReversed>
+                <samFlag>RE</samFlag>
+                <description>Indicates that input read was reversed during adapter/poly_A scan</description>
+            </ReadReversed>             
+        </nanoporeReadSAMtag>
         <illuminaSAMtag>
             <IlluminaGene>
                 <samFlag>IG</samFlag>
@@ -167,83 +312,57 @@ Don't set too low should be > 300 -->
             </IlluminaGene>  
         </illuminaSAMtag>
         <polyATFindingSAMtag>
-            <READ_TOO_SHORT>
-                <samFlag>AX</samFlag>
-                <description>Read too short, not analyzed</description>
-            </READ_TOO_SHORT>
-            <PRE_POLYT_TOO_SHORT>
-                <samFlag>AZ</samFlag>
-                <description>Pre-polyT sequence too short</description>
-            </PRE_POLYT_TOO_SHORT>
-            <NEITHER_POLY_NOR_POLYT>
-                <samFlag>A0</samFlag>
-                <description>Neither polyA nor polyT</description>
-            </NEITHER_POLY_NOR_POLYT>
             <POLYAT_END>
                 <samFlag>PE</samFlag>
                 <description>End of polyA or polyT</description>
             </POLYAT_END>
-            <INTERNAL_POLYAT>
-                <samFlag>PI</samFlag>
-                <description>Internal polyAT (evtl. adapter).</description>    
-            </INTERNAL_POLYAT>   
+            <POLYAT_START>
+                <samFlag>PS</samFlag>
+                <description>Start of polyA or polyT</description>
+            </POLYAT_START>
         </polyATFindingSAMtag>
         <adapterFindingSAMtag>        
-            <!-- Adapter found on both end of read - likely a chimeric cDNA  -->
-            <BOTH_POLYA_AND_POLYT_ADAPTER>
-                <samFlag>A2</samFlag>
-                <description>Both polyA and polyT</description>
-            </BOTH_POLYA_AND_POLYT_ADAPTER>
-            <!-- Read was reversed for analysis - means polyA found at 3' of read-->
-            <REVERSE_READ>
+            <!--           read was reverse comp before readscanner -->
+            <!--            <READ_WAS_REVERSE_COMP>
                 <samFlag>AR</samFlag>
-                <description>Read is reverse</description>
-            </REVERSE_READ>
-            <ADAPTER_NOT_FOUND>
-                <samFlag>AM</samFlag>
-                <description>Adapter not found</description>
-            </ADAPTER_NOT_FOUND>
-            <TOO_MANY_MISMATCHES>
-                <samFlag>AT</samFlag>
-                <description>Too many adapter mismatches</description>
-            </TOO_MANY_MISMATCHES>
- 
-            <ADAPTER_START>
-                <samFlag>AB</samFlag>
-                <description>Adapter start (1-based)</description>
-            </ADAPTER_START>
+                <description>Initial fastq read was reverse</description>
+            </REVERSE_READ>-->
             <ADAPTER_END>
                 <samFlag>AE</samFlag>
-                <description>Adapter end (1-based)</description>
+                <description>Adapter end (1-based), side facing barcode</description>
             </ADAPTER_END>
         </adapterFindingSAMtag>
         <tSOFindingSAMtag>
-<!--            <TSO_NOT_SCANNED>
+            <!--            <TSO_NOT_SCANNED>
                 <samFlag>TS</samFlag>
                 <description>Not scanned for TSO</description>
             </TSO_NOT_SCANNED>-->
-            <TSO_NOT_FOUND>
-                <samFlag>TN</samFlag>
-                <description>TSO not found</description>
-            </TSO_NOT_FOUND>
-            <TSO_TOO_MANY_MISMATCHES>
-                <samFlag>TM</samFlag>
-                <description>TSO too many mismatches</description>
-            </TSO_TOO_MANY_MISMATCHES>
-            <TSO_BEGIN>
-                <samFlag>TB</samFlag>
-                <description>TSO begin (1-based)</description>
-            </TSO_BEGIN>
             <TSO_END>
                 <samFlag>TE</samFlag>
-                <description>TSO end (1-based)</description>
+                <description>TSO end (1-based), facing cDNA</description>
             </TSO_END>
         </tSOFindingSAMtag>
         <barcodeFindingSAMtag>
-            <BC_NONE_FOUND>
-                <samFlag>BN</samFlag>
-                <description>Barcode not found</description>
-            </BC_NONE_FOUND>
+            <BC_SEQ_READSCAN>
+                <samFlag>BU</samFlag>
+                <description>Barcode seq from readscan</description>
+            </BC_SEQ_READSCAN> 
+            <BC_SEQ_READSCAN_BEGIN>
+                <samFlag>BV</samFlag>
+                <description>Barcode start from readscan</description>
+            </BC_SEQ_READSCAN_BEGIN>
+            <BC_SEQ_READSCAN_END>
+                <samFlag>BE</samFlag>
+                <description>Barcode end from readscan</description>
+            </BC_SEQ_READSCAN_END>   
+            <BC_SEQ_READSCAN_ED>
+                <samFlag>BW</samFlag>
+                <description>Barcode ED from readscan</description>
+            </BC_SEQ_READSCAN_ED>                          
+            <BC_SEQ_READSCAN_ED_SECOND>
+                <samFlag>BX</samFlag>
+                <description>Barcode ED 2nd best (false) match from readscan</description>
+            </BC_SEQ_READSCAN_ED_SECOND>                                     
             <GENE_NOT_FOUND_IN_ILLUMINA>
                 <samFlag>B0</samFlag>
                 <description>Gene not found in Illumina data</description>
@@ -253,7 +372,7 @@ Don't set too low should be > 300 -->
                 <description>Genomic region not found in Illumina data</description>  
             </GENOMIC_REGION_NOT_FOUND_IN_ILLUMINA>
             <FOUND_FOR_ILLUMINA_CELL_GENE>
-                <samFlag>BF</samFlag>
+                <samFlag>BD</samFlag>
                 <description>Cell BC found for matching Illumina Cell BC for data for same gene in same cell</description>
             </FOUND_FOR_ILLUMINA_CELL_GENE>
             <FOUND_FOR_ILLUMINA_CELL_GENOMIC_REGION>
@@ -293,9 +412,24 @@ Don't set too low should be > 300 -->
                 <description>Barcode start (1-based)</description>
             </BARCODE_START>
             <BARCODE_END>
-                <samFlag>BE</samFlag>
+                <samFlag>BF</samFlag>
                 <description>Barcode end (1-based)</description>
             </BARCODE_END>
+            <!--            cell bc found in illumina data            -->
+            <CELL_BC_SEQ_FROM_ILLUMINA_DATA>
+                <samFlag>BY</samFlag>
+                <description>Cell BC sequence from Illumina data</description>
+            </CELL_BC_SEQ_FROM_ILLUMINA_DATA>
+                      <!--            cell bc found in read scan           -->
+            <CELL_BC_SEQ_FROM_READSCAN>
+                <samFlag>BZ</samFlag>
+                <description>Cell BC sequence found in read scan</description>
+            </CELL_BC_SEQ_FROM_READSCAN>
+            <CELL_BC_SEQ_FROM_READSCAN_RANK>
+                <samFlag>BH</samFlag>
+                <description>Rank of Cell BC sequence found in read scan (CellBcs ordered by read count during read scan</description>
+            </CELL_BC_SEQ_FROM_READSCAN_RANK>
+            <!--            cell barcode, either illumina if found or bc from read scan if illumina not searched or found-->
             <CELL_BC>
                 <samFlag>BC</samFlag>
                 <description>Cell BC sequence</description>
@@ -326,10 +460,30 @@ Don't set too low should be > 300 -->
                 <samFlag>UE</samFlag>
                 <description>UMI end (one based)</description>
             </UMI_END>
+<!--            umi sequence this umi was grouped with, the assigned UMI-->
             <UMI_sequence>
                 <samFlag>U8</samFlag>
-                <description>UMI sequence'U8</description>
-            </UMI_sequence> 
+                <description>UMI sequence</description>
+            </UMI_sequence>
+<!--            read sequence of umi -->
+            <UMI_read_sequence>
+                <samFlag>U7</samFlag>
+                <description>UMI read sequence</description>
+            </UMI_read_sequence>
+<!--            simply the sequence following the BC, set if BC found and no UMI assigned -->
+                
+            <UMI_IS_FROM_CLUSTERING>                    
+                <samFlag>UC</samFlag>
+                <description>if set, indicates that UMI is from clustering</description>
+            </UMI_IS_FROM_CLUSTERING>
+            <UMI_IS_FROM_ILLUMINA_DATA>                    
+                <samFlag>UI</samFlag>
+                <description>if set, indicates that UMI is from illumina data</description>
+            </UMI_IS_FROM_ILLUMINA_DATA>   
+            <UMI_IS_JUST_READSEQ>                    
+                <samFlag>UZ</samFlag>
+                <description>if set, indicates that UMI is just read sequence</description>
+            </UMI_IS_JUST_READSEQ>
             <UMI_match_with_reduced_length>
                 <samFlag>UR</samFlag>
                 <description>UMI was found after scan with reduced UMI length</description>
@@ -337,3 +491,4 @@ Don't set too low should be > 300 -->
         </umiFindingSamTags>
     </samFlags>
 </Parameters>
+

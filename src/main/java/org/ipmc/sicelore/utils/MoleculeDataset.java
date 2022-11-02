@@ -243,8 +243,8 @@ public class MoleculeDataset {
                 }
                 else{
                     // ambiguous is true, mutiple isoforms are valid
-                    // but in STICT mode we have all exons and we set to one of the possible isoform
-                    // need to solve Gapsh case where competing with pseudogenes
+                    // but in STRICT mode we have all exons and we set to one of the possible isoform
+                    // need to solve GAPDH case where competing with pseudogenes
                     // get the transcripts with the more exons for instance
                     // but need to records the transcriptRecords before
                     this.ambiguous++;

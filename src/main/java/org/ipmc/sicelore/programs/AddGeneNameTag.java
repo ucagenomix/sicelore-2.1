@@ -45,6 +45,8 @@ public class AddGeneNameTag extends CommandLineProgram
     public boolean USE_STRAND_INFO = true;
     @Argument(shortName = "ALLOW_MULTI_GENE_READS", doc = "Whether or ot allow for multi-gene reads", optional=true)
     public boolean ALLOW_MULTI_GENE_READS = true;
+    @Argument(shortName = "DEBUG", doc = "Debugger mode", optional=true)
+    public boolean DEBUG = false;
     
     private ProgressLogger pl;
     private final Log log;
@@ -73,8 +75,6 @@ public class AddGeneNameTag extends CommandLineProgram
 
     protected void process()
     {
-        
-        
         htsjdk.samtools.SamReader inputSam = htsjdk.samtools.SamReaderFactory.makeDefault().open(INPUT);
         htsjdk.samtools.SAMFileHeader samFileHeader = inputSam.getFileHeader();
         samFileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
@@ -88,20 +88,21 @@ public class AddGeneNameTag extends CommandLineProgram
                 pl.record(r);
                 //log.info(new Object[]{"processing :" + r.getReadName()});
                 
-                 if (!r.getReadUnmappedFlag())
+                if (!r.getReadUnmappedFlag())
                     r = setGeneExons(r, geneOverlapDetector);
-                /*
-                String name = r.getReadName();
-                String GE = (String) r.getAttribute("GE");
-                String IG = (String) r.getAttribute("IG");
                 
-                if(GE != null){
-                    if(!GE.equals(IG))
+                if(DEBUG){
+                    String name = r.getReadName();
+                    String GE = (String) r.getAttribute("GE"); // rainer tag
+                    String IG = (String) r.getAttribute(GENETAG);
+                
+                    if(GE != null){
+                        if(!GE.equals(IG))
+                            log.info(new Object[]{name + "\t" + GE + "/" + IG});
+                    }
+                    else if(IG != null)
                         log.info(new Object[]{name + "\t" + GE + "/" + IG});
                 }
-                else if(IG != null)
-                    log.info(new Object[]{name + "\t" + GE + "/" + IG});
-                */
                 
                 samFileWriter.addAlignment(r);
             }

@@ -306,13 +306,13 @@ public class Matrix
         
         try {
             os = new BufferedOutputStream(new java.io.FileOutputStream(paramFile));
-            os.write(new String("cellBC\tnbReads\tnbUmis\tnbIsoformSet\tnbIsoformNotSet\n").getBytes());
+            os.write(new String("cellBC\tnbReads\tnbGenes\tnbUmis\tnbIsoformSet\tnbIsoformNotSet\n").getBytes());
             
             for(String cell_barcode : cellMetrics.keySet()){
                 CellMetrics cm = cellMetrics.get(cell_barcode);
                 if(cm != null){
                     //int total = cm.getIsoform_known_count() + cm.getIsoform_undef_count();
-                    os.write(new String(cell_barcode+"\t"+cm.getNb_reads()+"\t"+cm.getNb_umis()+"\t"+cm.getIsoform_known_count()+"\t" +cm.getIsoform_undef_count()+"\n").getBytes());
+                    os.write(new String(cell_barcode+"\t"+cm.getNb_reads()+"\t"+cm.getNb_genes()+"\t"+cm.getNb_umis()+"\t"+cm.getIsoform_known_count()+"\t" +cm.getIsoform_undef_count()+"\n").getBytes());
                 }
                 else{
                     os.write(new String(cell_barcode+"\t0\t0\t0\t0\t0\n").getBytes());

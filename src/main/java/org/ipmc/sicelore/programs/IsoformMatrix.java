@@ -21,6 +21,13 @@ import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtils;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.statistics.HistogramDataset;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 @CommandLineProgramProperties(summary = "Isoform and gene level expression matrices production.", oneLineSummary = "Isoform and gene level expression matrices production.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature
 public class IsoformMatrix extends CommandLineProgram
@@ -104,13 +111,14 @@ public class IsoformMatrix extends CommandLineProgram
         File ISOMATRIX   = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isomatrix.txt");
         File ISOMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isometrics.txt");
         File JUNCMATRIX  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_juncmatrix.txt");
-        File JUNCMETRICS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_juncmetrics.txt");
+        File JUNCMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_juncmetrics.txt");
         File GENEMATRIX  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genematrix.txt");
         File GENEMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genemetrics.txt");
         File CELLMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_cellmetrics.txt");
-        File MOLINFOS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
-        File LOGS  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".log");
-        File outISOBAM = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isobam.bam");
+        File MOLINFOS    = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
+        File LOGS        = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".log");
+        File HTML        = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".html");
+        File outISOBAM   = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_isobam.bam");
 
         Matrix matrix = dataset.produceMatrix(this.cellList);
         
@@ -132,6 +140,7 @@ public class IsoformMatrix extends CommandLineProgram
         log.info(new Object[]{"\tMatrix isoforms undefine[" + matrix.getTotal_isoform_undef() + "]"});
         
         writeLOGS(LOGS, bam, dataset, matrix);
+        writeHTML(HTML, bam, dataset, matrix);
         
         if(ISOBAM){
             log.info(new Object[]{"\tProducing ISOBAM\t[true]"});
@@ -216,7 +225,62 @@ public class IsoformMatrix extends CommandLineProgram
             try { os.close();  } catch (Exception e2) { System.err.println("can not close stream"); }
         } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
     }
+    
+    public void writeHTML(File HTML, LongreadParser bam, MoleculeDataset dataset, Matrix matrix)
+    {
+        BufferedOutputStream os = null;
+        
+        DefaultCategoryDataset result = new DefaultCategoryDataset();
 
+        result.addValue(bam.getValid_records(), "Valid", "SAM records");
+        result.addValue(bam.getMapqv0_records(), "mapqv=0", "SAM records");
+        result.addValue(bam.getGene_unset(), "no gene", "SAM records");
+        result.addValue(bam.getUmi_unset(), "no UMI", "SAM records");
+        result.addValue(bam.getChimeria_records(), "chimeria", "SAM records");
+        
+        result.addValue(dataset.getOnematch(), "Match", "Molecules");
+        result.addValue(dataset.getMonoexon(), "Mono exonic", "Molecules");
+        result.addValue(dataset.getAmbiguous(), "Ambiguous", "Molecules");
+        result.addValue(dataset.getNomatch(), "No match", "Molecules");
+        
+        result.addValue(matrix.getTotal_isoform_def(), "defined", "Isoforms");
+        result.addValue(matrix.getTotal_isoform_undef(), "undefined", "Isoforms");
+        
+        final JFreeChart chart = ChartFactory.createStackedBarChart(
+            "IsoformMatrix statistics",  // chart title
+            "Category",                  // domain axis label
+            "#",                     // range axis label
+            result,                     // data
+            PlotOrientation.HORIZONTAL,    // the plot orientation
+            true,                        // legend
+            true,                        // tooltips
+            false                        // urls
+        );
+        
+        chart.setBackgroundPaint(java.awt.Color.white);
+        
+        try {
+            os = new BufferedOutputStream(new java.io.FileOutputStream(HTML));
+
+            ChartUtils.saveChartAsPNG(new File(OUTDIR.getAbsolutePath() + "/histogram.png"), chart, 1000, 1000);
+            
+            os = new BufferedOutputStream(new FileOutputStream(HTML));
+            final PrintWriter writer = new PrintWriter(os);
+            writer.println("<HTML>");
+            writer.println("<HEAD><TITLE>JFreeChart Image Map Demo 2</TITLE></HEAD>");
+            writer.println("<BODY>");
+            writer.println("<IMG SRC=\"histogram.png\" WIDTH=\"600\" HEIGHT=\"400\" BORDER=\"0\" USEMAP=\"#chart\">");
+            writer.println("</BODY>");
+            writer.println("</HTML>");
+            writer.close();
+            
+               os.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            try { os.close();  } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { os.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
+    }
+    
     public static void main(String[] args) {
         System.exit(new IsoformMatrix().instanceMain(args));
     }

@@ -1,8 +1,5 @@
 
-<img src="sicelore.png">
-
-
-SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell barcode / UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell Nanopore or PacBIo long read sequencing data.
+SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell barcode/spatial (Visium) and UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell / Spatial (Visium) Nanopore or PacBIo long read sequencing data.
 
 # Installation
 
@@ -12,53 +9,36 @@ requires:
 
 * Java >= 12
 
-* [spoa](https://github.com/rvaser/spoa)
+* [samtools](https://github.com/samtools/samtools)
 
-* [fastp](https://github.com/OpenGene/fastp)
+* [minimap2](https://github.com/lh3/minimap2)
 
-* samtools
+* [spoa](https://github.com/rvaser/spoa) for UMI consensus sequence (optional step)
 
 # Workflow
 
 [1) Adapter search, stranding, barcode assignment to reads](#nanopore-scan)
 
- 
-
-              Mapping against reference genome
-
- 
 
 [2) UMI assignment to Nanopore SAM records](#umi-assignment)
 
 
- 
-[6) Consensus sequence calculation for RNA molecules (UMIs)](#ComputeConsensus)
-
-Generates consensus sequence for transcripts from multiple reads for UMI.
-
-[7) Mapping of molecules consensus sequences to the reference genome with minimap2](#molecule-consensus-mapping)
-
-Consensus sequences are mapped to the reference genome
-
-[8) Tag molecule SAM records with gene names, cell barcodes and UMI sequence](#molecule-tagging)
-
-Adds gene names, cell barcode and UMI sequence. Required for [cell x genes/isoforms/junctions] matrices generation
-
-[9) Transcript isoform expression quantification](#IsoformMatrix)
+[3.option1) Gene-/Isoform-/Junction-level matrices](#IsoformMatrixReads)
 
 Identifies matching Gencode transcript isoforms and generates [cell x genes/isoforms/junctions] matrices.
 
-[10) SNP calling](#snp-calling)
 
-Calling nucleotide polymorphism cell by cell
+[3.option2) Gene-/Isoform-/Junction-level matrices using UMI consensus sequences](#IsoformMatrixMolecules)
 
-[11) Fusions gene calling](#fusion-calling)
+* Generates consensus sequence for multiple reads UMIs.
 
-Detecting fusion transcripts cell by cell
+* Consensus sequences are mapped to the reference genome
 
-[12) Novel transcripts isoforms detection](#collapse-model)
+* Adds gene names, cell barcode and UMI sequence.
 
-Indentifying novel transcripts isoforms 
+* Identifies matching Gencode transcript isoforms and generates cell/spatialBC x Gene-/Isoform-/Junction-level matrices
+
+
 
 ## Authors
 
@@ -715,11 +695,16 @@ positions are 1-based, in <> the tag in config.xml is shown where it can be cust
 **U7** UMI read sequence
 
 
-<a id="computeConsensus"></a>
 
-## 6) Generate consensus sequences
+<a id="IsoformMatrixReads"></a>
 
-**use ComputeConsensus (sicelore.v2.jar)**
+
+
+<a id="IsoformMatrixMolecules"></a>
+
+a. Generate consensus sequences
+
+**use ComputeConsensus (Sicelore-2.1.jar)**
 
 The pipeline allows to compute the consensus sequence for molecule detected  in input .bam file. First step is loading the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
 
@@ -772,7 +757,7 @@ Full path to temporary directory
 
 ```
 
-java -jar -Xmx44g sicelore.v2.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fq T=20 TMPDIR=/scracth/tmp/
+java -jar -Xmx44g Sicelore-2.1.jar ComputeConsensus I=GEUS10xAttributes.umifound.chr1.bam O=molecules.chr1.fq T=20 TMPDIR=/scracth/tmp/
 
 ```
 
@@ -782,12 +767,12 @@ java -jar -Xmx44g sicelore.v2.jar ComputeConsensus I=GEUS10xAttributes.umifound.
 
 If ComputeConsensus step has been split per chromosome, we need to deduplicate molecules from genes having multiple copies in the genome.
 
-First we need to concatenate all chromosomes fastq files then use ***DeduplicateMolecule*** pipeline (sicelore.v2.jar)
+First we need to concatenate all chromosomes fastq files then use ***DeduplicateMolecule*** pipeline (Sicelore-2.1.jar)
 
 ```
 
 cat */molecules.chr*.fa > molecules.fa
-java -jar -Xmx22g sicelore.v2.jar DeduplicateMolecule I=molecules.fq O=deduplicate.fq
+java -jar -Xmx22g Sicelore-2.1.jar DeduplicateMolecule I=molecules.fq O=deduplicate.fq
 
 ```
 
@@ -806,24 +791,24 @@ samtools index molecules.bam
 
 ## 8) Tag molecule SAM records with gene names, cell barcodes, UMI sequence and reads number
 
-**uses AddGeneNameTag (sicelore.v2.jar)** 
+**uses AddGeneNameTag (Sicelore-2.1.jar)** 
 
 Add gene name tag (GE) to molecules SAM records
 
 ```
 
-java -jar -Xmx22g sicelore.v2.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx22g Sicelore-2.1.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index molecules.GE.bam
 
 ```
 
-**uses AddBamMoleculeTags (sicelore.v2.jar)**
+**uses AddBamMoleculeTags (Sicelore-2.1.jar)**
 
 Add CellBC (BC), UMIs (U8) and read number (RN) tags from molecule read name to molecules SAM records
 
 ``` 
 
-java -jar -Xmx22g sicelore.v2.jar AddBamMoleculeTags I=molecules.GE.bam O=molecules.GE.tags.bam
+java -jar -Xmx22g Sicelore-2.1.jar AddBamMoleculeTags I=molecules.GE.bam O=molecules.GE.tags.bam
 samtools index molecules.GE.tags.bam
 
 ```
@@ -832,7 +817,7 @@ samtools index molecules.GE.tags.bam
 
 ## 9) Transcript isoform expression quantification
 
-**uses IsoformMatrix (sicelore.v2.jar)**
+**uses IsoformMatrix (Sicelore-2.1.jar)**
 
 This step can be done at the reads level but prefer using it at the molecules level after consensus calling as describes in the protocole. In case of processing at the read level here is the algotithm used.
 
@@ -939,7 +924,7 @@ molecule per molecules information (cellBC, UMI, nbReads, nbSupportingReads, gen
 
 ```
 
-java -jar -Xmx44g sicelore.v2.jar IsoformMatrix I=molecules.tags.GE.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
+java -jar -Xmx44g Sicelore-2.1.jar IsoformMatrix I=molecules.tags.GE.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
 
 ```
 
@@ -947,7 +932,7 @@ java -jar -Xmx44g sicelore.v2.jar IsoformMatrix I=molecules.tags.GE.bam GENETAG=
 
 ## 10) Calling Single Nucleotide Polymorphisms cell by cell
 
-**use SNPMatrix (sicelore.v2.jar)**
+**use SNPMatrix (Sicelore-2.1.jar)**
 
 Consensus sequence show higher sequence accuracy than raw nanopore reads and we can now call SNPs using the generated molecules bam file (molecules.tags.GE.bam)
 
@@ -989,7 +974,7 @@ Prefix for _matrix.txt/_metrics.txt/_molinfos.txt tab-delimited output text file
 
 ```
 
-java -jar -Xmx22g sicelore.v2.jar SNPMatrix I=molecule.tags.bam MINRN=0 MINQV=0 CSV=barcodes.csv SNP=snp_description.csv O=/path/to/output/directory/ PREFIX=snp
+java -jar -Xmx22g Sicelore-2.1.jar SNPMatrix I=molecule.tags.bam MINRN=0 MINQV=0 CSV=barcodes.csv SNP=snp_description.csv O=/path/to/output/directory/ PREFIX=snp
 
 ```
 
@@ -1011,7 +996,7 @@ Per molecule per SNP position information
 
 ## 11) Detecting fusion transcripts cell by cell
 
-**use ExportClippedReads and FusionDetector (sicelore.v2.jar)**
+**use ExportClippedReads and FusionDetector (Sicelore-2.1.jar)**
 
 First step is exporting hard and soft clipped reads from dataset. A fusion transcript read map the genome in more than one unique location. It gives two differents minimap2 SAM records each including a portion of starting or ending clipping. Those reads might also comes from chimeric molecules produced during amplification step (i.e. PCR artefacts). Those PCR artefacts are arising mainly between transcripts having a high sequence similarity  and might preferentially happens wih highly expressed genes.
 
@@ -1031,7 +1016,7 @@ Minimum length of start/end hard/soft clipping needed far calling a read as clip
 
 ```
 
-java -jar -Xmx22g sicelore.v2.jar ExportClippedReads I=GEUS10xAttributes.umifound.bam O=clipped_reads.fastq
+java -jar -Xmx22g Sicelore-2.1.jar ExportClippedReads I=GEUS10xAttributes.umifound.bam O=clipped_reads.fastq
 
 ```
 
@@ -1046,11 +1031,11 @@ samtools sort unsorted.bam -o clipped_reads.bam
 samtools index clipped_reads.bam
 
 # add gene names to Nanopore SAM records
-java -jar -Xmx12g sicelore.v2.jar AddGeneNameTag I=clipped_reads.bam O=clipped_reads.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx12g Sicelore-2.1.jar AddGeneNameTag I=clipped_reads.bam O=clipped_reads.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index clipped_reads.GE.bam
 
 # add read sequence and QV values to Nanopore SAM records
-java -jar -Xmx12g sicelore.v2.jar AddBamReadSequenceTag I=clipped_reads.GE.bam O=clipped_reads.GEUS.bam FASTQ=clipped_reads.fastq
+java -jar -Xmx12g Sicelore-2.1.jar AddBamReadSequenceTag I=clipped_reads.GE.bam O=clipped_reads.GEUS.bam FASTQ=clipped_reads.fastq
 samtools index clipped_reads.GEUS.bam
 
 # Add Nanopore Barcode/UMI
@@ -1078,7 +1063,7 @@ Prefix for _matrix.txt, _metrics.txt and _molinfos.txt tab-delimited output text
 
 ```
 
-java -jar -Xmx22g sicelore.v2.jar FusionDetector I=clipped_reads.GEUS10xAttributes.umifound.bam O=/path/to/output/directory PREFIX=fus CSV=barcodes.csv
+java -jar -Xmx22g Sicelore-2.1.jar FusionDetector I=clipped_reads.GEUS10xAttributes.umifound.bam O=/path/to/output/directory PREFIX=fus CSV=barcodes.csv
 
 ```
 
@@ -1102,7 +1087,7 @@ per molecules (UMI/BC) fusion information
 
 ## 12) Detecting novel transcripts isoforms
 
-**use CollaspeModel (sicelore.v2.jar)**
+**use CollaspeModel (Sicelore-2.1.jar)**
 
 SAM records are grouped per cellBC and UMI by transcript isoform based on exon makeup considering only UMI supported by RNMIN (default=1) reads. 
 Transcripts isoforms showing an exon structure supported by less than MINEVIDENCE (default=5) UMIs are filtered out. 
@@ -1191,7 +1176,7 @@ Junction validation cutoff (default = 1 read)
 
 ```
 
-java -jar -Xmx40g sicelore.v2.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=SRA.E18brain.star.bam CAGE=Ressources/mm10.liftover.Fantom5.cage_peaks.bed POLYA=Ressources/mm10.gencode.vM24.polyAs.bed
+java -jar -Xmx40g Sicelore-2.1.jar CollapseModel I=isobam.bam CSV=barcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=SRA.E18brain.star.bam CAGE=Ressources/mm10.liftover.Fantom5.cage_peaks.bed POLYA=Ressources/mm10.gencode.vM24.polyAs.bed
 
 ```
 

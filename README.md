@@ -306,84 +306,58 @@ sp2 indicates this is the second read obtained after splitting the initial chime
  
 
 ```xml
+<--reads below this length will be discarded-->
+<minReadLength>200</minReadLength>
 
-        <--reads below this length will be discarded-->
+<!--Levenshtein distance (ED) with which to merge barcodes when creating list of used barcodes
+If BC a has an ED from BC b equal or less this value and minCountFold x less reads it will be merge to Barcode b and not added to the list of used barcodes
+if not provided or null will be set to barcode edit distance providid in the command line
+should be null or at least as big as the ED for barcode search-->
+<mergeBCsED>null</mergeBCsED>
 
-        <minReadLength>200</minReadLength>
+<!--Minimal fold more counts in BC a than in BC b to merge b into a during generation of list of used barcodes-->
+<minCountFold>20</minCountFold>
 
-        <!--Levenshtein distance (ED) with which to merge barcodes when creating list of used barcodes
+<!--Minimal mean BC qv to consider barcode for barcode list-->
+<minMeanBCqv>10</minMeanBCqv>
 
-         If BC a has an ED from BC b equal or less this value and minCountFold x less reads it will be merge to Barcode b and not added to the list of used barcodes
+<!--Minimal mean Read qv to consider barcode for barcode list-->
+<minMeanReadqv>10</minMeanReadqv>
 
-         if not provided or null will be set to barcode edit distance providid in the command line
+<!--Minimal consecutive 3p adapter matches to consider barcode for barcode list-->
+<minAdapter3pMatches>8</minAdapter3pMatches>
 
-         should be null or at least as big as the ED for barcode search-->
+<!--cell barcodes with read counts this fold below the max reads for a cell won't be assigned-->
+<cellsWithReadsnFoldBelowMaxToKeep>500</cellsWithReadsnFoldBelowMaxToKeep>
 
-        <mergeBCsED>null</mergeBCsED>
+<!--search for barcode at position predicted from adapter finding +/- this value-->
+<testPlusMinusPos>2</testPlusMinusPos>
 
-        <!--minamal fold more counts in BC a than in BC b to merge b into a during generation of list of used barcodes-->
+<!--File with all possible 10x barcodes, one BC per line, can contain -1 after the BC sequence , can be gz compressed , SHOULD BE IN APPLICATION ROOT DIRECTORY-->
+<!--<fileWithAllPossibleTenXbarcodes>3M-february-2018.txt.gz</fileWithAllPossibleTenXbarcodes>-->
+<fileWithAllPossibleTenXbarcodes>737K-august-2016.txt</fileWithAllPossibleTenXbarcodes>
 
-        <minCountFold>20</minCountFold>
+Prefixes in Read names:
+<!--Prefix before polyA position, first A after cDNA -->
+<pa_start_prefix>PS=</pa_start_prefix>
 
-        <!--Minimal mean BC qv to consider barcode for barcode list-->
+<!--Prefix before polyA position, last A after cDNA -->
+<pa_end_prefix>PE=</pa_end_prefix>
 
-        <minMeanBCqv>10</minMeanBCqv>
+<!--Prefix before Adapter position, last adapter base before cellBC -->
+<adapter_pos_prefix>AE=</adapter_pos_prefix>
 
-        <!--Minimal mean Read qv to consider barcode for barcode list-->
+<!--Prefix before TSO position in read, last TSO base before cDNA-->
+<tso_pos_prefix>T=</tso_pos_prefix>
 
-        <minMeanReadqv>10</minMeanReadqv>
+<!--Prefix before seq is between last adapter base and 42 bases further  downstream sequence is forward on stranded read-->
+<seq_prefix>X=</seq_prefix>
 
-        <!--Minimal consecutive 3p adapter matches to consider barcode for barcode list-->
+<!--Prefix before mean qv -->
+<qv_prefix>Q=</qv_prefix>
 
-        <minAdapter3pMatches>8</minAdapter3pMatches>
-
-       
-        <!--cell barcodes with read counts this fold below the max reads for a cell won't be assigned-->
-
-         <cellsWithReadsnFoldBelowMaxToKeep>500</cellsWithReadsnFoldBelowMaxToKeep>
-
-        <!--search for barcode at position predicted from adapter finding +/- this value-->
-
-        <testPlusMinusPos>2</testPlusMinusPos>
-
-        <!--File with all possible 10x barcodes, one BC per line, can contain -1 after the BC sequence , can be gz compressed , SHOULD BE IN APPLICATION ROOT DIRECTORY-->
-
-       <!--<fileWithAllPossibleTenXbarcodes>3M-february-2018.txt.gz</fileWithAllPossibleTenXbarcodes>-->
-
-        <fileWithAllPossibleTenXbarcodes>737K-august-2016.txt</fileWithAllPossibleTenXbarcodes>
-
-                             Prefixes in Read names:
-
-        <!--Prefix before polyA position, first A after cDNA -->
-
-        <pa_start_prefix>PS=</pa_start_prefix>
-
-        <!--Prefix before polyA position, last A after cDNA -->
-
-        <pa_end_prefix>PE=</pa_end_prefix>
-
-        <!--Prefix before Adapter position, last adapter base before cellBC -->
-
-        <adapter_pos_prefix>AE=</adapter_pos_prefix>
-
-        <!--Prefix before TSO position in read, last TSO base before cDNA-->
-
-        <tso_pos_prefix>T=</tso_pos_prefix>
-
-        <!--Prefix before seq is between last adapter base and 42 bases further  downstream
-
-        sequence is forward on stranded read-->
-
-        <seq_prefix>X=</seq_prefix>
-
-        <!--Prefix before mean qv -->
-
-        <qv_prefix>Q=</qv_prefix>
-
-        <!--number of bases of adapter (the one b4 the BC) to include into the read sequence (adapter end, bc, umi, start of polyA) in readname-->
-
-        <nbasesOfAdapterSeqInReadname>3</nbasesOfAdapterSeqInReadname>
-
+<!--number of bases of adapter (the one b4 the BC) to include into the read sequence (adapter end, bc, umi, start of polyA) in readname-->
+<nbasesOfAdapterSeqInReadname>3</nbasesOfAdapterSeqInReadname>
 ```
  
 <a id="mapping"></a>
@@ -430,7 +404,7 @@ c) The reads for which the UMIs don't cluster with any other UMI for the same ge
 
 ### Considerations
 
-The input bam file must be sorted. **if you use separate jobs, don't split records that correspond to the same genomic region over several batches ** For clustering, all reads corresponding to the same genomic region must be treated in the same batch. If you split the reads for mapping, merge the Bam files, sort them and then split them again (e.g. one bam per chromosome). 
+The input bam file must be sorted. **if you use separate jobs, don't split records that correspond to the same genomic region over several batches** For clustering, all reads corresponding to the same genomic region must be treated in the same batch. If you split the reads for mapping, merge the Bam files, sort them and then split them again (e.g. one bam per chromosome). 
 
  
 
@@ -659,7 +633,7 @@ positions are 1-based, in <> the tag in config.xml is shown where it can be cust
 ### Step 4 option (a) - Generates quantification matrices directly using cell/spatialBC-UMI annotated long-reads
 
 
-This step can be done at the reads level but prefer using it at the molecules level after consensus calling as describe below ([option b](#IsoformMatrixMolecules)). In case of processing at the read level here is the algotithm used.
+This step can be done at the reads level but in case of subsequent SNV calling is required prefer using it at the molecules level after consensus calling as describe below ([option b](#IsoformMatrixMolecules)). In case of processing at the read level here is the algotithm used.
 
 SAM records matching known genes are grouped by UMI and analyzed for matching Gencode transcripts. SAM records with extensive non-matching sequences at either end, hard- or soft clipping are discarded (MAXCLIP parameter, defaults to > 150 nt ). To assign a UMI to a Gencode transcript when it recapitulates the full exon-exon junction layout authorizing a DELTA (default 2) bases margin of added or lacking sequences at exon boundaries, to allow for indels at exon junctions and imprecise mapping by Minimap2. For each UMI, all its reads are analyzed and the UMI is assigned to the Gencode transcript supported by the majority of the reads.
 
@@ -668,9 +642,9 @@ If an equal number of reads supports two different Gencode transcript, the UMI i
 
 #### Parameters
 
-**INPUT=** (required): cell / spatial barcode (BC tag) and UMI (U8 tag) assigned bam file with the gene mame in the GE tag. SAMrecords lacking any of those 3 required fields are not analyzed.
+**INPUT=** (required): cell / spatial barcode (BC tag) and UMI (U8 tag) assigned bam file with the gene mame in the GE tag (Typically **passedParsed.bam from Step 3**) SAMrecords lacking any of those 3 required fields are not analyzed.
 
-**CSV=** (required): .csv file listing, one per line, the barcodes that need to be quantified
+**CSV=** (required): .csv/.tsv file listing, one per line, the barcodes that need to be quantified (**BarcodesAssigned.tsv from Step 1**)
 
 **REFFLAT=** (required): Can be generated base on Gencode GTF file for genome build used for mapping with ***gtfToGenePred*** from [UCSC](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/)
 
@@ -718,9 +692,7 @@ paste <(cut -f 12 gencode.vM24.primary_assembly.annotation.refflat.txt) <(cut -f
 
 **PREFIX**_juncmatrix.txt: junction level [junctionId x cellBC] count matrix 
 
-**PREFIX**_molinfos.txt: molecule per molecules information (cellBC, UMI, nbReads, nbSupportingReads, geneId, transcriptId)
-
-**PREFIX**_molinfos.txt: molecule per molecules information (cellBC, UMI, nbReads, nbSupportingReads, geneId, transcriptId)
+**PREFIX**_molinfos.txt: molecule per molecules information (cellBC, UMI, nbReads, nbSupportingReads, mappingPctId, snpPhredScore, geneId, transcriptId)
 
 **PREFIX**.log: Log file
 
@@ -738,11 +710,20 @@ java -jar -Xmx44g Sicelore-2.1.jar IsoformMatrix I=input.bam GENETAG=GE UMITAG=U
 
 ### Step 4 option (b) - Generates quantification matrices from UMI consensus sequences
 
+
+In case option (a) **PREFIX**_molinfos.txt files gives you the information that your UMI are sequenced rather often several times (number of reads per molecules high), you might want to perform the same analysis based on consensus sequence per UMI in order to long-read error correct your molecules sequences for subsequent SNV calling in nanopore reads.
+
+
 #### 4.b.1) Generate consensus sequences ####
 
-**use ComputeConsensus (Sicelore-2.1.jar)**
+The pipeline allows to compute the consensus sequence for each UMI taking advantage of the fact that you sequenced several times the same molecule. This step requires access to the sequence of raw read that need to be integrates as a SAM flag into the **passedParsed.bam from Step 3**.
 
-The pipeline allows to compute the consensus sequence for barcode/UMI associated molecules in input .bam file. First step is loading the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
+
+**Adding raw long read sequence as SAM tag**
+
+
+
+First step is loading the molecules, the cDNA sequence is defined as [tsoEnd(TE tag) ... umiEnd(UE tag)] for consensus sequence computation.
 
 Briefly, each molecule is processed as follows depending the number of reads the molecule has: (i) just one read per molecule (UMI), the consensus sequence is set to the read sequence; (ii) 2 reads per molecule, the consensus sequence is set as the cDNA sequence of the best mapping read according to the "de" minimap2 SAMrecord tag value; (iii) More than two reads per molecule, a consensus sequence is comppute using [spoa](https://github.com/rvaser/spoa) multiple alignment using a set of reads for the molecule. 
 
@@ -766,7 +747,7 @@ for($i=0; $i<@jobs; $i++){
 
 **ComputeConsensus pipeline**
 
-**INPUT=** (required): Bam file containing cellBC (BC tag) and UMI (U8 tag) assigned Nanopore SAM entries with the gene mame in the GE tag. SAMrecords lacking any of those 3 required fields are discarded from further analysis.
+**INPUT=** (required): Typically **passedParsed.bam from Step 3**. SAMrecords lacking BC/U8 or GE SAM tags are discarded from further analysis.
 
 **OUTPUT=** (required): Consensus sequence in fastq format for all molecules detected. Name of each molecules set to CellBC(BC), UMIs(U8) and read number RN) ">BC-UMI-RN"
 
@@ -775,6 +756,8 @@ for($i=0; $i<@jobs; $i++){
 **UMITAG=**: UMI sequence tag (default = U8)
 
 **CELLTAG=**: Cell tag (default = BC)
+
+**MAXCLIP=**: Maximum number of extensive non-matching sequences at either end, hard- or soft clipping to call the read as chimeric and discards it (default = 150)
 
 **MAPQV0=**: Wether or not to keep mapqv=0 SAM records (default=false)
 

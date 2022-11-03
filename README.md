@@ -6,8 +6,7 @@ analysis and 3' and 5' 10x Genomics protocols**.
 
 If you use SiCeLoRe in your work, please cite:
 
-> High throughput error corrected Nanopore single cell transcriptome sequencing.
-> Lebrigand K, Waldmann R et al. (2020).
+> Lebrigand K, Waldmann R et al. (2020). High throughput error corrected Nanopore single cell transcriptome sequencing.
 > *Nature Communication* 11, 4025. [[https://doi.org/10.1038/s41467-020-17800-6](https://doi.org/10.1038/s41467-020-17800-6)]
 
 
@@ -63,7 +62,7 @@ This test script should takes under 5mn to run, output files are located in ./ou
 
 ```
 git clone https://github.com/ucagenomix/sicelore-2.1.git
-cd sicelore
+cd sicelore-2.1
 chmod +x quickrun-2.1.sh
 dos2unix quickrun-2.1.sh
 export JAVA_HOME=<path to Java>
@@ -74,7 +73,7 @@ export PATH=$PATH:<minimap2path>:<samtoolspath>:<spoapath>
 
 <a id="nanopore-scan"></a>
 
- 
+
 ## Step 1 - Scan Nanopore reads - assign cell barcodes.
 
  

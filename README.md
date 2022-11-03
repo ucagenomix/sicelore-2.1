@@ -57,17 +57,17 @@ Step 7 - [Novel isoform discovery](#new-model)
 
 ## Quick run analysis
 
-We provide test data as a subsampling of reads for the Mus musculus Clta locus for the 190 cells dataset.
-This test script should takes under 5mn to run, output files are located in ./output_dir directory.
+We provide test data as a subsampling of reads for the Homo sapiens Myl6 locus for an unpublished dataset.
+This test script should takes under 5mn to run, output files are located in ./outputdir_a directory (Step 4 option a), ./outputdir_b directory (Step 4 option b).
 
 ```
 git clone https://github.com/ucagenomix/sicelore-2.1.git
 cd sicelore-2.1
-chmod +x quickrun-2.1.sh
-dos2unix quickrun-2.1.sh
+chmod +x quickrun-2.1a.sh
+dos2unix quickrun-2.1a.sh
 export JAVA_HOME=<path to Java>
-export PATH=$PATH:<minimap2path>:<samtoolspath>:<spoapath>
-./quickrun-2.1.sh
+export PATH=$PATH:<minimap2path>:<samtoolspath>
+./quickrun-2.1a.sh
 ```
 
 
@@ -540,7 +540,7 @@ positions are 1-based, in <> the tag in config.xml is shown where it can be cust
 
 <a id="IsoformMatrixReads"></a>
 
-## Step 4 - Generate cell/spatialBC x Gene-/Isoform-/Junction-level matrices
+## Step 4 - Generate cell or spatial barcode x Gene-/Isoform-/Junction-level matrices
 
 This step can be done at the reads level but in case of subsequent SNV calling is required prefer using it at the molecules level 
 after consensus calling as describe below ([option b](#IsoformMatrixMolecules)). In case of processing at the read level here is 
@@ -645,11 +645,22 @@ SNV calling in nanopore reads.
 
 This step add long-read sequence and QV as SAM tags into the **passedParsed.bam from Step 3**.
 
-```
-java -jar -Xmx300g NanoporeBC_UMI_finder.jar --i passedParsed.bam  --fastqdir <fastdir> --o passedParsedWithSequences.bam 
-```
+#### Parameters
 
--Xmx : allow the RAM you have available -Xmx300G is an example for running it on the Promethion server
+**-b,--inBam**: Bam file to be tagged with read and QV
+
+**-f,--inFastq**: fastq with all reads and QVs in one file
+
+**-o,--outBam**: output Bam
+
+**-r,--readTag**: two character tag for read sequence, defaults to US
+
+**-q,--qvTag**: two character tag for quality values, defaults to QS
+
+
+```
+java -jar -Xmx300g NanoporeBC_UMI_finder.jar tagbamwithread --inFastq <passed.fastq.gz> --inBam passedParsed.bam --outBam passedParsedWithSequences.bam --readTag US --qvTag QS
+```
 
 
 #### 4.b.2) Generate consensus sequences ####
@@ -753,7 +764,7 @@ java -jar -Xmx44g Sicelore-2.1.jar AddBamMoleculeTags I=molecules.GE.bam O=molec
 samtools index molecules.GE.tags.bam
 ```
 
-#### 4.b.5) Generate cell/spatialBC x Gene-/Isoform-/Junction-level matrices ####
+#### 4.b.5) Generate cell or spatial barcode x Gene-/Isoform-/Junction-level matrices ####
 
 
 #### Parameters

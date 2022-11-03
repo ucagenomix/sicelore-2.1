@@ -13,7 +13,7 @@ import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgram; 
 
 @CommandLineProgramProperties(summary = "Collapse molecules Bam file to model Bam File", oneLineSummary = "Collapse molecules Bam file to model Bam File", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature

@@ -12,7 +12,7 @@ public class CellMetrics
 {
     private int isoform_known_count=0;
     private int isoform_undef_count=0;
-    private int nb_reads=0;
+    private int nb_reads=0; 
     private Set<String> genes = new HashSet<String>();
     private int nb_umis=0;
     

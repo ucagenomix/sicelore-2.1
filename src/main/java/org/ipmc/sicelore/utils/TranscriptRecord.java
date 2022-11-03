@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 public class TranscriptRecord implements Comparable<TranscriptRecord> {
 
     private String transcriptId;
-    private String geneId;
+    private String geneId; 
     private String chrom;
     private Strand strand;
     private int txStart;

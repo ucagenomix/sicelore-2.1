@@ -16,7 +16,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import java.io.*;
 import java.util.*;
-import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.Log; 
 import htsjdk.tribble.annotation.Strand;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;

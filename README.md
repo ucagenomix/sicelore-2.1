@@ -58,16 +58,16 @@ Step 7 - [Novel isoform discovery](#new-model)
 ## Quick run analysis
 
 We provide test data as a subsampling of reads for the Homo sapiens Myl6 locus for an unpublished dataset.
-This test script should takes under 5mn to run, output files are located in ./outputdir_a directory (Step 4 option a), ./outputdir_b directory (Step 4 option b).
+This test script should takes 5mn to run, output files are located in ./outputdir directory (Step 4 option a), ./outputdir_4b directory (Step 4 option b).
 
 ```
 git clone https://github.com/ucagenomix/sicelore-2.1.git
 cd sicelore-2.1
-chmod +x quickrun-2.1a.sh
-dos2unix quickrun-2.1a.sh
+chmod +x quickrun-2.1.sh
+dos2unix quickrun-2.1.sh
 export JAVA_HOME=<path to Java>
 export PATH=$PATH:<minimap2path>:<samtoolspath>
-./quickrun-2.1a.sh
+./quickrun-2.1.sh
 ```
 
 

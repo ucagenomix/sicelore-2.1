@@ -13,7 +13,7 @@ import org.biojava.nbio.core.util.ConcurrencyTools;
 import com.google.common.util.concurrent.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import gnu.trove.THashMap;
+import gnu.trove.THashMap; 
 import gnu.trove.THashSet;
 
 public class MoleculeDataset {

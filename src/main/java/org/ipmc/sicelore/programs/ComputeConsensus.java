@@ -11,7 +11,7 @@ import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgram; 
 
 @CommandLineProgramProperties(summary = "Compute consensus sequence per molecule.", oneLineSummary = "Compute consensus sequence per molecule.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature

@@ -13,7 +13,7 @@ import java.util.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;
 import org.broadinstitute.barclay.help.DocumentedFeature;
-import picard.cmdline.CommandLineProgram;
+import picard.cmdline.CommandLineProgram; 
 
 @CommandLineProgramProperties(summary = "Remove duplicate molecule from Fasta/Fastq file. Default is select for RN optimization.", oneLineSummary = "Remove duplicate molecule from Fasta/Fastq file. Default is select for RN optimization.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
 @DocumentedFeature

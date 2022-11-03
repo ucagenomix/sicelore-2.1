@@ -15,7 +15,7 @@ import java.io.*;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Log;
 import htsjdk.samtools.util.ProgressLogger;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit; 
 import org.ipmc.sicelore.utils.*;
 import org.broadinstitute.barclay.argparser.Argument;
 import org.broadinstitute.barclay.argparser.CommandLineProgramProperties;

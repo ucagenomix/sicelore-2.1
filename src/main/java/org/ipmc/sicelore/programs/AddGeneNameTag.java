@@ -23,7 +23,7 @@ import picard.annotation.GeneAnnotationReader;
 import htsjdk.samtools.util.OverlapDetector;
 import picard.annotation.Gene;
 import htsjdk.samtools.AlignmentBlock;
-import picard.annotation.LocusFunction;
+import picard.annotation.LocusFunction; 
 
 @CommandLineProgramProperties(summary = "Add a gene name tag to SAM records case it overlaps an exon", oneLineSummary = "Add a gene name tag to SAM records case it overlaps an exon.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoRe.class)
 @DocumentedFeature

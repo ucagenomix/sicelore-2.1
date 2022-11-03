@@ -9,7 +9,7 @@ import java.util.*;
 import java.io.*;
 import htsjdk.samtools.*;
 import htsjdk.samtools.util.*;
-import gnu.trove.THashMap;
+import gnu.trove.THashMap; 
 
 public class LongreadParser implements LongreadModelParser {
 

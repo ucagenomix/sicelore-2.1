@@ -1,7 +1,7 @@
 #!/bin/bash
 
 start=$SECONDS
-readonly analysisdir=${PWD}/outputdir_b/
+readonly analysisdir=${PWD}/outputdir_4b/
 readonly readscandir=${analysisdir}readscan/
 readonly mappingdir=${analysisdir}mapping/
 readonly umidir=${analysisdir}umis/

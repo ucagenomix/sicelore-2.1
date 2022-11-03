@@ -15,7 +15,7 @@ import org.broadinstitute.barclay.help.DocumentedFeature;
 import picard.cmdline.CommandLineProgram;
 
 @CommandLineProgramProperties(summary = "Histogram of read length distribution.", oneLineSummary = "Histogram of read length distribution.", programGroup = org.ipmc.sicelore.cmdline.SiCeLoReUtils.class)
-@DocumentedFeature
+@DocumentedFeature 
 public class HistoReadLength extends CommandLineProgram {
 
     private final Log log;

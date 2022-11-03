@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.tribble.annotation.Strand;
-import java.util.regex.Pattern;
+import java.util.regex.Pattern; 
 
 public class LongreadRecord implements Comparable<LongreadRecord>
 {

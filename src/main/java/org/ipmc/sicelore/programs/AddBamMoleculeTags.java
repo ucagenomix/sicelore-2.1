@@ -17,7 +17,7 @@ import picard.cmdline.CommandLineProgram;
 @DocumentedFeature
 public class AddBamMoleculeTags extends CommandLineProgram {
 
-    private final Log log;
+    private final Log log; 
     private ProgressLogger pl;
     @Argument(shortName = "I", doc = "The input SAM or BAM file")
     public File INPUT;

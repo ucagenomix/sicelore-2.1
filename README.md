@@ -1,5 +1,21 @@
 
-SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell barcode/spatial (Visium) and UMI (unique molecular identifier) assignment and bioinformatics analysis of highly multiplexed single cell / Spatial (Visium) Nanopore or PacBIo long read sequencing data.
+SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell or spatial barcode and unique molecular identifier (UMI) 
+assignment of highly multiplexed single cell or Spatial (Visium) Nanopore and PacBIo long read sequencing dataset.
+
+This repository is the version 2.1 of the initial project [SiCeLoRe](https://github.com/ucagenomix/sicelore), now compatible with
+**short-read free** analysis and **3'** and **5'** 10x Genomics protocols.
+
+If you use SiCeLoRe in your work, please cite:
+
+**High throughput error corrected Nanopore single cell transcriptome sequencing.**
+
+Lebrigand, K., Waldmann et al.
+
+Nat Commun 11, 4025 (2020).
+
+[https://doi.org/10.1038/s41467-020-17800-6](https://doi.org/10.1038/s41467-020-17800-6)
+
+
 
 ## Installation
 

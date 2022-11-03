@@ -107,5 +107,5 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-    <name>sicelore.v2</name>
+    <name>sicelore-2.1</name>
 </project>

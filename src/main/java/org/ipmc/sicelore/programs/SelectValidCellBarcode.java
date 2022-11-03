@@ -59,14 +59,24 @@ public class SelectValidCellBarcode extends CommandLineProgram {
                 line=line.replaceAll(",","");
                 String[] tab = line.split("\t");
                 
-                if("".equals(tab[1])){ tab[1] = new String("0"); }
-                if("".equals(tab[2])){ tab[2] = new String("0"); }
-                if("".equals(tab[3])){ tab[3] = new String("0"); }
-                
-                int total_umi = new Integer(tab[1]).intValue();
-                int umi_ed0 = new Integer(tab[2]).intValue();
-                int umi_ed1 = new Integer(tab[3]).intValue();
-                
+                int total_umi = 0;
+                int umi_ed0 = 0;
+                int umi_ed1 = 0;
+                if(tab.length == 3){
+                    total_umi = new Integer(tab[1]).intValue();
+                    umi_ed0 = new Integer(tab[2]).intValue();
+                    umi_ed1 = new Integer(tab[3]).intValue();
+                }
+                else if(tab.length == 2){
+                    total_umi = new Integer(tab[1]).intValue();
+                    umi_ed0 = new Integer(tab[2]).intValue();
+                    umi_ed1 = 1;
+                }
+                else if(tab.length == 1){
+                    total_umi = new Integer(tab[1]).intValue();
+                    umi_ed0 = 1;
+                    umi_ed1 = 1;
+                }
                 total_barcodes++;
                 
                 if(total_umi >= MINUMI && new Double(umi_ed0/umi_ed1).doubleValue() >= ED0ED1RATIO){

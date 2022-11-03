@@ -57,7 +57,7 @@ Step 7 - [Novel isoform discovery](#new-model)
 
 ## Quick run analysis
 
-We provide test data as a subsampling of reads (100k) for the Homo sapiens Myl6 locus for an unpublished dataset (4.852 cells).
+We provide test data as a subsampling of reads (92k) for the Homo sapiens (hg38) Myl6 locus of an unpublished internal dataset (4.852 cells).
 This test script should takes under 3mn to run, output files are located in ./outputdir directory (Step 4 option a), ./outputdir_4b directory (Step 4 option b).
 
 ```

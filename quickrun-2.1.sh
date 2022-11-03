@@ -44,6 +44,7 @@ $java -jar  -Xmx4G Jar/NanoporeBC_UMI_finder-2.1.jar assignumis --inFileNanopore
 ### Step 4 - option a ###
 $java -jar -Xmx4g Jar/Sicelore-2.1.jar SelectValidCellBarcode I=${readscandir}BarcodesAssigned.tsv O=${siceloredir}barcodes.csv MINUMI=1 ED0ED1RATIO=1
 $java -jar -Xmx4g Jar/Sicelore-2.1.jar IsoformMatrix I=${umidir}passedParsed.bam REFFLAT=Data/gencode.v38.chr12.refFlat CSV=${siceloredir}barcodes.csv OUTDIR=$siceloredir PREFIX=reads ISOBAM=true VALIDATION_STRINGENCY=SILENT
+$samtools index ${siceloredir}reads_isobam.bam
 
 end=$SECONDS
 duration=$(( end - start ))

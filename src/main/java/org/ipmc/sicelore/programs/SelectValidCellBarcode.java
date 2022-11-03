@@ -62,17 +62,17 @@ public class SelectValidCellBarcode extends CommandLineProgram {
                 int total_umi = 0;
                 int umi_ed0 = 0;
                 int umi_ed1 = 0;
-                if(tab.length == 3){
+                if(tab.length == 4){
                     total_umi = new Integer(tab[1]).intValue();
                     umi_ed0 = new Integer(tab[2]).intValue();
                     umi_ed1 = new Integer(tab[3]).intValue();
                 }
-                else if(tab.length == 2){
+                else if(tab.length == 3){
                     total_umi = new Integer(tab[1]).intValue();
                     umi_ed0 = new Integer(tab[2]).intValue();
                     umi_ed1 = 1;
                 }
-                else if(tab.length == 1){
+                else if(tab.length == 2){
                     total_umi = new Integer(tab[1]).intValue();
                     umi_ed0 = 1;
                     umi_ed1 = 1;

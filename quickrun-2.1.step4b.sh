@@ -59,7 +59,8 @@ $samtools index ${siceloredir}molecules.GE.bam
 $java -jar -Xmx44g Jar/Sicelore-2.1.jar AddBamMoleculeTags I=${siceloredir}molecules.GE.bam O=${siceloredir}molecules.GE.tags.bam
 $samtools index ${siceloredir}molecules.GE.tags.bam
 
-$java -jar -Xmx4g Jar/Sicelore-2.1.jar IsoformMatrix I=${siceloredir}molecules.GE.tags.bam REFFLAT=Data/gencode.v38.chr12.refFlat CSV=${readscandir}BarcodesAssigned.tsv OUTDIR=$siceloredir PREFIX=mols ISOBAM=true VALIDATION_STRINGENCY=SILENT
+$java -jar -Xmx4g Jar/Sicelore-2.1.jar IsoformMatrix I=${siceloredir}molecules.GE.tags.bam REFFLAT=Data/gencode.v38.chr12.refFlat CSV=${siceloredir}barcodes.csv OUTDIR=$siceloredir PREFIX=mols ISOBAM=true VALIDATION_STRINGENCY=SILENT
+$samtools index ${siceloredir}mols_isobam.bam
 
 end=$SECONDS
 duration=$(( end - start ))

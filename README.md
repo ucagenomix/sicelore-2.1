@@ -6,8 +6,10 @@ analysis and 3' and 5' 10x Genomics protocols**.
 
 If you use SiCeLoRe in your work, please cite:
 
-> Lebrigand K, Waldmann R et al. (2020). High throughput error corrected Nanopore single cell transcriptome sequencing.
-> *Nature Communication* 11, 4025. [10.1038/s41467-020-17800-6][doi]
+> **High throughput error corrected Nanopore single cell transcriptome sequencing.**
+> *Lebrigand K, Waldmann R et al. (2020).*
+> *Nature Communication* 11, 4025. [doi:10.1038/s41467-020-17800-6][doi]
+
 
 
 ## Installation

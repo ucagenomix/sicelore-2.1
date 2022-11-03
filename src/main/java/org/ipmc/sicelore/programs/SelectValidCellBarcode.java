@@ -59,6 +59,10 @@ public class SelectValidCellBarcode extends CommandLineProgram {
                 line=line.replaceAll(",","");
                 String[] tab = line.split("\t");
                 
+                if("".equals(tab[1])){ tab[1] = new String("0"); }
+                if("".equals(tab[2])){ tab[2] = new String("0"); }
+                if("".equals(tab[3])){ tab[3] = new String("0"); }
+                
                 int total_umi = new Integer(tab[1]).intValue();
                 int umi_ed0 = new Integer(tab[2]).intValue();
                 int umi_ed1 = new Integer(tab[3]).intValue();

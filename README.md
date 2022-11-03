@@ -1,20 +1,13 @@
 
 SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell or spatial barcode and unique molecular identifier (UMI) 
-assignment of highly multiplexed single cell or Spatial (Visium) Nanopore and PacBIo long read sequencing dataset.
-
-This repository is the version 2.1 of the initial project [SiCeLoRe](https://github.com/ucagenomix/sicelore), now compatible with
-**short-read free** analysis and **3'** and **5'** 10x Genomics protocols.
+assignment of highly multiplexed single cell or Spatial (Visium) Nanopore and PacBIo long read sequencing dataset. This repository 
+is the release **2.1** of the initial project [SiCeLoRe](https://github.com/ucagenomix/sicelore), **now compatible with short-read free 
+analysis and 3' and 5' 10x Genomics protocols**.
 
 If you use SiCeLoRe in your work, please cite:
 
-**High throughput error corrected Nanopore single cell transcriptome sequencing.**
-
-Lebrigand, K., Waldmann et al.
-
-Nat Commun 11, 4025 (2020).
-
-[https://doi.org/10.1038/s41467-020-17800-6](https://doi.org/10.1038/s41467-020-17800-6)
-
+> Lebrigand K, Waldmann R et al. (2020). High throughput error corrected Nanopore single cell transcriptome sequencing.
+> *Nature Communication* 11, 4025. [10.1038/s41467-020-17800-6][doi]
 
 
 ## Installation
@@ -35,12 +28,9 @@ requires:
 
 Step 1 - [Adapter search, stranding, barcode assignment to reads](#nanopore-scan)
 
-
 Step 2 - [Mapping against reference genome](#mapping)
 
-
 Step 3 - [UMI assignment to Nanopore SAM records](#umi-assignment)
-
 
 Step 4 - Generate cell/spatialBC x Gene-/Isoform-/Junction-level matrices
 
@@ -48,15 +38,11 @@ Step 4 - Generate cell/spatialBC x Gene-/Isoform-/Junction-level matrices
     
 - [option b: using consensus sequences per UMI](#IsoformMatrixMolecules)
 
-
 Step 5 - [Single Nucleotide Variant calling cell by cell](#snp-calling)
-
 
 Step 6 - [Fusion transcripts detection cell by cell](#fusion-calling)
 
-
 Step 7 - [Novel isoform discovery](#new-model)
-
 
 
 ## Authors

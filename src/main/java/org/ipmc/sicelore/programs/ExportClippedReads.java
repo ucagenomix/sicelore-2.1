@@ -28,7 +28,17 @@ public class ExportClippedReads extends CommandLineProgram
     public File OUTPUT;
     @Argument(shortName = "MINCLIP", doc = "Hard or Soft Clipping size to call as clipped read (default=150)", optional=true)
     public int MINCLIP = 150;
-    
+    @Argument(shortName = "CELLTAG", doc = "Cell tag (default=BC)", optional=true)
+    public String CELLTAG = "BC";
+    @Argument(shortName = "UMITAG", doc = "UMI tag (default=U8)", optional=true)
+    public String UMITAG = "U8";
+    @Argument(shortName = "GENETAG", doc = "Gene name tag (default=GE)", optional=true)
+    public String GENETAG = "GE";
+    @Argument(shortName = "USTAG", doc = "Read sequence tag (default=US)", optional=true)
+    public String USTAG = "US";
+    @Argument(shortName = "QSTAG", doc = "Read QV tag (default=QS)", optional=true)
+    public String QSTAG = "QS";
+   
     private ProgressLogger pl;
     private final Log log;
 
@@ -55,7 +65,15 @@ public class ExportClippedReads extends CommandLineProgram
                 pl.record(r);
                 records++;
                 String readName = r.getReadName();
+                String[] tmp = readName.split("_");
+                
                 boolean isClipped = false;
+                
+                String geneId = (String) r.getAttribute(GENETAG);
+                String barcode = (String) r.getAttribute(CELLTAG);
+                String umi = (String) r.getAttribute(UMITAG);
+                
+                readName = tmp[0] + "_" + geneId + "_" + barcode + "_" + umi;
                 
                 String cigar = r.getCigarString();
                 String[] cigartype = cigar.split("[0-9]+");
@@ -70,9 +88,9 @@ public class ExportClippedReads extends CommandLineProgram
                     clippedRecords++;
                     //log.info(new Object[]{clippedRecords+"/"+records+"\t"+cigar});
                     
-                    String US = (String)r.getAttribute("US");
-                    String UQ = (String)r.getAttribute("UQ");
-                    os.write(new String("@"+readName+"\n"+US+"\n+\n"+UQ+"\n").getBytes());
+                    String US = (String)r.getAttribute(USTAG);
+                    String QS = (String)r.getAttribute(QSTAG);
+                    os.write(new String("@"+readName+"\n"+US+"\n+\n"+QS+"\n").getBytes());
                     clippedReads.add(readName);
                 }
             }

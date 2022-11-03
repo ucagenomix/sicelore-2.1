@@ -6,15 +6,9 @@ analysis and 3' and 5' 10x Genomics protocols**.
 
 If you use SiCeLoRe in your work, please cite:
 
-> **High throughput error corrected Nanopore single cell transcriptome sequencing.**
-
-> *Lebrigand K, Waldmann R et al. (2020).*
-
-> *Nature Communication* 11, 4025. [https://doi.org/10.1038/s41467-020-17800-6](https://doi.org/10.1038/s41467-020-17800-6)
-
-
-[doi:10.1038/s41467-020-17800-6][doi]
-
+> High throughput error corrected Nanopore single cell transcriptome sequencing.
+> Lebrigand K, Waldmann R et al. (2020).
+> *Nature Communication* 11, 4025. [[https://doi.org/10.1038/s41467-020-17800-6](https://doi.org/10.1038/s41467-020-17800-6)]
 
 
 ## Installation
@@ -29,7 +23,7 @@ requires:
 
 * [minimap2](https://github.com/lh3/minimap2)
 
-* [spoa](https://github.com/rvaser/spoa), required for UMI consensus sequence based quantification
+* [spoa](https://github.com/rvaser/spoa) (require for step 4.b)
 
 ## Workflow
 
@@ -364,8 +358,6 @@ Prefixes in Read names:
  
 <a id="mapping"></a>
 
- 
-
 ## Step 2 - Mapping
 
 Map the reads from the pass folder generated in the barcode assignment step against the reference genome.
@@ -375,6 +367,9 @@ We typically use minimap2.
 UMI assignment requires sorted bam files. When you split files to start multiple UMI assignment jobs keep genomic regions together (e.g. split by chromosome)
 
 
+```bash
+minimap2 -ax splice -uf --sam-hit-only -t 4 $BUILD.mmi fastq_pass.fastq.gz | samtools view -bS -@ 60 - | samtools sort -m 2G -@ 4 -o passed.bam -&& samtools index passed.bam
+```
 
 
 <a id="umi-assignment"></a>
@@ -440,7 +435,6 @@ If no config file is found in the current path (working directory) , the softwar
 ```bash
 java -jar -Xmx300g NanoporeBC_UMI_finder.jar assignumis --inFileNanopore <Nanopore Bam> --outfile <cell bc and UMI assigned output bam file>
 ```
--Xmx : allow the RAM you have available -Xmx300G is an example for running it on the Promethion server
 
 
 Not all of the options in the config.xml are currently used. Some options are for Illlumina guided assignment.
@@ -463,73 +457,38 @@ Output bam file.
 
 * **-p,--fivePbc** (no arguments)
 
- 
-
 Set this flag when **5' barcoding** was used. Software default is 3' barcoding.
-
- 
-
- 
 
 * **-a,--annotationFile**  <name.refFlat> <a id="annotationFile"></a>
 
- 
-
 path to refflat or GTF file.  Name has to end with ".refFlat" , ".refflat" or ".gtf".  Can be compressed, ".bz2" or ".gz" file name extension.  If supplied will generate a cell/gene umi count table and add the GE tag to SAM record.  Uses the  “TagReadWithGeneExonFunction” from the DropSeq package (https://github.com/broadinstitute/Drop-seq ).
-
- 
 
 * **-c,--config**
 
- 
-
 path to config.xml.  By default tests current path (working directory) , if not found, the software takes the config files from the directory where the application (jar) is.
-
- 
 
 * **-l,--logFile**
 
- 
-
 If not provided will create a default log with same name as outfile with “.log” appended in folder where output bam goes.
-
- 
 
 * **-e,--randomBarcode; -f,--randomUMI** (no arguments)
 
- 
-
 For benchmarking. performs random Barcode or UMI Simulation. If a previously scanned and BC and UMI annotated file (the file with all entries not just the entries with found BC/UMIs) is rescanned with this option the max edit distance is the ED of the previously found match if any. Provide the barcode and UMI assigned BAM file (the file with all sam entries not just the BC/UMI assigned) as input BAM for the random barcode or umi scan (retrieves edit sdistance info for found BCs and UMIs there).
-
- 
 
 * **-g,--ONTgene**
 
- 
-
 2 char SAM attribute for gene name in Nanopore SAM. Default: GE (from config.xml)
-
- 
 
 * **-h,--help**
 
- 
-
 displays list of option.
 
- 
-
- 
 
 ### SAM tags in output file
-
- 
 
 SAM tags in output bam can be modified in the config xml. If entry for tag is commented out in XML it won’t be printed.
 
 By default cell barcode is in BC tag (\<CELL_BC\>) in config.xml. UMI is in U8  (\<UMI_sequence\>) tag.
-
- 
 
 Other info is added to the following tags by default:
 
@@ -856,7 +815,6 @@ samtools index molecules.GE.tags.bam
 ```
 java -jar -Xmx300g Sicelore-2.1.jar IsoformMatrix I=molecules.GE.tags.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=BarcodesAssigned.tsv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
 ```
-
 
 
 <a id="snp-calling"></a>

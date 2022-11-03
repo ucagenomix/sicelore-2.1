@@ -25,10 +25,10 @@ public class SelectValidCellBarcode extends CommandLineProgram {
     public File INPUT;
     @Argument(shortName = "O", doc = "The selected cell barcodes file (.csv)")
     public File OUTPUT;
-    @Argument(shortName = "MINUMI", doc = "Minimal number of UMI (default=0, no filter)")
-    public int MINUMI = 0;
-    @Argument(shortName = "ED0ED1RATIO", doc = "ED0 to ED1 ratio (default=0, mean no filter (i.e. =1, mean keep cells having more ED0 than ED1 umis, should be the case)", optional=true)
-    public double ED0ED1RATIO = 0;
+    @Argument(shortName = "MINUMI", doc = "Minimal number of UMI (default=1, no filter)")
+    public int MINUMI = 1;
+    @Argument(shortName = "ED0ED1RATIO", doc = "ED0 to ED1 ratio (default=1, mean keep cells having more ED0 than ED1 umis (should be the case)", optional=true)
+    public double ED0ED1RATIO = 1;
     
     public SelectValidCellBarcode() {
         log = Log.getInstance(SelectValidCellBarcode.class);

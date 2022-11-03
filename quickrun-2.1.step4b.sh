@@ -44,6 +44,7 @@ $minimap2 -ax splice -uf --sam-hit-only -t 4 --junc-bed Data/gencode.v38.chr12.b
 $java -jar  -Xmx4G Jar/NanoporeBC_UMI_finder-2.1.jar assignumis --inFileNanopore ${mappingdir}passed.bam -o ${umidir}passedParsed.bam --annotationFile Data/gencode.v38.chr12.refFlat
 
 ### Step 4 - option b ###
+$java -jar -Xmx4g Jar/Sicelore-2.1.jar SelectValidCellBarcode I=${readscandir}BarcodesAssigned.tsv O=${siceloredir}barcodes.csv MINUMI=1 ED0ED1RATIO=1
 $java -jar -Xmx4g Jar/NanoporeBC_UMI_finder.jar tagbamwithread --inFastq ${analysisdir}fastq_pass.fastq.gz --inBam ${umidir}passedParsed.bam --outBam ${siceloredir}passedParsedWithSequences.bam --readTag US --qvTag QS
 $java -jar -Xmx4g Jar/Sicelore-2.1.jar ComputeConsensus I=${siceloredir}passedParsedWithSequences.bam O=${siceloredir}molecules.fastq T=4 TMPDIR=${tmpdir}
 

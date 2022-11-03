@@ -57,8 +57,8 @@ Step 7 - [Novel isoform discovery](#new-model)
 
 ## Quick run analysis
 
-We provide test data as a subsampling of reads for the Homo sapiens Myl6 locus for an unpublished dataset.
-This test script should takes 5mn to run, output files are located in ./outputdir directory (Step 4 option a), ./outputdir_4b directory (Step 4 option b).
+We provide test data as a subsampling of reads (100k) for the Homo sapiens Myl6 locus for an unpublished dataset (4.852 cells).
+This test script should takes under 3mn to run, output files are located in ./outputdir directory (Step 4 option a), ./outputdir_4b directory (Step 4 option b).
 
 ```
 git clone https://github.com/ucagenomix/sicelore-2.1.git
@@ -547,6 +547,25 @@ after consensus calling as describe below ([option b](#IsoformMatrixMolecules)).
 the algotithm used.
 
 
+#### Parameters
+
+**INPUT=** (required): cell / spatial barcode (BC tag) and UMI (U8 tag) assigned bam file with the gene mame in the GE tag (Typically **passedParsed.bam from Step 3**) SAMrecords lacking any of those 3 required fields are not analyzed.
+
+**MINUMI=** (required): Minimal number of UMI in spatial or cell barcode to call barcode as valid (default=1)
+
+**ED0ED1RATIO=** (required): Minimal ratio between reads edit distance 0 versus edit distance 1 to call the spatial or cell barcode as valid  (default=1)
+
+
+#### Output
+
+**O=**: .csv valid barcodes files
+
+```
+java -jar -Xmx4g Jar/Sicelore-2.1.jar SelectValidCellBarcode I=BarcodesAssigned.tsv O=ValidBarcodes.csv MINUMI=1 ED0ED1RATIO=1
+```
+
+
+
 ### Option (a) - Generates quantification matrices directly from barcoded long-reads
 
 SAM records matching known genes are grouped by UMI and analyzed for matching Gencode transcripts. 
@@ -565,7 +584,7 @@ randomly assigned to one of the top scoring isoforms (AMBIGUOUS_ASSIGN=true) or 
 
 **INPUT=** (required): cell / spatial barcode (BC tag) and UMI (U8 tag) assigned bam file with the gene mame in the GE tag (Typically **passedParsed.bam from Step 3**) SAMrecords lacking any of those 3 required fields are not analyzed.
 
-**CSV=** (required): .csv/.tsv file listing, one per line, the barcodes that need to be quantified (**BarcodesAssigned.tsv from Step 1**)
+**CSV=** (required): .csv file listing, one per line, the barcodes that need to be quantified (**ValidBarcodes.csv from Step 4**)
 
 **REFFLAT=** (required): Can be generated base on Gencode GTF file for genome build used for mapping with ***gtfToGenePred*** from [Gencode](https://www.gencodegenes.org/human/release_38.html)
 
@@ -771,7 +790,7 @@ samtools index molecules.GE.tags.bam
 
 **INPUT=** (required): **molecules.GE.tags.bam**
 
-**CSV=** (required): .csv/.tsv file listing, one per line, the barcodes that need to be quantified (**BarcodesAssigned.tsv from Step 1**)
+**CSV=** (required): .csv file listing, one per line, the barcodes that need to be quantified (**ValidBarcodes.csv from Step 4**)
 
 **REFFLAT=** (required): Can be generated base on Gencode GTF file for genome build used for mapping with ***gtfToGenePred*** from [Gencode](https://www.gencodegenes.org/human/release_38.html)
 
@@ -823,7 +842,7 @@ samtools index molecules.GE.tags.bam
 **PREFIX**_isobam.bam: Isobam file
 
 ```
-java -jar -Xmx300g Sicelore-2.1.jar IsoformMatrix I=molecules.GE.tags.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=BarcodesAssigned.tsv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
+java -jar -Xmx300g Sicelore-2.1.jar IsoformMatrix I=molecules.GE.tags.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=ValidBarcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
 ```
 
 
@@ -839,7 +858,7 @@ Consensus sequence show higher sequence accuracy than raw nanopore reads and we 
 
 **INPUT=** (required): Molecules bam file (**molecules.GE.tags.bam** from step 4.b.5)
 
-**CSV=** (required): .csv/.tsv file listing, one per line, the barcodes that need to be quantified (**BarcodesAssigned.tsv** from Step 1)
+**CSV=** (required): .csv file listing, one per line, the barcodes that need to be quantified (**ValidBarcodes.csv** from Step 4)
 
 **SNP=** (required): SNPs descriptor comma-separated .csv file, 1-position or x-positions per line as follow:
 
@@ -860,7 +879,7 @@ chr3,80692286|80706912,-,Gria2_RGQR        // SNP association call at 2-position
 **PREFIX**: Prefix for _matrix.txt/_metrics.txt/_molinfos.txt tab-delimited output text files
 
 ```
-java -jar -Xmx44g sicelore-2.1.jar SNPMatrix I=molecules.GE.tags.bam MINRN=0 MINQV=0 CSV=BarcodesAssigned.tsv SNP=snps.csv O=. PREFIX=snp
+java -jar -Xmx44g sicelore-2.1.jar SNPMatrix I=molecules.GE.tags.bam MINRN=0 MINQV=0 CSV=ValidBarcodes.csv SNP=snps.csv O=. PREFIX=snp
 ```
 
 #### Output files
@@ -911,7 +930,7 @@ java -jar -Xmx44g sicelore-2.1.jar ExportClippedReads I=passedParsedWithSequence
 
 **INPUT=** (required): clipped_reads.tags.US.bam
 
-**CSV=** (required): .csv/.tsv file listing, one per line, the barcodes that need to be quantified (**BarcodesAssigned.tsv from Step 1**)
+**CSV=** (required): .csv file listing, one per line, the barcodes that need to be quantified (**ValidBarcodes.csv from Step 4**)
 
 **OUTPUT=,O=** (required): Output directory
  
@@ -942,7 +961,7 @@ java -jar -Xmx12g sicelore-2.1.jar AddBamReadSequenceTag I=clipped_reads.tags.ba
 samtools index clipped_reads.tags.US.bam
 
 # fusion detector pipeline
-java -jar -Xmx44g sicelore-2.1.jar FusionDetector I=clipped_reads.tags.US.bam O=. PREFIX=fusion CSV=BarcodesAssigned.tsv
+java -jar -Xmx44g sicelore-2.1.jar FusionDetector I=clipped_reads.tags.US.bam O=. PREFIX=fusion CSV=ValidBarcodes.csv
 
 ```
 
@@ -964,7 +983,7 @@ The set of novel isoforms are then validated using **CAGE** / **SHORT** / **POLY
 
 **INPUT=** (required): Isobam file produced by IsoformMatrix pipeline using ISOBAM=true
 
-**CSV=** (required): .csv/.tsv file listing, one per line, the barcodes that need to be quantified (**BarcodesAssigned.tsv from Step 1**)
+**CSV=** (required): .csv file listing, one per line, the barcodes that need to be quantified (**ValidBarcodes.csv from Step 4**)
 
 **REFFLAT=** (required): Can be generated base on Gencode GTF file for genome build used for mapping with ***gtfToGenePred*** from [Gencode](https://www.gencodegenes.org/human/release_38.html)
 
@@ -1017,6 +1036,6 @@ The set of novel isoforms are then validated using **CAGE** / **SHORT** / **POLY
 **PREFIX.d'DELTA'.rn'RNMIN'.e'MINEVIDENCE'.fas**: Representative sequence fasta file, poa/racon consensus sequence using top 20 best qualities UMIs (based on "de" minimap2 tag value)
 
 ```
-java -jar -Xmx44g sicelore-2.1.jar CollapseModel I=isobam.bam CSV=BarcodesAssigned.tsv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=illumina.shortread.staraligned.bam CAGE=Fantom5.cage_peaks.bed POLYA=gencode.v38.polyAs.bed
+java -jar -Xmx44g sicelore-2.1.jar CollapseModel I=isobam.bam CSV=ValidBarcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=illumina.shortread.staraligned.bam CAGE=Fantom5.cage_peaks.bed POLYA=gencode.v38.polyAs.bed
 ```
 

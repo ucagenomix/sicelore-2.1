@@ -91,7 +91,6 @@ process STEP4a_matrix {
  	
  	publishDir "${params.outdir}/${params.matrixdir}", mode: 'copy'
  	
- 	
     """
 	$params.java -jar $params.javaXmx $params.sicelore IsoformMatrix I=$bam REFFLAT=$params.refflat CSV=$csv OUTDIR=. PREFIX=$params.PREFIX CELLTAG=$params.CELLTAG UMITAG=$params.UMITAG GENETAG=$params.GENETAG TSOENDTAG=$params.TSOENDTAG POLYASTARTTAG=$params.POLYASTARTTAG CDNATAG=$params.CDNATAG USTAG=$params.USTAG RNTAG=$params.RNTAG MAPQV0=$params.MAPQV0 DELTA=$params.DELTA METHOD=$params.METHOD ISOBAM=$params.ISOBAM AMBIGUOUS_ASSIGN=$params.AMBIGUOUS_ASSIGN VALIDATION_STRINGENCY=SILENT
     $params.samtools index -@ $params.max_cpus ${params.PREFIX}_isobam.bam
@@ -106,11 +105,13 @@ process STEP4b_addsequence {
  
     output:
     path 'parsedbamseq.bam'	, emit: parsedbamseq
+    path 'parsedbamseq.bam.bai'	, emit: parsedbamseqbai
     
     publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
     
     """
     $params.java -jar $params.javaXmx $params.nanopore tagbamwithread --inFastq $fastqgz --inBam $bam --outBam parsedbamseq.bam --readTag US --qvTag QS
+    $params.samtools index -@ $params.max_cpus parsedbamseq.bam
 	"""
 }
 
@@ -188,7 +189,7 @@ process STEP4b_mapping {
  	path 'molecules.bam'		, emit: bam
  	path 'molecules.bam.bai'	, emit: bai
 
-    publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
+    //publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
  	
     """
 	$params.minimap2 -ax splice -uf --sam-hit-only -t $params.max_cpus --junc-bed $params.juncbed $params.minimapfasta $dedup > molecules.sam
@@ -208,7 +209,7 @@ process STEP4b_addtags {
  	path 'molecules.tags.bam'		, emit: bam
  	path 'molecules.tags.bam.bai'	, emit: bai
  	
-    publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
+    //publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
 
     """
 	$params.java -jar $params.javaXmx $params.sicelore AddBamMoleculeTags I=$bam O=molecules.tags.bam CELLTAG=$params.CELLTAG UMITAG=$params.UMITAG RNTAG=$params.RNTAG
@@ -223,14 +224,14 @@ process STEP4b_addgenes {
  	path(bai)
  	
  	output:
- 	path 'molecules.bam'		, emit: bam
- 	path 'molecules.bam.bai'	, emit: bai
+ 	path 'molecules.tags.GE.bam'		, emit: bam
+ 	path 'molecules.tags.GE.bam.bai'	, emit: bai
  	
     publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
 
     """
 	$params.java -jar $params.javaXmx $params.sicelore AddGeneNameTag I=$bam O=molecules.tags.GE.bam REFFLAT=$params.refflat GENETAG=$params.GENETAG ALLOW_MULTI_GENE_READS=$params.ALLOW_MULTI_GENE_READS USE_STRAND_INFO=$params.USE_STRAND_INFO VALIDATION_STRINGENCY=SILENT
-    $params.samtools index -@ $params.max_cpus molecules.bam
+    $params.samtools index -@ $params.max_cpus molecules.tags.GE.bam
     """
 }
 

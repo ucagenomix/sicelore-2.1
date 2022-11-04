@@ -70,6 +70,13 @@ export PATH=$PATH:<minimap2path>:<samtoolspath>
 ./quickrun-2.1.sh
 ```
 
+In case Nextflow is installed on your system
+
+```
+git clone https://github.com/ucagenomix/sicelore-2.1.git
+cd sicelore-2.1
+nextflow run sicelore-nf/main.nf
+```
 
 <a id="nanopore-scan"></a>
 

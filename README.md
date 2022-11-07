@@ -101,7 +101,7 @@ Adds info required for the Illumina-guided BC UMI assignment (e.g. sequence upst
 
 When strandedness of read can be determined (adapter and polyA[if opted for] were found) the barcode assigned read is written stranded (forward) into a "pass" folder. Failed reads are written unstranded into a "failed" folder.
 
-Scan of 100M reads takes about 80 min on the 96 core Promethion. In our experience running it does not interfere with ongoing sequencing runs. When started in parallel with sequencing runs we use nice -n +10 to decrease priority and allow a max of 200G of RAM ( -Xmx200G)
+Scan of 100M reads takes about 80 min on the 96 core Promethion. In our experience running it does not interfere with ongoing sequencing runs. When started in parallel with sequencing runs we use nice -n +10 to decrease priority and allow a max of 128G of RAM ( -Xmx128G)
 
 **Use the reads in the "pass" folder to proceed**
 
@@ -125,10 +125,8 @@ Generates a html file with stats.
 
 
 ```bash
-java -jar -Xmx300G <path>/NanoporeBC_UMI_finder.jar scanfastq -d <directory to start recursive search for fastq files> -o outPutDirectory --bcEditDistance 1
+java -jar -Xmx128g <path>/NanoporeBC_UMI_finder.jar scanfastq -d <directory to start recursive search for fastq files> -o outPutDirectory --bcEditDistance 1
 ```
-
--Xmx : allow the RAM you have available -Xmx300G is an example for running it on the Promethion server
 
 ### Comments
 
@@ -439,7 +437,7 @@ If no config file is found in the current path (working directory) , the softwar
 ### Usage
 
 ```bash
-java -jar -Xmx300g NanoporeBC_UMI_finder.jar assignumis --inFileNanopore <Nanopore Bam> --outfile <cell bc and UMI assigned output bam file>
+java -jar -Xmx128g NanoporeBC_UMI_finder.jar assignumis --inFileNanopore <Nanopore Bam> --outfile <cell bc and UMI assigned output bam file>
 ```
 
 
@@ -650,11 +648,8 @@ paste <(cut -f 12 gencode.v38.primary_assembly.annotation.refflat.txt) <(cut -f 
 **PREFIX**_isobam.bam: Isobam file
 
 ```
-java -jar -Xmx300g Sicelore-2.1.jar IsoformMatrix I=passedParsed.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=gencode.v38.refFlat CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
+java -jar -Xmx128g Sicelore-2.1.jar IsoformMatrix I=passedParsed.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=gencode.v38.refFlat CSV=barcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
 ```
-
--Xmx : allow the RAM you have available -Xmx300G is an example for running it on the Promethion server
-
 
 <a id="IsoformMatrixMolecules"></a>
 
@@ -685,7 +680,7 @@ This step add long-read sequence and QV as SAM tags into the **passedParsed.bam 
 
 
 ```
-java -jar -Xmx300g NanoporeBC_UMI_finder.jar tagbamwithread --inFastq <passed.fastq.gz> --inBam passedParsed.bam --outBam passedParsedWithSequences.bam --readTag US --qvTag QS
+java -jar -Xmx128g NanoporeBC_UMI_finder.jar tagbamwithread --inFastq <passed.fastq.gz> --inBam passedParsed.bam --outBam passedParsedWithSequences.bam --readTag US --qvTag QS
 ```
 
 
@@ -746,7 +741,7 @@ Use ***ComputeConsensus*** pipeline (Sicelore-2.1.jar)
 **example below is for chromosome 1, repeat for all chromosomes**
 
 ```
-java -jar -Xmx300g Sicelore-2.1.jar ComputeConsensus I=chr1.bam O=molecules.chr1.fastq T=20 TMPDIR=/scracth/tmp/
+java -jar -Xmx32g Sicelore-2.1.jar ComputeConsensus I=chr1.bam O=molecules.chr1.fastq T=20 TMPDIR=/scracth/tmp/
 ```
 
 
@@ -758,7 +753,7 @@ First we need to concatenate all chromosomes fastq files then use ***Deduplicate
 
 ```
 cat */molecules.chr*.fastq > molecules.fastq
-java -jar -Xmx300g Sicelore-2.1.jar DeduplicateMolecule I=molecules.fastq O=deduplicate.fastq
+java -jar -Xmx128g Sicelore-2.1.jar DeduplicateMolecule I=molecules.fastq O=deduplicate.fastq
 ```
 
 Molecule consensus sequences can then be mapped to the reference genome to generate a molecules.bam file for further analysis.
@@ -777,7 +772,7 @@ Use ***AddGeneNameTag*** pipeline (Sicelore-2.1.jar)
 Add gene name tag (GE) to molecules SAM records
 
 ```
-java -jar -Xmx44g Sicelore-2.1.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
+java -jar -Xmx32g Sicelore-2.1.jar AddGeneNameTag I=molecules.bam O=molecules.GE.bam REFFLAT=refFlat.txt TAG=GE ALLOW_MULTI_GENE_READS=true USE_STRAND_INFO=true VALIDATION_STRINGENCY=SILENT
 samtools index molecules.GE.bam
 ```
 
@@ -786,7 +781,7 @@ Then use ***AddBamMoleculeTags*** pipeline (Sicelore-2.1.jar)
 Add CellBC (BC), UMIs (U8) and read number (RN) tags from molecule read name to molecules SAM records
 
 ``` 
-java -jar -Xmx44g Sicelore-2.1.jar AddBamMoleculeTags I=molecules.GE.bam O=molecules.GE.tags.bam
+java -jar -Xmx32g Sicelore-2.1.jar AddBamMoleculeTags I=molecules.GE.bam O=molecules.GE.tags.bam
 samtools index molecules.GE.tags.bam
 ```
 
@@ -849,7 +844,7 @@ samtools index molecules.GE.tags.bam
 **PREFIX**_isobam.bam: Isobam file
 
 ```
-java -jar -Xmx300g Sicelore-2.1.jar IsoformMatrix I=molecules.GE.tags.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=ValidBarcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
+java -jar -Xmx128g Sicelore-2.1.jar IsoformMatrix I=molecules.GE.tags.bam GENETAG=GE UMITAG=U8 CELLTAG=BC REFFLAT=refFlat.txt CSV=ValidBarcodes.csv DELTA=2 MAXCLIP=150 METHOD=STRICT AMBIGUOUS_ASSIGN=false OUTDIR=. PREFIX=sicelore
 ```
 
 
@@ -886,7 +881,7 @@ chr3,80692286|80706912,-,Gria2_RGQR        // SNP association call at 2-position
 **PREFIX**: Prefix for _matrix.txt/_metrics.txt/_molinfos.txt tab-delimited output text files
 
 ```
-java -jar -Xmx44g sicelore-2.1.jar SNPMatrix I=molecules.GE.tags.bam MINRN=0 MINQV=0 CSV=ValidBarcodes.csv SNP=snps.csv O=. PREFIX=snp
+java -jar -Xmx32g sicelore-2.1.jar SNPMatrix I=molecules.GE.tags.bam MINRN=0 MINQV=0 CSV=ValidBarcodes.csv SNP=snps.csv O=. PREFIX=snp
 ```
 
 #### Output files
@@ -930,7 +925,7 @@ high sequence similarity and might preferentially happens within highly expresse
 
 
 ```
-java -jar -Xmx44g sicelore-2.1.jar ExportClippedReads I=passedParsedWithSequences.bam O=clipped_reads.fastq
+java -jar -Xmx32g sicelore-2.1.jar ExportClippedReads I=passedParsedWithSequences.bam O=clipped_reads.fastq
 ```
 
 #### FusionDetector  pipeline (Sicelore-2.1.jar)
@@ -960,15 +955,15 @@ samtools sort unsorted.bam -o clipped_reads.bam
 samtools index clipped_reads.bam
 
 # add GE/BC/U8 SAM tags to SAM records
-java -jar -Xmx44g sicelore-2.1.jar AddBamReadTags I=clipped_reads.bam O=clipped_reads.tags.bam
+java -jar -Xmx32g sicelore-2.1.jar AddBamReadTags I=clipped_reads.bam O=clipped_reads.tags.bam
 samtools index clipped_reads.tags.bam
 
 # add read sequence and QV values to Nanopore SAM records
-java -jar -Xmx12g sicelore-2.1.jar AddBamReadSequenceTag I=clipped_reads.tags.bam O=clipped_reads.tags.US.bam FASTQ=clipped_reads.fastq
+java -jar -Xmx32g sicelore-2.1.jar AddBamReadSequenceTag I=clipped_reads.tags.bam O=clipped_reads.tags.US.bam FASTQ=clipped_reads.fastq
 samtools index clipped_reads.tags.US.bam
 
 # fusion detector pipeline
-java -jar -Xmx44g sicelore-2.1.jar FusionDetector I=clipped_reads.tags.US.bam O=. PREFIX=fusion CSV=ValidBarcodes.csv
+java -jar -Xmx32g sicelore-2.1.jar FusionDetector I=clipped_reads.tags.US.bam O=. PREFIX=fusion CSV=ValidBarcodes.csv
 
 ```
 
@@ -1043,6 +1038,6 @@ The set of novel isoforms are then validated using **CAGE** / **SHORT** / **POLY
 **PREFIX.d'DELTA'.rn'RNMIN'.e'MINEVIDENCE'.fas**: Representative sequence fasta file, poa/racon consensus sequence using top 20 best qualities UMIs (based on "de" minimap2 tag value)
 
 ```
-java -jar -Xmx44g sicelore-2.1.jar CollapseModel I=isobam.bam CSV=ValidBarcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=illumina.shortread.staraligned.bam CAGE=Fantom5.cage_peaks.bed POLYA=gencode.v38.polyAs.bed
+java -jar -Xmx128g sicelore-2.1.jar CollapseModel I=isobam.bam CSV=ValidBarcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=illumina.shortread.staraligned.bam CAGE=Fantom5.cage_peaks.bed POLYA=gencode.v38.polyAs.bed
 ```
 

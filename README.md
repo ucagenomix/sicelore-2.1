@@ -1,7 +1,7 @@
 SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell or spatial barcode and unique molecular identifier (UMI)
 assignment of highly multiplexed single cell or Spatial (Visium) Nanopore  long read sequencing dataset. This repository
 is the release **2.1** of the initial project [SiCeLoRe](https://github.com/ucagenomix/sicelore), **now with short-read free
-analysis compatible with  10x Genomics  3' and 5' protocols**.
+analysis compatible with  10x Genomics Visium and single-cell 3' and 5' protocols**.
 
 If you use SiCeLoRe in your work, please cite:
 
@@ -55,21 +55,17 @@ Step 7 - [Novel isoform discovery](#new-model)
 
 We provide test data as a subsampling of reads (92k) for the Homo sapiens (hg38) Myl6 locus of an unpublished internal dataset (4.852 cells).
 
-Quick run quickrun-2.1.sh script should takes 3 mn to run, output files are located in ./outputdir directory (Step 4 option a).
-
-Quick run quickrun-2.1.step4b.sh script should takes 7 mn to run, output files are located in ./outputdir_4b directory (Step 4 option b).
-
-
- ./outputdir_4b directory (Step 4 option b).
+Note that **quickrun-2.1.sh** script should takes 3 mn to run, output files are located in ./outputdir directory (Step 4 option a) while **quickrun-2.1.step4b.sh** script should takes 7 mn to run, output files are located in ./outputdir_4b directory (Step 4 option b).
 
 ```
 git clone https://github.com/ucagenomix/sicelore-2.1.git
 cd sicelore-2.1
-chmod +x quickrun-2.1.sh
-dos2unix quickrun-2.1.sh
+chmod +x quickrun-2.1.sh quickrun-2.1.step4b.sh
+dos2unix quickrun-2.1.sh quickrun-2.1.step4b.sh
 export JAVA_HOME=<path to Java>
 export PATH=$PATH:<minimap2path>:<samtoolspath>
 ./quickrun-2.1.sh
+./quickrun-2.1.step4b.sh
 ```
 
 In case Nextflow is installed on your system
@@ -81,7 +77,8 @@ nextflow run sicelore-nf/main.nf
 ```
 
 
-**please adjust max_cpus and max_memory/javaXmx options according to your own system configuration**
+You need to optimize **max_cpus**, **max_memory** and **javaXmx** parameters according to your system configuration
+
 
 
 <a id="nanopore-scan"></a>

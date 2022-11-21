@@ -33,12 +33,14 @@ Step 4 - Generate cell/spatialBC x Gene-/Isoform-/Junction-level matrices
 
 - [option b: using consensus sequences per UMI](#IsoformMatrixMolecules)
 
-Step 5 - [Single Nucleotide Variant calling cell by cell](#snp-calling)
+Step 5 (optional) - [Single Nucleotide Variant calling cell by cell](#snp-calling)
 
-Step 6 - [Fusion transcripts detection cell by cell](#fusion-calling)
+Step 6 (optional) - [Fusion transcripts detection cell by cell](#fusion-calling)
 
-Step 7 - [Novel isoform discovery](#new-model)
- 
+Step 7 (optional) - [Novel isoform discovery](#new-model)
+
+Step 8 - [Data statistical analysis](#analysis)
+
 
 ## Authors
 
@@ -1745,3 +1747,34 @@ The set of novel isoforms are then validated using **CAGE** / **SHORT** / **POLY
 ```
 java -jar -Xmx64g sicelore-2.1.jar CollapseModel I=isobam.bam CSV=ValidBarcodes.csv REFFLAT=refFlat.txt O=. PREFIX=CollapseModel MINEVIDENCE=5 DELTA=2 RNMIN=1 SHORT=illumina.shortread.staraligned.bam CAGE=Fantom5.cage_peaks.bed POLYA=gencode.v38.polyAs.bed
 ```
+
+ 
+
+<a id="analysis"></a>
+
+ 
+
+## Step 8 - Data statistical analysis
+
+
+We provide two R scipts github repositories for statistical data analysis using R of Sicelore outputs isoform-level matrices :
+
+
+> Lebrigand K, Waldmann R et al. (2020). High throughput error corrected Nanopore single cell transcriptome sequencing.
+> *Nature Communication* 11, 4025. [[https://doi.org/10.1038/s41467-020-17800-6](https://doi.org/10.1038/s41467-020-17800-6)]
+
+[https://github.com/ucagenomix/sicelore/tree/master/R](https://github.com/ucagenomix/sicelore/tree/master/R)
+
+
+> Lebrigand K, Waldmann R et al. (2020). The spatial landscape of gene expression isoforms in tissue sections.
+> *BioRxiv*. [[https://doi.org/10.1101/2020.08.24.252296](https://doi.org/10.1101/2020.08.24.252296 )]
+
+[https://github.com/ucagenomix/SiT](https://github.com/ucagenomix/SiT)
+
+
+A dedicated R package has been developped for data analysis and exploration of isoform switchning events detected :
+
+
+[https://github.com/ucagenomix/isoswitch](isoswitch)
+
+

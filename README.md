@@ -1,93 +1,43 @@
 SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell or spatial barcode and unique molecular identifier (UMI)
-
 assignment of highly multiplexed single cell or Spatial (Visium) Nanopore  long read sequencing dataset. This repository
-
 is the release **2.1** of the initial project [SiCeLoRe](https://github.com/ucagenomix/sicelore), **now with short-read free
-
 analysis compatible with  10x Genomics  3' and 5' protocols**.
-
- 
 
 If you use SiCeLoRe in your work, please cite:
 
- 
-
 > Lebrigand K, Waldmann R et al. (2020). High throughput error corrected Nanopore single cell transcriptome sequencing.
-
 > *Nature Communication* 11, 4025. [[https://doi.org/10.1038/s41467-020-17800-6](https://doi.org/10.1038/s41467-020-17800-6)]
-
- 
-
- 
 
 ## Installation
 
- 
-
 just copy files.
-
- 
 
 requires:
 
- 
-
 * Java >= 12
-
- 
-
 * [samtools](https://github.com/samtools/samtools)
-
- 
-
 * [minimap2](https://github.com/lh3/minimap2)
-
- 
-
 * [spoa](https://github.com/rvaser/spoa) (require for step 4.b)
-
- 
 
 ## Workflow
 
- 
-
 Step 1 - [Read stranding, barcode assignment to reads](#nanopore-scan)
-
- 
 
 Step 2 - [Mapping against reference genome](#mapping)
 
- 
-
 Step 3 - [UMI assignment to Nanopore SAM records](#umi-assignment)
-
- 
 
 Step 4 - Generate cell/spatialBC x Gene-/Isoform-/Junction-level matrices
 
- 
-
 - [option a: directly using cell/spatialBC-UMI annotated long-reads](#IsoformMatrixReads)
-
-   
 
 - [option b: using consensus sequences per UMI](#IsoformMatrixMolecules)
 
- 
-
 Step 5 - [Single Nucleotide Variant calling cell by cell](#snp-calling)
-
- 
 
 Step 6 - [Fusion transcripts detection cell by cell](#fusion-calling)
 
- 
-
 Step 7 - [Novel isoform discovery](#new-model)
-
- 
-
  
 
 ## Authors

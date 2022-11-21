@@ -42,75 +42,39 @@ Step 7 - [Novel isoform discovery](#new-model)
 
 ## Authors
 
- 
 
 * Kevin Lebrigand <[lebrigand@ipmc.cnrs.fr](mailto:lebrigand@ipmc.cnrs.fr)>
 
- 
-
 [![Twitter Follow](https://img.shields.io/twitter/follow/kevinlebrigand.svg?style=social&logo=twitter)](https://twitter.com/kevinlebrigand)
 
- 
+ * Rainer Waldmann <[waldmann@ipmc.cnrs.fr](mailto:waldmann@ipmc.cnrs.fr)>
 
-* Rainer Waldmann <[waldmann@ipmc.cnrs.fr](mailto:waldmann@ipmc.cnrs.fr)>
-
- 
-
-<a id="parsing-illumina-data"></a>
-
- 
+ <a id="parsing-illumina-data"></a>
 
 ## Quick run analysis
 
- 
-
 We provide test data as a subsampling of reads (92k) for the Homo sapiens (hg38) Myl6 locus of an unpublished internal dataset (4.852 cells).
-
 This test script should takes under 3mn to run, output files are located in ./outputdir directory (Step 4 option a), ./outputdir_4b directory (Step 4 option b).
 
- 
-
 ```
-
 git clone https://github.com/ucagenomix/sicelore-2.1.git
-
 cd sicelore-2.1
-
 chmod +x quickrun-2.1.sh
-
 dos2unix quickrun-2.1.sh
-
 export JAVA_HOME=<path to Java>
-
 export PATH=$PATH:<minimap2path>:<samtoolspath>
-
 ./quickrun-2.1.sh
-
 ```
-
- 
 
 In case Nextflow is installed on your system
 
- 
-
 ```
-
 git clone https://github.com/ucagenomix/sicelore-2.1.git
-
 cd sicelore-2.1
-
 nextflow run sicelore-nf/main.nf
-
 ```
-
- 
 
 <a id="nanopore-scan"></a>
-
- 
-
- 
 
 ## Step 1 - Scan Nanopore reads - assign cell barcodes.
 

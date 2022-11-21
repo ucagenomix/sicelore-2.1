@@ -903,7 +903,7 @@ This step can be done at the read level (barcode/UMI assigned bam file) but if s
 
  
 
-**ED0ED1RATIO=** (required): Minimal ratio between reads with barcode edit distance 0 (ED0) versus barcode edit distance 1 (ED1) to call the spatial or cell barcode as valid  (default=1). Typically much more reads are assigned with ED0 to a barcode than with ED1.  **(TODO!!!!!!! default and required: contradiction)**
+**ED0ED1RATIO=** (required): Ratio of the spatial / cell barcode reads assigned with edit distance 0 (ED0) versus assigned with edit distance 1 (ED1) to call the spatial / cell barcode as valid (default=1). Typically we expect much more reads in a cell having ED0 than ED1.
 
  
 
@@ -994,11 +994,11 @@ paste <(cut -f 12 gencode.v38.primary_assembly.annotation.refflat.txt) <(cut -f 
 
  
 
-**METHOD=**: STRICT full exon-exon structure required for assignation (default mode)    **TODO!!!!! what are the alternate methods ????????**
+**METHOD=**: STRICT full exon-exon structure required for assignation (default mode)
 
  
 
-**AMBIGUOUS_ASSIGN=**: Only active for SCORE mode, whether or not to assign an UMI that has 2 or more matching transcript model (default=false)  **TODO!!!!! WHAT IS SCORE MODE ???????**
+**AMBIGUOUS_ASSIGN=**: Whether or not to assign an UMI that has 2 or more matching transcript model (default=false)
 
  
 

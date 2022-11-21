@@ -54,7 +54,13 @@ Step 7 - [Novel isoform discovery](#new-model)
 ## Quick run analysis
 
 We provide test data as a subsampling of reads (92k) for the Homo sapiens (hg38) Myl6 locus of an unpublished internal dataset (4.852 cells).
-This test script should takes under 3mn to run, output files are located in ./outputdir directory (Step 4 option a), ./outputdir_4b directory (Step 4 option b).
+
+Quick run quickrun-2.1.sh script should takes 3 mn to run, output files are located in ./outputdir directory (Step 4 option a).
+
+Quick run quickrun-2.1.step4b.sh script should takes 7 mn to run, output files are located in ./outputdir_4b directory (Step 4 option b).
+
+
+ ./outputdir_4b directory (Step 4 option b).
 
 ```
 git clone https://github.com/ucagenomix/sicelore-2.1.git
@@ -74,56 +80,35 @@ cd sicelore-2.1
 nextflow run sicelore-nf/main.nf
 ```
 
+
+**please adjust max_cpus and max_memory/javaXmx options according to your own system configuration**
+
+
 <a id="nanopore-scan"></a>
 
 ## Step 1 - Scan Nanopore reads - assign cell barcodes.
 
- 
-
-
 1) Scans for chimeric cDNA generated during library preparation and splits chimeric reads . Reads that contain two adjacent internal (>200 nt from end)  polyA/T sequences flanked by an adapter (pAad), one  internal pAad with adjacent TSO or two adjacent TSOs are split into separate reads.
-
- 
 
 2) Scans the Nanopore fastq reads for poly(A/T) and adapter sequence and generates stranded (forward) reads for reads with found polyA and adapter.
 
- 
-
 Scans by default for >= 15 nt. polyA (or T) with >= 75% As within 100 nt from both ends of the read. If poly(A) was found, searches for a 10xGenomics adapter sequence  downstream of the poly(A).
-
- 
 
 Scan for  polyA is optional and can be skipped (--noPolyARequired option) for samples that don't have polyA tails (e.g. RACE PCR combined with 5' barcoding).  Splitting of chimeric transcripts is skipped when no polyA is searched.
 
- 
-
 Assigns cell barcodes: First, a list of used barcodes is generated. The software only uses high quality reads during the first pass. A list of all possible 10xGenomics barcodes (e.g. 3M-february-2018.txt.gz from Cellranger) should be specified to guide the definition of used barcodes. If Illumina data are available the file with the list of used barcodes can be supplied (--cellRangerBCs < path to file >) -> the first pass will be skipped and the supplied barcode list will be used.
-
- 
 
 In a second pass the software assigns the cell barcodes. With the current read qualities a maximal edit distance of one is largely sufficient (--bcEditDistance 1).  Barcode assignment accuracy is typically > 99.9% for edit distance 1, edit distance 2 yields about 5 - 10% more barcode assigned reads but the tradeoff is a lower assignment accuracy.
 
- 
-
 Adds various info to the read name: cell barcode, adapter and polyA position ....
-
- 
 
 When strandedness of read can be determined (adapter and polyA[if opted for] were found) the barcode assigned read is written stranded (forward) into a "pass" folder. Failed reads are written unstranded into a "failed" folder.
 
- 
+ Scan of 100M reads takes about 80 min on the 96 core Promethion. In our experience running it does not interfere with ongoing sequencing runs. When started in parallel with sequencing runs we use nice -n +10 to decrease priority and allow a max of 64G of RAM ( -Xmx64G)
 
-Scan of 100M reads takes about 80 min on the 96 core Promethion. In our experience running it does not interfere with ongoing sequencing runs. When started in parallel with sequencing runs we use nice -n +10 to decrease priority and allow a max of 64G of RAM ( -Xmx64G)
+ **Use the reads in the "pass" folder to proceed**
 
- 
-
-**Use the reads in the "pass" folder to proceed**
-
- 
-
-Generates a html file with stats.
-
- 
+ Generates a html file with stats.
 
 ### Required files
 

@@ -1757,7 +1757,7 @@ java -jar -Xmx64g sicelore-2.1.jar CollapseModel I=isobam.bam CSV=ValidBarcodes.
 ## Step 8 - Data statistical analysis
 
 
-We provide two R scipts github repositories for statistical data analysis using R of Sicelore outputs isoform-level matrices :
+We provide two R scripts github repositories for statistical data analysis of Sicelore isoform-level matrices
 
 
 > Lebrigand K, Waldmann R et al. (2020). High throughput error corrected Nanopore single cell transcriptome sequencing.
@@ -1772,9 +1772,9 @@ We provide two R scipts github repositories for statistical data analysis using 
 [https://github.com/ucagenomix/SiT](https://github.com/ucagenomix/SiT)
 
 
-A dedicated R package has been developped for data analysis and exploration of isoform switchning events detected :
+A dedicated R package has been developped by Ignacio Atienza (IPMC) for data analysis and exploration of isoform switching events
 
 
-[https://github.com/ucagenomix/isoswitch](isoswitch)
+[https://github.com/ucagenomix/isoswitch](https://github.com/ucagenomix/isoswitch)
 
 

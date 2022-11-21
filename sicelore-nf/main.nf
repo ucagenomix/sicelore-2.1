@@ -37,7 +37,7 @@ process STEP1_validbarcodes {
     path(barcodeassigned)
 
     output:
-    path 'BarcodesValidated.csv'	, emit: csv
+    path 'BarcodesValidated.csv'    , emit: csv
     
     publishDir "${params.outdir}/${params.scandir}", mode: 'copy'
     

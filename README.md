@@ -560,7 +560,7 @@ UMI assignment requires sorted bam files. When you split files to start multiple
 
 ```bash
 
-minimap2 -ax splice -uf --sam-hit-only -t 4 $BUILD.mmi fastq_pass.fastq.gz | samtools view -bS -@ 60 - | samtools sort -m 2G -@ 4 -o passed.bam -&& samtools index passed.bam
+minimap2 -ax splice -uf --sam-hit-only -t 20 $BUILD.mmi fastq_pass.fastq.gz | samtools view -bS -@ 20 - | samtools sort -m 2G -@ 20 -o passed.bam -&& samtools index passed.bam
 
 ```
 

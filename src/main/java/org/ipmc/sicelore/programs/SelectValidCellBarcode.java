@@ -56,7 +56,7 @@ public class SelectValidCellBarcode extends CommandLineProgram {
             String line = fichier.readLine();
             line = fichier.readLine();
             while(line != null) {
-                line=line.replaceAll(",",".");
+                line=line.replaceAll(",","\\.");
                 String[] tab = line.split("\t");
                 
                 int total_umi = 0;
@@ -82,6 +82,9 @@ public class SelectValidCellBarcode extends CommandLineProgram {
                 if(total_umi >= MINUMI && new Double(umi_ed0/umi_ed1).doubleValue() >= ED0ED1RATIO){
                     kept_barcodes++;
                     os.write(new String(tab[0] + "\n").getBytes());
+                }
+                else{
+                    log.info(new Object[]{tab[0] + " barcode removed\t\t[" + line + "]"});
                 }
                 
                 line = fichier.readLine();

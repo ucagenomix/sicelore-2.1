@@ -56,7 +56,7 @@ public class SelectValidCellBarcode extends CommandLineProgram {
             String line = fichier.readLine();
             line = fichier.readLine();
             while(line != null) {
-                line=line.replaceAll(",","");
+                line=line.replaceAll(",",".");
                 String[] tab = line.split("\t");
                 
                 int total_umi = 0;

@@ -91,7 +91,7 @@ process STEP4a_matrix {
     publishDir "${params.outdir}/${params.matrixdir}", mode: 'copy'
  	
     """
-    $params.java -jar $params.javaXmx $params.sicelore IsoformMatrix -I $bam -REFFLAT $params.refflat -CSV $csv -OUTDIR . -PREFIX $params.PREFIX -CELLTAG $params.CELLTAG -UMITAG $params.UMITAG -GENETAG=$params.GENETAG -TSOENDTAG=$params.TSOENDTAG -POLYASTARTTAG=$params.POLYASTARTTAG -CDNATAG $params.CDNATAG -USTAG $params.USTAG -RNTAG $params.RNTAG -MAPQV0 $params.MAPQV0 -DELTA $params.DELTA -METHOD $params.METHOD -ISOBAM $params.ISOBAM -AMBIGUOUS_ASSIGN $params.AMBIGUOUS_ASSIGN -VALIDATION_STRINGENCY SILENT
+    $params.java -jar $params.javaXmx $params.sicelore IsoformMatrix -I $bam -REFFLAT $params.refflat -CSV $csv -OUTDIR . -PREFIX $params.PREFIX -CELLTAG $params.CELLTAG -UMITAG $params.UMITAG -GENETAG $params.GENETAG -TSOENDTAG $params.TSOENDTAG -POLYASTARTTAG $params.POLYASTARTTAG -CDNATAG $params.CDNATAG -USTAG $params.USTAG -RNTAG $params.RNTAG -MAPQV0 $params.MAPQV0 -DELTA $params.DELTA -METHOD $params.METHOD -ISOBAM $params.ISOBAM -AMBIGUOUS_ASSIGN $params.AMBIGUOUS_ASSIGN -VALIDATION_STRINGENCY SILENT
     $params.samtools index -@ $params.max_cpus ${params.PREFIX}_isobam.bam
     """
 }
@@ -248,7 +248,7 @@ process STEP4b_matrix {
     publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
 
     """
-    $params.java -jar $params.javaXmx $params.sicelore IsoformMatrix -I $bam -REFFLAT $params.refflat -CSV $csv -OUTDIR ./ PREFIX=$params.PREFIX -CELLTAG $params.CELLTAG -UMITAG $params.UMITAG -GENETAG $params.GENETAG -TSOENDTAG $params.TSOENDTAG -POLYASTARTTAG $params.POLYASTARTTAG -CDNATAG $params.CDNATAG -USTAG $params.USTAG -RNTAG $params.RNTAG -MAPQV0 $params.MAPQV0 -DELTA $params.DELTA -METHOD $params.METHOD -ISOBAM $params.ISOBAM -AMBIGUOUS_ASSIGN $params.AMBIGUOUS_ASSIGN -VALIDATION_STRINGENCY SILENT
+    $params.java -jar $params.javaXmx $params.sicelore IsoformMatrix -I $bam -REFFLAT $params.refflat -CSV $csv -OUTDIR ./ -PREFIX $params.PREFIX -CELLTAG $params.CELLTAG -UMITAG $params.UMITAG -GENETAG $params.GENETAG -TSOENDTAG $params.TSOENDTAG -POLYASTARTTAG $params.POLYASTARTTAG -CDNATAG $params.CDNATAG -USTAG $params.USTAG -RNTAG $params.RNTAG -MAPQV0 $params.MAPQV0 -DELTA $params.DELTA -METHOD $params.METHOD -ISOBAM $params.ISOBAM -AMBIGUOUS_ASSIGN $params.AMBIGUOUS_ASSIGN -VALIDATION_STRINGENCY SILENT
     $params.samtools index -@ $params.max_cpus ${params.PREFIX}_isobam.bam
     """
 }

@@ -20,8 +20,9 @@ process STEP1_readscan {
     output:
     path './passed/ReadScanner.html'        , emit: scanhtml
     path './passed/BarcodesAssigned.tsv'    , emit: scancsv
+    path './passed/stats.pojo'              , emit: pojo
     path 'fastq_pass.fastq.gz'              , emit: fastqgz
-    
+
     publishDir "${params.outdir}/${params.scandir}", mode: 'copy'
     
     """
@@ -54,7 +55,7 @@ process STEP2_mapping {
     output:
     path 'passed.bam'	, emit: mappingbam
     
-    publishDir "${params.outdir}/${params.mappingdir}", mode: 'copy'
+    //publishDir "${params.outdir}/${params.mappingdir}", mode: 'copy'
     
     """
     $params.minimap2 -ax splice -uf --sam-hit-only -t $params.max_cpus --junc-bed $params.juncbed $params.minimapfasta $fastqgz | $params.samtools view -bS -@ $params.max_cpus - | $params.samtools sort -m 2G -@ $params.max_cpus -o passed.bam -&& $params.samtools index passed.bam

@@ -6,6 +6,9 @@ package org.ipmc.sicelore.programs;
  * 
  */
 import htsjdk.samtools.AlignmentBlock;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -31,7 +34,7 @@ public class CrispRstats extends CommandLineProgram
     public File HISTO;
     @Argument(shortName = "DETAIL", doc = "The output details per reads", optional=true)
     public File DETAIL;
-    @Argument(shortName = "MINSIZE", doc = "Minimum deletion size to cinsider (default=10)")
+    @Argument(shortName = "MINSIZE", doc = "Minimum deletion size to consider (default=10)")
     public int MINSIZE=10;
     @Argument(shortName = "COORD", doc = "Genomic coordinate (default=21:17608000-17610000)")
     public String COORD="21:17608000-17610000";
@@ -62,7 +65,12 @@ public class CrispRstats extends CommandLineProgram
             os = new DataOutputStream(new FileOutputStream(DETAIL));
 
             SamReader sam = SamReaderFactory.makeDefault().open(INPUT);
-            
+        
+            htsjdk.samtools.SAMFileHeader samFileHeader = sam.getFileHeader();
+            //samFileHeader.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+            //SAMFileWriter sup10out = new SAMFileWriterFactory().makeSAMOrBAMWriter(samFileHeader, true, new File("sup10.bam"));
+            //SAMFileWriter inf10out = new SAMFileWriterFactory().makeSAMOrBAMWriter(samFileHeader, true, new File("inf10.bam"));
+        
             String chromosome = COORD.split(":")[0];
             int start = new Integer((COORD.split(":")[1]).split("-")[0]).intValue();
             int end = new Integer((COORD.split(":")[1]).split("-")[1]).intValue();
@@ -109,7 +117,12 @@ public class CrispRstats extends CommandLineProgram
                 if(maxdel > MAX)
                     MAX = maxdel;
                 
-                if(maxdel >= MINSIZE){
+                //if(maxdel > 10)
+                //    sup10out.addAlignment(r);
+                //else
+                //    inf10out.addAlignment(r);
+                
+                if(MAX >= MINSIZE){
                     os.writeBytes(read_name + "\t" + startBigestDeletion + "\t" + maxdel + "\n");
                     
                     if(this.histo.containsKey(maxdel))
@@ -119,6 +132,8 @@ public class CrispRstats extends CommandLineProgram
                 }
             }
             sam.close();
+            //sup10out.close();
+            //inf10out.close();
             os.close();
             
         } catch (Exception e) { e.printStackTrace(); } 

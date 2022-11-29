@@ -8,10 +8,10 @@ workflow {
     STEP2_mapping(STEP1_readscan.out.fastqgz)
     STEP3_umis(STEP2_mapping.out.mappingbam)
 
-    // step 4a
+    // step 4a (barcoded reads)
     STEP4a_matrix(STEP1_validbarcodes.out.csv, STEP3_umis.out.parsedbam)
 
-    // step 4b (consensus)
+    // step 4b (consensus molecules)
     STEP4b_addsequence(STEP3_umis.out.parsedbam, STEP1_readscan.out.fastqgz)
     chrs = STEP4b_getchrs(STEP4b_addsequence.out.parsedbamseq) | splitText | map{it -> it.trim()}
     STEP4b_splitbam(chrs, STEP4b_addsequence.out.parsedbamseq, STEP4b_addsequence.out.parsedbamseqbai) | STEP4b_consensus | STEP4b_concatenate | collectFile | STEP4b_deduplicate | STEP4b_mapping | STEP4b_addtags | STEP4b_addgenes
@@ -71,8 +71,11 @@ process STEP3_umis {
     path(mappingbam)
  
     output:
-    path 'passedParsed.bam'	, emit: parsedbam
-    path 'passedParsed.bai'	, emit: parsedbai
+    path 'passedParsed.bam'                 , emit: parsedbam
+    path 'passedParsed.bai'                 , emit: parsedbai
+    path 'passedParsed.bam.genecounts.tsv'  , emit: genecounts
+    path 'passedParsed.bam.html'            , emit: umireport
+    path 'passedParsed.bam.UMIdepths.tsv'	 , emit: umidepth
     
     publishDir "${params.outdir}/${params.umisdir}", mode: 'copy'
     
@@ -194,10 +197,7 @@ process STEP4b_mapping {
     //publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
  	
     """
-    $params.minimap2 -ax splice -uf --sam-hit-only -t $params.max_cpus --junc-bed $params.juncbed $params.minimapfasta $dedup > molecules.sam
-    $params.samtools view -Sb -@ $params.max_cpus molecules.sam -o deleted.bam
-    $params.samtools sort -@ $params.max_cpus deleted.bam -o molecules.bam
-    $params.samtools index -@ $params.max_cpus molecules.bam
+    $params.minimap2 -ax splice -uf --sam-hit-only -t $params.max_cpus --junc-bed $params.juncbed $params.minimapfasta $dedup | $params.samtools view -bS -@ $params.max_cpus - | $params.samtools sort -m 2G -@ $params.max_cpus -o molecules.bam -&& $params.samtools index molecules.bam
     """
 }
 

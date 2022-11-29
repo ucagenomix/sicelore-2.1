@@ -7,11 +7,14 @@ workflow {
     STEP1_validbarcodes(STEP1_readscan.out.scancsv)
     STEP2_mapping(STEP1_readscan.out.fastqgz)
     STEP3_umis(STEP2_mapping.out.mappingbam)
-	
+
+    // step 4a
     STEP4a_matrix(STEP1_validbarcodes.out.csv, STEP3_umis.out.parsedbam)
-    
+
+    // step 4b (consensus)
     STEP4b_addsequence(STEP3_umis.out.parsedbam, STEP1_readscan.out.fastqgz)
-    STEP4b_getchrs(STEP4b_addsequence.out.parsedbamseq) | splitText | map{it -> it.trim()} | STEP4b_splitbam | STEP4b_consensus | STEP4b_concatenate | collectFile | STEP4b_deduplicate | STEP4b_mapping | STEP4b_addtags | STEP4b_addgenes
+    chrs = STEP4b_getchrs(STEP4b_addsequence.out.parsedbamseq) | splitText | map{it -> it.trim()}
+    STEP4b_splitbam(chrs, STEP4b_addsequence.out.parsedbamseq, STEP4b_addsequence.out.parsedbamseqbai) | STEP4b_consensus | STEP4b_concatenate | collectFile | STEP4b_deduplicate | STEP4b_mapping | STEP4b_addtags | STEP4b_addgenes
     STEP4b_matrix(STEP1_validbarcodes.out.csv, STEP4b_addgenes.out.bam)
 }
 
@@ -20,14 +23,13 @@ process STEP1_readscan {
     output:
     path './passed/ReadScanner.html'        , emit: scanhtml
     path './passed/BarcodesAssigned.tsv'    , emit: scancsv
-    path './passed/stats.pojo'              , emit: pojo
     path 'fastq_pass.fastq.gz'              , emit: fastqgz
 
     publishDir "${params.outdir}/${params.scandir}", mode: 'copy'
     
     """
     mkdir ./passed
-    $params.java -jar $params.javaXmx $params.nanopore scanfastq -d $params.fastqdir -o ./passed --bcEditDistance 1 --compress
+    $params.java -jar $params.javaXmx $params.nanopore scanfastq -d $params.fastqdir -o ./passed --ncpu $params.max_cpus --bcEditDistance 1 --compress
     find ./passed/passed/ -type f -name '*' | xargs pigz -dc |  pigz > fastq_pass.fastq.gz
     """
 }
@@ -54,8 +56,9 @@ process STEP2_mapping {
 
     output:
     path 'passed.bam'	, emit: mappingbam
+    path 'passed.bam.bai'	, emit: mappingbai
     
-    //publishDir "${params.outdir}/${params.mappingdir}", mode: 'copy'
+    publishDir "${params.outdir}/${params.mappingdir}", mode: 'symlink'
     
     """
     $params.minimap2 -ax splice -uf --sam-hit-only -t $params.max_cpus --junc-bed $params.juncbed $params.minimapfasta $fastqgz | $params.samtools view -bS -@ $params.max_cpus - | $params.samtools sort -m 2G -@ $params.max_cpus -o passed.bam -&& $params.samtools index passed.bam
@@ -74,7 +77,7 @@ process STEP3_umis {
     publishDir "${params.outdir}/${params.umisdir}", mode: 'copy'
     
     """
-    $params.java -jar $params.javaXmx $params.nanopore assignumis --inFileNanopore $mappingbam -o passedParsed.bam --annotationFile $params.refflat
+    $params.java -jar $params.javaXmx $params.nanopore assignumis --inFileNanopore $mappingbam -o passedParsed.bam --ncpu $params.max_cpus --annotationFile $params.refflat
     """
 }
 
@@ -83,12 +86,10 @@ process STEP4a_matrix {
     input:
     path(csv)
     path(bam)
- 	
+ 
     output:
-    path("*.txt")		, emit: isotxt
-    path("*_isobam.bam")	, emit: isobam
-    path("*_isobam.bam.bai")	, emit: isobai
- 	
+    path("*")
+ 
     publishDir "${params.outdir}/${params.matrixdir}", mode: 'copy'
  	
     """
@@ -106,7 +107,7 @@ process STEP4b_addsequence {
     path 'parsedbamseq.bam'	, emit: parsedbamseq
     path 'parsedbamseq.bam.bai'	, emit: parsedbamseqbai
     
-    publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
+    //publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
     
     """
     $params.java -jar $params.javaXmx $params.nanopore tagbamwithread --inFastq $fastqgz --inBam $bam --outBam parsedbamseq.bam --readTag US --qvTag QS
@@ -129,12 +130,14 @@ process STEP4b_getchrs {
 process STEP4b_splitbam {
     input:
     val(chromo)
- 	
+    path(bam)
+    path(bai)
+
     output:
     path 'chromosome.bam'	, emit: bam
  	
     """
-    $params.samtools view -Sb $params.matrixconsdirfull/parsedbamseq.bam $chromo -o chromosome.bam
+    $params.samtools view -Sb $bam $chromo -o chromosome.bam
     $params.samtools index -@ $params.max_cpus chromosome.bam
     """
 }
@@ -144,7 +147,7 @@ process STEP4b_consensus {
     path(bam)
  	
     output:
-    path 'chr.fq'	, emit: fq
+    path 'chr.fq'   , emit: fq
  	
     """
     $params.java -jar $params.javaXmx $params.sicelore ComputeConsensus -T $params.max_cpus -I $bam -O chr.fq -CELLTAG $params.CELLTAG -UMITAG $params.UMITAG -GENETAG $params.GENETAG -TSOENDTAG $params.TSOENDTAG -POLYASTARTTAG $params.POLYASTARTTAG -CDNATAG $params.CDNATAG -USTAG $params.USTAG -RNTAG $params.RNTAG -MAPQV0 $params.MAPQV0 -TMPDIR $params.tmpdir -VALIDATION_STRINGENCY SILENT -MAXREADS $params.MAXREADS -MINPS $params.MINPS -MAXPS $params.MAXPS -DEBUG $params.DEBUG
@@ -170,7 +173,7 @@ process STEP4b_deduplicate {
     path(fq)
 
     output:
-    path 'molecules.fastq'	, emit: dedup
+    path 'molecules.fastq'  , emit: dedup
  	
     publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
 
@@ -185,8 +188,8 @@ process STEP4b_mapping {
     path(dedup)
  
     output:
-    path 'molecules.bam'	, emit: bam
-    path 'molecules.bam.bai'	, emit: bai
+    path 'molecules.bam'    , emit: bam
+    path 'molecules.bam.bai', emit: bai
 
     //publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
  	
@@ -205,7 +208,7 @@ process STEP4b_addtags {
     path(bai)
  	
     output:
-    path 'molecules.tags.bam'		, emit: bam
+    path 'molecules.tags.bam'	, emit: bam
     path 'molecules.tags.bam.bai'	, emit: bai
  	
     //publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
@@ -223,8 +226,8 @@ process STEP4b_addgenes {
     path(bai)
  	
     output:
-    path 'molecules.tags.GE.bam'	, emit: bam
-    path 'molecules.tags.GE.bam.bai'	, emit: bai
+    path 'molecules.tags.GE.bam'    , emit: bam
+    path 'molecules.tags.GE.bam.bai', emit: bai
  	
     publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
 
@@ -241,10 +244,8 @@ process STEP4b_matrix {
     path(bam)
  	
     output:
-    path("*.txt")		, emit: isotxt
-    path("*_isobam.bam")	, emit: isobam
-    path("*_isobam.bam.bai")	, emit: isobai
- 	
+    path("*")
+
     publishDir "${params.outdir}/${params.matrixconsdir}", mode: 'copy'
 
     """

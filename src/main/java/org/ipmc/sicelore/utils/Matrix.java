@@ -53,7 +53,12 @@ public class Matrix
     public int getTotal_remove(){ return total_remove; }
     public int getTotal_isoform_def(){ return total_isoform_def; }
     public int getTotal_isoform_undef(){ return total_isoform_undef; } 
-       
+    
+    public void cleanIt(String gene)
+    {
+         //geneMetrics.remove(gene);
+    } 
+    
     public void addMolecule(Molecule molecule)
     {
         THashMap mapCell = null;
@@ -298,6 +303,60 @@ public class Matrix
             os2.close();
         } catch (Exception e) { e.printStackTrace(); try { os.close();  os2.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
         } finally { try { os.close();  os2.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }
+    }
+    
+    public void writeBulk(java.io.File bulkgene, java.io.File bulkiso, UCSCRefFlatParser model)
+    {
+        BufferedOutputStream os = null;
+        BufferedOutputStream os2 = null;
+        THashSet setUmi = null;
+        
+        try {
+            os = new BufferedOutputStream(new java.io.FileOutputStream(bulkgene));
+            os2 = new BufferedOutputStream(new java.io.FileOutputStream(bulkiso));
+            os.write(new String("geneId\tcount\n").getBytes());
+            os2.write(new String("transcriptId\texons\tcount\n").getBytes());
+
+            for(String isokey : matriceGene.keySet()){
+                os.write(isokey.getBytes());
+                int total = 0;
+                for(String cell_barcode : cellMetrics.keySet()){
+                    if ((setUmi = (THashSet) ((THashMap) matriceGene.get(isokey)).get(cell_barcode)) != null)
+                        total += setUmi.size();
+                }
+                os.write(new String("\t" + total + "\n").getBytes());
+            }
+            
+            for(String isokey : matrice.keySet()){
+                String[] tmp = isokey.split("\t");
+                
+                if(model != null){
+                    TranscriptRecord tr = (TranscriptRecord)model.select(tmp[0],tmp[1]);
+                    int nb_exon = 0;
+                    if(tr != null)
+                        nb_exon = tr.getExons().size();
+                    
+                    os.write(new String(isokey + "\t" + nb_exon).getBytes());
+                    os2.write(new String(isokey + "\t" + nb_exon).getBytes());
+                }
+                else{
+                    os.write(new String(isokey+"\tna").getBytes());
+                    os2.write(new String(isokey+"\tna").getBytes());
+                }
+                    
+                int total = 0;
+                for(String cell_barcode : cellMetrics.keySet()){
+                    if ((setUmi = (THashSet) ((THashMap) matrice.get(isokey)).get(cell_barcode)) != null)
+                        total += setUmi.size();
+                }
+                os2.write(new String("\t" + total + "\n").getBytes());
+            }
+
+            os.close();
+            os2.close();
+            
+        } catch (Exception e) { e.printStackTrace(); try { os.close(); os2.close(); } catch (Exception e2) { System.err.println("can not close stream"); }
+        } finally { try { os.close(); os2.close(); } catch (Exception e3) { System.err.println("can not close stream");  } }        
     }
 
     public void writeCellMetrics(java.io.File paramFile)

@@ -20,6 +20,7 @@ public class Molecule
     private byte[] consensusQV;
     private int consensusLength;
     private String snpPhredScore = "";
+    private String status = "Ambiguous";
     
     private String geneId = "undef";
     private String transcriptId = "undef";
@@ -89,6 +90,9 @@ public class Molecule
     
     public int getSupporting_reads() { return this.supporting_reads; }
     public void setSupporting_reads(int r) { this.supporting_reads=r; }
+    
+    public String getStatus() { return this.status; }
+    public void setStatus(String status) { this.status = status; }
     
     public String[] getGeneIdsArray() {
         String[] array = new String[this.geneIds.size()];

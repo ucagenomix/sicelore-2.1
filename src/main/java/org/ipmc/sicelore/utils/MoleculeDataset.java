@@ -184,6 +184,9 @@ public class MoleculeDataset {
         if(debug) { System.out.println("transcripts:" + transcripts); }
         if(debug) { System.out.println("molecule:" + molecule.getBarcode() + "\t" + molecule.getUmi() + "\t" + molecule.getGeneIds().toString()); }
         
+        //if(transcripts.size() == 0)
+        //    molecule.setStatus("Nascent");
+        
         // only 1 mono-exonic transcript in the model --> we do set the isoform
         if(transcripts.size() == 1 && transcripts.get(0).getJunctions().isEmpty()){
            this.monoexon++;
@@ -590,6 +593,8 @@ public class MoleculeDataset {
             for (int i = 0; i < juncRef.size(); i++) {
                 if (!isIn((Junction) juncRef.get(i), juncRead, DELTA))
                     bool = false;
+                else
+                    molecule.setStatus("Nascent");
             }
         }
         else
@@ -597,8 +602,10 @@ public class MoleculeDataset {
         
         // get all junctions of all reads/molecules
         for (int i = 0; i < juncRef.size(); i++) {
-            if (isIn((Junction) juncRef.get(i), juncRead, DELTA))
+            if (isIn((Junction) juncRef.get(i), juncRead, DELTA)){
                  molecule.addJunction(juncRef.get(i));
+                 molecule.setStatus("Nascent");
+            }
         }
         
         return bool;

@@ -59,6 +59,8 @@ public class SNPMatrix extends CommandLineProgram {
     public int MINRN = 0;
     @Argument(shortName = "MINQV", doc = "Minimum QV score at position to keep the molecule for SNP calling (default=0, means all)")
     public int MINQV = 0;
+    //@Argument(shortName = "MINHITS", doc = "Minimum hits (reads or molecules) at position to report site (default=0, means all)")
+    //public int MINHITS = 0;
 
     public CellList cellList;
     
@@ -117,6 +119,7 @@ public class SNPMatrix extends CommandLineProgram {
                         
                     int[] arr = stringToIntArray(pos);
                     SAMRecordIterator iter = samReader.query(chromosome, arr[0], arr[arr.length - 1], false);
+                    
                     while (iter.hasNext()) {
                         SAMRecord r = iter.next();
 
@@ -180,6 +183,13 @@ public class SNPMatrix extends CommandLineProgram {
                         }
                     }
                     iter.close();
+                    
+                    //if(total < MINHITS){
+                        // clean matrix
+                    //    matrix.cleanIt(gene);
+                    //}
+                    
+                    
                     log.info(new Object[]{"processing...\t\t" + line + "\t" + total + " hits, " + lowRN + " lowRN, " + lowQV + " lowQV"});
                     total_hits+=total;
                     total_lowrn+=lowRN;

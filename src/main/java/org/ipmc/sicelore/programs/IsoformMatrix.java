@@ -70,6 +70,8 @@ public class IsoformMatrix extends CommandLineProgram
     public boolean AMBIGUOUS_ASSIGN = false;
     @Argument(shortName = "MAPQV0", doc = "Wether or not to keep mapqv=0 SAM records (default=false)", optional=true)
     public boolean MAPQV0 = false;
+    @Argument(shortName = "TOBULK", doc = "Wether or not to provide a bulk quantification (default=false)", optional=true)
+    public boolean TOBULK = false;
     
     public CellList cellList;
     private ProgressLogger pl;
@@ -115,6 +117,8 @@ public class IsoformMatrix extends CommandLineProgram
         File GENEMATRIX  = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genematrix.txt");
         File GENEMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_genemetrics.txt");
         File CELLMETRICS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_cellmetrics.txt");
+        File BULKGENE    = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_bulkgene.txt");
+        File BULKISO     = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_bulkiso.txt");
         File MOLINFOS    = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + "_molinfos.txt");
         File LOGS        = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".log");
         File HTML        = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".html");
@@ -130,6 +134,9 @@ public class IsoformMatrix extends CommandLineProgram
         matrix.writeCellMetrics(CELLMETRICS);
         log.info(new Object[]{"\twriteJunctionMatrix\t[start]"});
         matrix.writeJunctionMatrix(JUNCMATRIX, JUNCMETRICS);
+        
+        if(TOBULK)
+            matrix.writeBulk(BULKGENE, BULKISO, dataset.getModel());
         
         log.info(new Object[]{"\tMatrix cells size\t[" + matrix.getCellMetrics().size() + "]"});
         log.info(new Object[]{"\tMatrix genes size\t[" + matrix.getGeneMetrics().size() + "]"});

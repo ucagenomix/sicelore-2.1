@@ -80,7 +80,7 @@ process STEP3_umis {
     publishDir "${params.outdir}/${params.umisdir}", mode: 'copy'
     
     """
-    $params.java -jar $params.javaXmx $params.nanopore assignumis --inFileNanopore $mappingbam -o passedParsed.bam --annotationFile $params.refflat
+    $params.java -jar $params.javaXmx -XX:ActiveProcessorCount=$params.max_cpus $params.nanopore assignumis --inFileNanopore $mappingbam -o passedParsed.bam --annotationFile $params.refflat
     """
 }
 

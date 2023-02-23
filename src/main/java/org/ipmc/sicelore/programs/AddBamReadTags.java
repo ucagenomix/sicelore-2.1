@@ -54,6 +54,12 @@ public class AddBamReadTags extends CommandLineProgram {
                     r.setAttribute(UMITAG, info[2]);
                     
                 }
+                else if(info.length == 4){ // GE|BC|U8 --> v2.1
+                    r.setAttribute(GENETAG, info[1]);
+                    r.setAttribute(CELLTAG, info[2]);
+                    r.setAttribute(UMITAG, info[3]);
+                    
+                }
                 localSAMFileWriter.addAlignment(r);
             }
             localSamReader.close();

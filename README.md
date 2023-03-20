@@ -14,7 +14,7 @@ just copy files.
 
 requires:
 
-* Java >= 12
+* Java >= 13
 * [samtools](https://github.com/samtools/samtools)
 * [minimap2](https://github.com/lh3/minimap2)
 * [spoa](https://github.com/rvaser/spoa) (require for step 4.b)

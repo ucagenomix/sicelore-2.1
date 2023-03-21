@@ -2,7 +2,7 @@ SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell or spatia
 assignment of highly multiplexed single cell or Spatial (Visium) Nanopore  long read sequencing dataset. This repository
 is the release **2.1** of the initial project [SiCeLoRe](https://github.com/ucagenomix/sicelore), **now with short-read free
 analysis compatible with  10x Genomics Visium and single-cell 3' and 5' protocols**.
-
+ 
 If you use SiCeLoRe in your work, please cite:
 
 > Lebrigand K, Waldmann R et al. (2020). High throughput error corrected Nanopore single cell transcriptome sequencing.

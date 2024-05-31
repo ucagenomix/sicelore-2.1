@@ -1,0 +1,11 @@
+name: sicelore-2.1
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - openjdk=21.0.3
+  - samtools=1.20
+  - minimap2=2.28
+  - spoa=4.1.4
+

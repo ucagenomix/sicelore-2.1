@@ -2,7 +2,7 @@ SiCeLoRe (Single Cell Long Read) is a suite of tools dedicated to cell or spatia
 assignment of highly multiplexed single cell or Spatial (Visium) Nanopore  long read sequencing dataset. This repository
 is the release **2.1** of the initial project [SiCeLoRe](https://github.com/ucagenomix/sicelore), **now with short-read free
 analysis compatible with  10x Genomics Visium and single-cell 3' and 5' protocols**.
- 
+
 If you use SiCeLoRe in your work, please cite:
 
 > Lebrigand K, Waldmann R et al. (2020). High throughput error corrected Nanopore single cell transcriptome sequencing.
@@ -14,7 +14,7 @@ just copy files.
 
 requires:
 
-* Java >= 12
+* Java >= 13
 * [samtools](https://github.com/samtools/samtools)
 * [minimap2](https://github.com/lh3/minimap2)
 * [spoa](https://github.com/rvaser/spoa) (require for step 4.b)
@@ -75,7 +75,7 @@ In case Nextflow is installed on your system
 ```
 git clone https://github.com/ucagenomix/sicelore-2.1.git
 cd sicelore-2.1
-nextflow run sicelore-nf/main.nf
+nextflow run sicelore-nf/main.nf -profile conda
 ```
 
 

@@ -42,6 +42,7 @@ public class MoleculeDataset {
     private int ambiguous = 0;
     private int monoexon = 0;
     private int multimatchset = 0;
+    private int total_junctions = 0;
     
     private int multiIG = 0;
     private int totalReads = 0;
@@ -105,6 +106,7 @@ public class MoleculeDataset {
     public int getNomatch() { return nomatch; }
     public int getOnematch() { return onematch; }
     public int getAmbiguous() { return ambiguous; }
+    public int getTotal_junctions() { return total_junctions; }
     
     public void initModel(File REFFLAT)
     {
@@ -157,6 +159,7 @@ public class MoleculeDataset {
         log.info(new Object[]{"\tSetIsoforms\t\tone match\t[" + this.onematch + "]"});
         //log.info(new Object[]{"\tSetIsoforms\t\t>1 match set\t[" + this.multimatchset + "]"});
         log.info(new Object[]{"\tSetIsoforms\t\tambiguous\t[" + this.ambiguous + "]"});
+        log.info(new Object[]{"\ttotal_junctions\t[" + this.total_junctions + "]"});
 
         List<Molecule> l;
         cles = this.mapMolecules.keySet();
@@ -203,7 +206,9 @@ public class MoleculeDataset {
 
                 for(LongreadRecord lrr : records){
                     List<Junction> list = lrr.getJunctions();
-
+                    
+                    this.total_junctions += list.size();
+                    
                     if(debug) { System.out.println("o "+lrr.getName() + "("+list.size()+" junctions)"); }
 
                     for(TranscriptRecord transcriptrecord : transcripts){
@@ -238,11 +243,12 @@ public class MoleculeDataset {
                 if(bestCandidates.size() == 1){
                     this.onematch++;
                     String g = (String)bestCandidates.iterator().next();
+                    
+                    if(debug) { System.out.println("only one best candidate --> transcript_id/gene_id:" + g); }
+                    
                     molecule.setTranscriptId(g.split("\\|")[0]);
                     molecule.setGeneId(g.split("\\|")[1]);
                     molecule.setSupporting_reads(candidates.get(g));
-
-                    if(debug) { System.out.println("only one best candidate --> transcript_id/gene_id:" + g); }
                 }
                 else{
                     // ambiguous is true, mutiple isoforms are valid
@@ -279,7 +285,7 @@ public class MoleculeDataset {
             }
             //else{ // we have a problem here no transcripts for genes (GE:tag) in model
 
-                //System.out.println(transcripts.size() + "\t" + molecule.getBarcode()+ ":"  + molecule.getUmi() + "\t" + molecule.getGeneIdsArray());
+                //System.out.println(transcripts.size() + "\t" + molecule.getBarcode()+ ":"  + molecule.getUmi() + "\t" + molecule.getGeneIdsArray().toString());
 
             //}
         }

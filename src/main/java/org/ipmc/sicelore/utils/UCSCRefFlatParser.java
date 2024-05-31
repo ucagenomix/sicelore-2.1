@@ -158,16 +158,16 @@ public class UCSCRefFlatParser implements GeneModelParser {
                     String U8 = (String)r.getAttribute(UMITAG);
                     String IG = (String)r.getAttribute(GENETAG);
                     String IT = (String)r.getAttribute(ISOFORMTAG);
-                    int    RN = ((Integer) r.getAttribute(RNTAG) != null) ? (Integer) r.getAttribute(RNTAG) : 0;
+                    int    RN = ((Integer) r.getAttribute(RNTAG) != null) ? (Integer) r.getAttribute(RNTAG) : 1;
                     
-                    LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, true);
+                    LongreadRecord lrr = LongreadRecord.fromSAMRecord(r, false);
                     
                     // never null case if umifound or isobam from isoformMatrix pipeline used
                     // but we filter out some not reliable reads just as in isoformMatrix
                     if(lrr != null && lrr.getMapqv() > 0 && !lrr.getIsChimeria() && RN >= this.RNMIN && cellList.contains(BC)){
                         
                         // we have a geneId
-                        if(! "undef".equals(IG)){
+                        if(IG != null && !"undef".equals(IG) && !"".equals(IG)){
                             TranscriptRecord tr = new TranscriptRecord(IG, IT);
                                 
                             // never seen this gene, create a new List<TranscriptRecord> including IT of lrr
@@ -190,6 +190,8 @@ public class UCSCRefFlatParser implements GeneModelParser {
                                 }
                             }
                             
+                            //log.info(new Object[]{String.format(IG + "," +  IT)});
+                            
                             // finally add the molecule to the TranscriptRecord
                             mapGenesTranscripts.get(IG).get(mapGenesTranscripts.get(IG).indexOf(tr)).add(lrr);
                         }
@@ -201,6 +203,8 @@ public class UCSCRefFlatParser implements GeneModelParser {
             }
             samReader.close();
         } catch (Exception e) { e.printStackTrace(); }
+        
+        log.info(new Object[]{String.format("Loader Bam End..." + mapGenesTranscripts.size())});
     }
     
     // parcours de la map de genes and collapse undef categorie

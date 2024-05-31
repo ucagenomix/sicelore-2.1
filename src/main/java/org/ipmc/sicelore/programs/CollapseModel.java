@@ -68,15 +68,15 @@ public class CollapseModel extends CommandLineProgram
     @Argument(shortName = "DEBUG", doc = "Debug mode, print consensus command and do not delete temp files (default=false)", optional=true)
     public boolean DEBUG = false;
     
-    @Argument(shortName = "SHORT", doc = "The short read SAM or BAM file fot junction validation")
+    @Argument(shortName = "SHORT", doc = "The short read SAM or BAM file fot junction validation", optional=true)
     public File SHORT;
-    @Argument(shortName = "CAGE", doc = "CAGE peaks file (.bed)")
+    @Argument(shortName = "CAGE", doc = "CAGE peaks file (.bed)", optional=true)
     public File CAGE;
     
     // ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M24/gencode.vM24.polyAs.gtf.gz
     // more +6 gencode.vM24.polyAs.gtf  | grep polyA_signal | awk '{ print $1 "\t" $4 "\t" $5 "\t" $1 ":" $4 ".." $5 "," $7 "\t1\t" $7 "\t" $4 "\t" $4+1 }' > gencode.vM24.polyAs.bed
     // sed -i -e "s/chr//g" gencode.vM24.polyAs.bed
-    @Argument(shortName = "POLYA", doc = "POLYA sites file (.bed)")
+    @Argument(shortName = "POLYA", doc = "POLYA sites file (.bed)", optional=true)
     public File POLYA;
 
     @Argument(shortName = "cageCo", doc = "CAGE validation cutoff (default=50 bases)")
@@ -93,7 +93,7 @@ public class CollapseModel extends CommandLineProgram
     private ProgressLogger pl;
     private final Log log;
     
-    private boolean doConsCall = false;
+    private boolean CONSENSUS = false;
     
     UCSCRefFlatParser refmodel;
     UCSCRefFlatParser mymodel;
@@ -130,7 +130,7 @@ public class CollapseModel extends CommandLineProgram
             ConsensusMsa cmsa = new ConsensusMsa();
             cmsa.setStaticParams(MAXPS);
             
-            this.doConsCall = true; // change to true if needed
+            //CONSENSUS = true; // change to true if needed
         }
         
         process();
@@ -163,7 +163,7 @@ public class CollapseModel extends CommandLineProgram
         mymodel.filter(); // remove also here the intron-retention --> TODO list
         mymodel.classifier();
         
-        if(CAGE.exists() && POLYA.exists() && SHORT.exists()){
+        if(CAGE != null && CAGE.exists() && POLYA != null && POLYA.exists() && SHORT != null && SHORT.exists()){
             log.info(new Object[]{"\tPerform validation using provided CAGE bed, POLYA bed and SHORT read bam files"});
             cage = new BEDParser(CAGE);
             polyA = new BEDParser(POLYA);
@@ -185,7 +185,7 @@ public class CollapseModel extends CommandLineProgram
         // allelic determination and output an allele specific counting matrix
         // define nachor for phasing: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5025529/
         // on the todo list !!
-        if(this.doConsCall){
+        if(CONSENSUS){
             log.info(new Object[]{"\tExporting all isoforms consensus sequence to fasta..."});
             File FAS = new File(OUTDIR.getAbsolutePath() + "/" + PREFIX + ".d" + DELTA + ".rn" + RNMIN + ".e" + MINEVIDENCE + ".fas");
             mymodel.callConsensus(FAS, nThreads);

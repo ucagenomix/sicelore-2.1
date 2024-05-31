@@ -90,7 +90,7 @@ public class IsoformMatrix extends CommandLineProgram
         LongreadRecord lrr = new LongreadRecord();
         lrr.setStaticParams(CELLTAG,UMITAG,GENETAG,TSOENDTAG,POLYASTARTTAG,USTAG,CDNATAG,MAXCLIP,RNTAG);
         
-        this.cellList = new CellList(CSV); 
+        this.cellList = new CellList(CSV);
         log.info(new Object[]{"\tCells detected\t\t[" + this.cellList.size() + "]"});
         
         if(!"STRICT".equals(METHOD)){

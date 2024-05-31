@@ -371,7 +371,7 @@ public class TranscriptRecord implements Comparable<TranscriptRecord> {
             
             // keep the longest lrr cDNA as representative
             // next step would be to compute consensus with POA just as molecule, need an object doing that
-            if(representative.length < lrr.getCdna().length)
+            if(lrr.getCdna() != null && representative.length < lrr.getCdna().length)
                 representative = lrr.getCdna();
         }
         

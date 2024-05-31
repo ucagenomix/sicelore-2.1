@@ -99,7 +99,7 @@ public class LongreadParser implements LongreadModelParser {
         
         if(record == null) { unvalid_records++; null_records++; return null; }
         if(record.getIsChimeria()) { unvalid_records++; chimeria_records++; return null; }
-        if(this.is_gene_mandatory && (record.getGeneId() == null || "undef".equals(record.getGeneId()))) { unvalid_records++; gene_unset++; return null; }
+        if(this.is_gene_mandatory && (record.getGeneId() == null || "undef".equals(record.getGeneId()) || "".equals(record.getGeneId()))) { unvalid_records++; gene_unset++; return null; }
         if(this.is_umi_mandatory && record.getUmi() == null) { unvalid_records++; umi_unset++; return null; }
         
         if(!this.keep_mapqv0 && record.getMapqv() == 0) {

@@ -26,10 +26,13 @@ process STEP1_readscan {
     path 'fastq_pass.fastq.gz'              , emit: fastqgz
 
     publishDir "${params.outdir}/${params.scandir}", mode: 'copy'
+
+    def fivePbc = params.fivePbc ? "--fivePbc" : ""
+    def noPolyARequired = params.noPolyARequired ? "--noPolyARequired" : ""
     
     """
     mkdir ./passed
-    $params.java -jar $params.javaXmx $params.nanopore scanfastq -d $params.fastqdir -o ./passed --ncpu $params.max_cpus --bcEditDistance 1 --compress
+    $params.java -jar $params.javaXmx $params.nanopore scanfastq -d $params.fastqdir -o ./passed --ncpu $params.max_cpus --bcEditDistance 1 --compress $fivePbc $noPolyARequired
     find ./passed/passed/ -type f -name '*' | xargs pigz -dc |  pigz > fastq_pass.fastq.gz
     """
 }
@@ -78,9 +81,11 @@ process STEP3_umis {
     path 'passedParsed.bam.UMIdepths.tsv'	 , emit: umidepth
     
     publishDir "${params.outdir}/${params.umisdir}", mode: 'copy'
+
+    def fivePbc = params.fivePbc ? "--fivePbc" : ""
     
     """
-    $params.java -jar $params.javaXmx -XX:ActiveProcessorCount=$params.max_cpus $params.nanopore assignumis --inFileNanopore $mappingbam -o passedParsed.bam --annotationFile $params.refflat
+    $params.java -jar $params.javaXmx -XX:ActiveProcessorCount=$params.max_cpus $params.nanopore assignumis --inFileNanopore $mappingbam -o passedParsed.bam --annotationFile $params.refflat $fivePbc
     """
 }
 

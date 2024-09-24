@@ -27,12 +27,14 @@ process STEP1_readscan {
 
     publishDir "${params.outdir}/${params.scandir}", mode: 'copy'
 
+    // check if parameters are set and add to command
     def fivePbc = params.fivePbc ? "--fivePbc" : ""
     def noPolyARequired = params.noPolyARequired ? "--noPolyARequired" : ""
+    def cellRangerBCs = params.cellRangerBCs ? "--cellRangerBCs $params.cellRangerBCs" : ""
     
     """
     mkdir ./passed
-    $params.java -jar $params.javaXmx $params.nanopore scanfastq -d $params.fastqdir -o ./passed --ncpu $params.max_cpus --bcEditDistance 1 --compress $fivePbc $noPolyARequired
+    $params.java -jar $params.javaXmx $params.nanopore scanfastq -d $params.fastqdir -o ./passed --ncpu $params.max_cpus --bcEditDistance 1 --compress $fivePbc $noPolyARequired $cellRangerBCs
     find ./passed/passed/ -type f -name '*' | xargs pigz -dc |  pigz > fastq_pass.fastq.gz
     """
 }

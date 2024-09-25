@@ -160,6 +160,12 @@ process STEP4b_consensus {
     path 'chr.fq'   , emit: fq
  	
     """
+    # check if tmpdir exists, otherwise create it
+    if [ ! -d "$params.tmpdir" ]; then
+      printf '%s\n' "--tmpdir $params.tmpdir does not exist. Creating directory." >&2
+      mkdir -p $params.tmpdir
+    fi
+    
     $params.java -jar -$params.javaXmx $params.sicelore ComputeConsensus -T $params.max_cpus -I $bam -O chr.fq -CELLTAG $params.CELLTAG -UMITAG $params.UMITAG -GENETAG $params.GENETAG -TSOENDTAG $params.TSOENDTAG -POLYASTARTTAG $params.POLYASTARTTAG -CDNATAG $params.CDNATAG -USTAG $params.USTAG -RNTAG $params.RNTAG -MAPQV0 $params.MAPQV0 -TMPDIR $params.tmpdir -VALIDATION_STRINGENCY SILENT -MAXREADS $params.MAXREADS -MINPS $params.MINPS -MAXPS $params.MAXPS -DEBUG $params.DEBUG
     """
 }

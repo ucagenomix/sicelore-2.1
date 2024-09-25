@@ -14,7 +14,7 @@ workflow {
     // step 4b (consensus molecules)
     STEP4b_addsequence(STEP3_umis.out.parsedbam, STEP1_readscan.out.fastqgz)
     chrs = STEP4b_getchrs(STEP4b_addsequence.out.parsedbamseq) | splitText | map{it -> it.trim()}
-    STEP4b_splitbam(chrs, STEP4b_addsequence.out.parsedbamseq, STEP4b_addsequence.out.parsedbamseqbai) | STEP4b_consensus | STEP4b_concatenate | collectFile | STEP4b_deduplicate | STEP4b_mapping | STEP4b_addtags | STEP4b_addgenes
+    STEP4b_splitbam(chrs, STEP4b_addsequence.out.parsedbamseq, STEP4b_addsequence.out.parsedbamseqbai) | STEP4b_consensus | collectFile | STEP4b_deduplicate | STEP4b_mapping | STEP4b_addtags | STEP4b_addgenes
     STEP4b_matrix(STEP1_validbarcodes.out.csv, STEP4b_addgenes.out.bam)
 }
 
@@ -161,19 +161,6 @@ process STEP4b_consensus {
  	
     """
     $params.java -jar -$params.javaXmx $params.sicelore ComputeConsensus -T $params.max_cpus -I $bam -O chr.fq -CELLTAG $params.CELLTAG -UMITAG $params.UMITAG -GENETAG $params.GENETAG -TSOENDTAG $params.TSOENDTAG -POLYASTARTTAG $params.POLYASTARTTAG -CDNATAG $params.CDNATAG -USTAG $params.USTAG -RNTAG $params.RNTAG -MAPQV0 $params.MAPQV0 -TMPDIR $params.tmpdir -VALIDATION_STRINGENCY SILENT -MAXREADS $params.MAXREADS -MINPS $params.MINPS -MAXPS $params.MAXPS -DEBUG $params.DEBUG
-    """
-}
-
-process STEP4b_concatenate {
-    input:
-    path x
-  
-    output:
-    path 'consensus.fq'	, emit: cons
-  
-    script:
-    """
-    < $x cat > consensus.fq
     """
 }
 

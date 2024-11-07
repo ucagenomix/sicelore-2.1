@@ -52,25 +52,33 @@ public class SplitBamPerCell extends CommandLineProgram {
             while (str != null) {
                 String[] tmp = str.split(",");
 
-                if (java.util.regex.Pattern.matches(".*-1", tmp[0]))
-                    tmp[0]= tmp[0].replace("-1", "");
-                    
+                //if (java.util.regex.Pattern.matches(".*-1", tmp[0]))
+                //    tmp[0]= tmp[0].replace("-1", "");
+                
+                System.out.println("-" + tmp[0] + "-");
+                
                 if (!localHashMap.containsKey(tmp[0]))
                     localHashMap.put(tmp[0], new htsjdk.samtools.SAMFileWriterFactory().makeSAMOrBAMWriter(localSAMFileHeader2, true, new File(OUTPUT.getAbsolutePath() + "/" + tmp[0] + ".bam")));
  
                 str = br.readLine();
             }
             br.close();
-
+            
             for (Iterator localIterator = localSamReader.iterator(); localIterator.hasNext();) {
-                SAMRecord localObject = (SAMRecord) localIterator.next();
-                pl.record((SAMRecord) localObject);
-                str = (String) ((SAMRecord) localObject).getAttribute(CELLTAG);
-                if (java.util.regex.Pattern.matches(".*-1", str))
-                    str = str.replace("-1", "");
+                SAMRecord r = (SAMRecord) localIterator.next();
+                pl.record(r);
+                String name = r.getReadName();
+                String cell_barcode = (String) r.getAttribute(CELLTAG);
                 
-                if ((SAMFileWriter) localHashMap.get(str) != null)
-                    ((SAMFileWriter) localHashMap.get(str)).addAlignment((SAMRecord) localObject);
+                if(cell_barcode != null){
+                    //System.out.println(name);
+
+                    //if (java.util.regex.Pattern.matches(".*-1", cell_barcode))
+                    //    cell_barcode = cell_barcode.replace("-1", "");
+
+                    if ((SAMFileWriter) localHashMap.get(cell_barcode) != null)
+                        ((SAMFileWriter) localHashMap.get(cell_barcode)).addAlignment(r);
+                }
             }
             localSamReader.close();
 
